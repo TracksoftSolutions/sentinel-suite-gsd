@@ -32,7 +32,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Entity Relationships & History
 
 ## 1. Security Operations
-- [ ] Daily Activity Reports (DAR)
+- [x] Daily Activity Reports (DAR)
 - [ ] Shift Passdowns & Handover Notes
 - [ ] Guard Tour & Checkpoint Verification
 - [ ] Patrol Management
