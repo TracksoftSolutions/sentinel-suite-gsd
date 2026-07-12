@@ -33,7 +33,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 
 ## 1. Security Operations
 - [x] Daily Activity Reports (DAR)
-- [ ] Shift Passdowns & Handover Notes
+- [x] Shift Passdowns & Handover Notes
 - [ ] Guard Tour & Checkpoint Verification
 - [ ] Patrol Management
 - [ ] Courtesy Patrol
