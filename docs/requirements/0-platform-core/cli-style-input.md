@@ -110,6 +110,7 @@ Beyond the core syntax, this doc also specifies four capabilities intended to ma
 - extra_args_target (which command in the expansion chain receives flags typed beyond the alias's own placeholders — defaults to the last command)
 - created_by, created_at
 - is_platform_default (bool)
+- extended_fields (JSONB, nullable — registers Alias as a carrier for [Tenant-Defined Types & Custom Fields](tenant-defined-types-custom-fields.md); governance/validation owned by that feature, not here)
 
 **Command Execution** (session-local, feeds into the standard Action Invocation audit record from Command/Action Bus)
 - transcript_entry_id, session_id, chain_id (groups commands submitted together on one line), chain_position
@@ -158,6 +159,7 @@ Beyond the core syntax, this doc also specifies four capabilities intended to ma
 - **Command Palette**: sibling surface, distinct trigger, no shared UI state — a user may use either or both.
 - **Settings & Preferences**: personal alias management, AI-assist mode preference, and (where enabled) voice input toggle surface alongside other user preference settings.
 - **AI-Assisted Incident Report Writing** (Security Operations): source of the shared voice transcription capability reused by AI-assist mode's optional voice input, rather than this feature building its own.
+- **Tenant-Defined Types & Custom Fields**: Alias registers as one of the first two non-entity carriers proving that feature's mechanism generalizes beyond Entity Registry Core.
 
 ## Non-Goals
 
