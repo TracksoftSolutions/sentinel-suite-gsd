@@ -35,7 +35,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Daily Activity Reports (DAR)
 - [x] Shift Passdowns & Handover Notes
 - [x] Guard Tour & Checkpoint Verification
-- [ ] Patrol Management
+- [x] Patrol Management
 - [ ] Courtesy Patrol
 - [ ] Tickets, Citations & Traffic Safety
 - [ ] Incident Reporting & Management

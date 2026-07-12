@@ -83,6 +83,7 @@ Both sequence enforcement (must checkpoints be visited in order) and scan verifi
 **Route Assignment**
 - assignment_id, tenant_id, route_ref, person_ref (Guard)
 - assignment_period_start, assignment_period_end (or shift_window_ref, if shift-scoped)
+- post_ref (nullable — FK → Patrol Management's Post, when this route fulfills a Fixed Post's local patrols or a Mobile Patrol Unit's checkpoint-based coverage; retrofit, see [patrol-management.md](patrol-management.md))
 - status (active, completed, cancelled)
 
 **Tour Run** (Activity extension, TPT level)
@@ -121,7 +122,7 @@ Both sequence enforcement (must checkpoints be visited in order) and scan verifi
 - **Shift Passdowns & Handover Notes**: a missed/late tour is a natural candidate for a default Pass-On Rule (e.g., auto-flag a missed required Tour Definition for the next shift) — a Tenant Admin configures this via Passdown's existing Pass-On Rule mechanism, not a bespoke integration.
 - **Command/Action Bus**: "Assign route," "Start tour," "Scan checkpoint," "Replace checkpoint tag" register as invokable actions across every surface.
 - **GIS & Mapping Services**: Checkpoint locations render on the map via their inherited Location geometry; a live Tour Run's progress is a natural future map overlay.
-- **Patrol Management (next in queue)**: sibling feature for roving/non-checkpoint-based patrol; explicitly out of scope here.
+- **Patrol Management**: the umbrella assignment layer this doc's Route Assignment executes underneath, via the retrofitted `post_ref` field — a Fixed Post's local patrols and an optional Mobile Patrol Unit's checkpoint coverage are both ordinary Route Assignments referencing a Post. Patrol Management owns the broader roving/non-checkpoint-based patrol concept (Mobile Patrol Unit tracking, ad hoc Patrol Requests) this doc doesn't.
 - **Module 12 (Tour Completeness Logs, Officer Performance Logs) and Module 9 (Location Hierarchy Designer, future)**: future consumers of this doc's Tour Run/Checkpoint Scan data and Checkpoint's Location-extension placement, respectively.
 
 ## Permissions
