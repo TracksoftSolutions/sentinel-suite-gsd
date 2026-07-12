@@ -12,7 +12,7 @@ Four layers, from definition down to individual event, each building on Master R
 3. **Patrol** — an **Activity extension** (per Activity Registry) representing one actual execution ("run") of a Tour Definition by a guard — per the user's own framing, "the activity of completing a tour": full offline-safe identity, audit, dedup, and cross-module timeline visibility, directly serving Module 12's future Tour Completeness Logs and Officer Performance Logs without either reimplementing scan tracking.
 4. **Checkpoint Scan** — an individual timed (or otherwise triggered) event within a Patrol: which checkpoint, when, by what method, whether verified. Modeled as its own thin Activity extension, referencing its parent Patrol and scanned Checkpoint by direct field (not an EntityAssociation — the parent/checkpoint relationship is fixed at creation and never re-parented, so it doesn't benefit from association-style history the way ownership or custody does). A scan is also the **launch point** for two kinds of follow-on record, both with location pre-seeded from the checkpoint's own Location: a lightweight built-in **Patrol Finding** (#Patrol Finding below) for things like an unlocked door or a leak, or any other richer Activity type (e.g., a future Incident, once Incident Reporting exists) via ordinary Command/Action Bus context-seeding — this doc establishes the launch-point mechanism generically, not a fixed list of what can be created from it.
 
-This gives a genuinely nested Activity structure — Route (a plan, not itself an Activity) → **Patrol** (one Tour Definition's run, an Activity) → **Checkpoint Scan** (an event within that Patrol, itself an Activity) → optionally a **Patrol Finding** or other Activity spawned from a scan. Route Assignment (the record spanning a guard's whole assignment period, potentially made up of many Patrols across several Tour Definitions) stays a non-Activity plan/scope record — the same role DAR's Shift Window and Passdown's Team Shift Window play — rather than becoming a fifth nested layer; there was no clear real-world "occurrence" at that level distinct from the Patrols underneath it, unlike Route → Patrol → Scan which each represent a genuine discrete happening.
+This gives a genuinely nested Activity structure, four levels deep — **Route** is the only non-Activity layer (a plan/build, per the user's own correction), and every level beneath it that represents something actually *happening* is its own Activity extension: **Route Assignment** (an Activity — one instance of a Route being assigned to a Guard and carried through to completion, "each time a route is assigned and completed," per the user's framing) → **Patrol** (one Tour Definition's run within that assignment, an Activity) → **Checkpoint Scan** (an event within a Patrol, itself an Activity) → optionally a **Patrol Finding** or other Activity spawned from a scan. Route Assignment is *not* a plain scope/plan record like DAR's Shift Window — it's a genuine occurrence with its own lifecycle (assigned → in progress → concluded), correcting an earlier draft of this doc that under-modeled it as a bare assignment row.
 
 **Naming disambiguation:** this doc's **Patrol** (the Activity representing one tour run) is a different concept from Patrol Management's **Mobile Patrol Unit** or **Patrol Request** (assignment/post-layer concepts in that sibling doc) — same root word, deliberately, since both describe real-world patrolling, but they sit at different layers: Patrol Management's Post is *who's assigned and where*; this doc's Patrol is *one completed run of a tour*.
 
@@ -41,33 +41,37 @@ Both sequence enforcement (must checkpoints be visited in order) and scan verifi
 ### Checkpoint (Location extension + associated tag Item)
 1. **Checkpoint** registers as a Location extension (per Location Registry), inheriting base identity, geometry, GIS placement, and dedup/merge.
 2. A Checkpoint's physical scan tag is a separate Item Registry entity, linked via a single-current-value EntityAssociation (`CheckpointTagAssociation`) — replacing a damaged/lost tag means removing the old active association row and adding a new one pointing to a newly-registered tag Item, leaving the prior tag as history, exactly like Vehicle's `ConveyanceOwnerAssociation` pattern.
-3. A Checkpoint can decline to have a tag at all if its Tour Definition's verification method is GPS-only (#12).
+3. A Checkpoint can decline to have a tag at all if its Tour Definition's verification method is GPS-only (#14).
 
 ### Route & Tour Definition
 4. A **Route** is a named assignment plan owned by a Supervisor, composed of one or more **Tour Definitions**.
 5. A **Tour Definition** declares: a target place (`location_ref` — any Location, typically a Building or Site-level Location, not necessarily the top of the hierarchy), the set of Checkpoints in scope at that place, `required_count` (how many times this Tour Definition must be completed over the Route's assignment period), and an optional `min_interval` (minimum time that must elapse between consecutive completions, e.g., 4 hours).
 6. A Route can mix Tour Definitions targeting entirely different places under one assignment (per the warehouse-plus-three-buildings example) — there's no requirement that a Route's Tour Definitions share a location.
-7. A Route is **assigned** to a Guard for an assignment period — a specific shift (optionally referencing DAR's Shift Window, when clocked-shift tracking is in play) or an explicit date/time range when no shift concept applies.
+
+### Route Assignment (Activity extension)
+7. **Route Assignment** registers as an Activity extension: one instance of a Route being assigned to a Guard and carried through to completion, inheriting base Activity identity, offline-safe numbering, and dedup/merge, same as Patrol and Checkpoint Scan. This is the record of "each time a route is assigned and completed," not merely a scope/plan row — a Guard sees a real, trackable occurrence, not just a filter.
+8. A Route Assignment covers an assignment period — a specific shift (optionally referencing DAR's Shift Window, when clocked-shift tracking is in play) or an explicit date/time range when no shift concept applies — and rolls up completion across every Patrol underneath it (percentage of required Tour Definition occurrences completed, across the whole Route).
+9. A Route Assignment reaches `concluded` once every Tour Definition under its Route has met its `required_count` for the assignment period (or the period ends, whichever the Supervisor/Tenant Admin's completion policy dictates — see Open Questions), at which point its rolled-up completeness is locked, mirroring Patrol's own conclusion behavior at one level up.
 
 ### Patrol (Activity extension)
-8. **Patrol** registers as an Activity extension: one guard's actual execution instance against a specific Tour Definition, inheriting base Activity identity, offline-safe numbering, and dedup/merge.
-9. A Patrol's completion is computed against its Tour Definition: percentage of in-scope Checkpoints scanned, order compliance (if enforced), and — for a repeat occurrence of the same Tour Definition — spacing compliance against `min_interval` relative to the immediately preceding Patrol for that same definition.
-10. A Patrol reaching the Activity base `concluded` status is when its final completeness/compliance is computed and locked; a still-`in_progress` Patrol's compliance is provisional/live.
+10. **Patrol** registers as an Activity extension: one guard's actual execution instance against a specific Tour Definition, inheriting base Activity identity, offline-safe numbering, and dedup/merge.
+11. A Patrol's completion is computed against its Tour Definition: percentage of in-scope Checkpoints scanned, order compliance (if enforced), and — for a repeat occurrence of the same Tour Definition — spacing compliance against `min_interval` relative to the immediately preceding Patrol for that same definition.
+12. A Patrol reaching the Activity base `concluded` status is when its final completeness/compliance is computed and locked; a still-`in_progress` Patrol's compliance is provisional/live — and rolls up into its parent Route Assignment's own completeness (#8).
 
 ### Checkpoint Scan (Activity extension)
-11. **Checkpoint Scan** registers as a thin Activity extension: `patrol_ref` (direct field, fixed at creation), `checkpoint_ref` (direct field), `scan_method` (tag, gps, manual_override), `verified` (bool — passed its Tour Definition's required verification method), `captured_gps` (optional, for corroboration/anomaly detection even when tag scan is the required method), `scanned_by`, `scan_timestamp`.
-12. Required verification method (tag-only, GPS-only, or both) is configurable per Tour Definition, defaulting to a tenant-wide Settings & Preferences value.
-13. Sequence enforcement (strict order vs. any order within window) is configurable per Tour Definition, defaulting to a tenant-wide Settings & Preferences value; an out-of-sequence scan on an order-enforced Tour Definition is recorded (never discarded) but flagged as a deviation.
-14. Checkpoint Scan creation works fully offline, per the platform's established offline model — a scan performed in a dead zone is recorded immediately with a client UUID and synced when connectivity returns.
+13. **Checkpoint Scan** registers as a thin Activity extension: `patrol_ref` (direct field, fixed at creation), `checkpoint_ref` (direct field), `scan_method` (tag, gps, manual_override), `verified` (bool — passed its Tour Definition's required verification method), `captured_gps` (optional, for corroboration/anomaly detection even when tag scan is the required method), `scanned_by`, `scan_timestamp`.
+14. Required verification method (tag-only, GPS-only, or both) is configurable per Tour Definition, defaulting to a tenant-wide Settings & Preferences value.
+15. Sequence enforcement (strict order vs. any order within window) is configurable per Tour Definition, defaulting to a tenant-wide Settings & Preferences value; an out-of-sequence scan on an order-enforced Tour Definition is recorded (never discarded) but flagged as a deviation.
+16. Checkpoint Scan creation works fully offline, per the platform's established offline model — a scan performed in a dead zone is recorded immediately with a client UUID and synced when connectivity returns.
 
 ### Missed/late detection (assumed default — see Open Questions)
-15. A Tour Definition occurrence not completed within its expected window (derived from `required_count` spread across the assignment period, and `min_interval` where set) publishes an automation-eligible domain event, letting a Tenant Admin configure a Domain Events rule (e.g., notify the Supervisor, or auto-create a Passdown Pass-On Flag) rather than this doc hardcoding a single fixed alert behavior.
+17. A Tour Definition occurrence not completed within its expected window (derived from `required_count` spread across the assignment period, and `min_interval` where set) publishes an automation-eligible domain event, letting a Tenant Admin configure a Domain Events rule (e.g., notify the Supervisor, or auto-create a Passdown Pass-On Flag) rather than this doc hardcoding a single fixed alert behavior.
 
 ### Inspection instructions & scan-triggered record creation
-16. A Checkpoint carries `inspection_instructions` (free text, authored per checkpoint) — displayed automatically the moment a guard scans it, so "what to look for" is always in front of the guard at the point of inspection rather than buried in a separate reference document.
-17. **Patrol Finding** registers as its own thin Activity extension, created directly from a Checkpoint Scan: `origin_scan_ref` (direct field, fixed at creation, same non-EntityAssociation reasoning as Checkpoint Scan's own parent link), `category` (tenant-configurable list, e.g. Unlocked Door, Leak, Damage, Suspicious Item, Maintenance Issue — same tenant-configurable-taxonomy pattern established by DAR Entry), and `narrative`. Its `ActivityLocationAssociation` (per Activity Registry) is auto-seeded from the originating Checkpoint's own Location, adjustable if the actual finding is near but not exactly at the checkpoint.
-18. A Patrol Finding follows the base Activity lifecycle (`open` → `concluded`, i.e. resolved) independently of its originating Scan or Patrol — resolving a finding never alters the scan or Patrol it came from, the same "record doesn't mutate what it references" discipline used elsewhere (DAR's Shift Review, Passdown's Pass-On Flag), applied here as child-record-doesn't-mutate-parent.
-19. A Checkpoint Scan is also a **generic launch point** for creating any other, richer Activity type (e.g., a future Incident, once Incident Reporting exists) via the Command/Action Bus's established context-seeding: invoking "create [Activity Type]" from a scan screen passes the checkpoint's Location as explicit context, following the platform's standard explicit > context > alias > default-resolver precedence. This doc establishes the launch-point mechanism generically — no scan-side change is required as future modules register new Activity extensions.
+18. A Checkpoint carries `inspection_instructions` (free text, authored per checkpoint) — displayed automatically the moment a guard scans it, so "what to look for" is always in front of the guard at the point of inspection rather than buried in a separate reference document.
+19. **Patrol Finding** registers as its own thin Activity extension, created directly from a Checkpoint Scan: `origin_scan_ref` (direct field, fixed at creation, same non-EntityAssociation reasoning as Checkpoint Scan's own parent link), `category` (tenant-configurable list, e.g. Unlocked Door, Leak, Damage, Suspicious Item, Maintenance Issue — same tenant-configurable-taxonomy pattern established by DAR Entry), and `narrative`. Its `ActivityLocationAssociation` (per Activity Registry) is auto-seeded from the originating Checkpoint's own Location, adjustable if the actual finding is near but not exactly at the checkpoint.
+20. A Patrol Finding follows the base Activity lifecycle (`open` → `concluded`, i.e. resolved) independently of its originating Scan or Patrol — resolving a finding never alters the scan or Patrol it came from, the same "record doesn't mutate what it references" discipline used elsewhere (DAR's Shift Review, Passdown's Pass-On Flag), applied here as child-record-doesn't-mutate-parent.
+21. A Checkpoint Scan is also a **generic launch point** for creating any other, richer Activity type (e.g., a future Incident, once Incident Reporting exists) via the Command/Action Bus's established context-seeding: invoking "create [Activity Type]" from a scan screen passes the checkpoint's Location as explicit context, following the platform's standard explicit > context > alias > default-resolver precedence. This doc establishes the launch-point mechanism generically — no scan-side change is required as future modules register new Activity extensions.
 
 ## Data Model / Fields
 
@@ -91,15 +95,16 @@ Both sequence enforcement (must checkpoints be visited in order) and scan verifi
 - required_verification_method (tag, gps, both — defaults from Settings & Preferences)
 - required_count (per assignment period), min_interval (nullable)
 
-**Route Assignment**
-- assignment_id, tenant_id, route_ref, person_ref (Guard)
+**Route Assignment** (Activity extension, TPT level: entity_id shared PK, FK → Activity.entity_id)
+- entity_id (PK, FK → Activity)
+- route_ref, person_ref (Guard)
 - assignment_period_start, assignment_period_end (or shift_window_ref, if shift-scoped)
 - post_ref (nullable — FK → Patrol Management's Post, when this route fulfills a Fixed Post's local patrols or a Mobile Patrol Unit's checkpoint-based coverage; retrofit, see [patrol-management.md](patrol-management.md))
-- status (active, completed, cancelled)
+- completeness_pct (rollup across every Patrol underneath it)
 
 **Patrol** (Activity extension, TPT level)
 - entity_id (PK, FK → Activity)
-- tour_definition_ref, assignment_ref
+- tour_definition_ref, route_assignment_ref (direct field, fixed at creation — parent Route Assignment)
 - completeness_pct, order_compliant (bool, nullable if unordered), spacing_compliant (bool, nullable if no min_interval or first occurrence)
 
 **Checkpoint Scan** (Activity extension, TPT level)
@@ -118,7 +123,7 @@ Both sequence enforcement (must checkpoints be visited in order) and scan verifi
 
 **Route:** `active` → `archived`.
 
-**Route Assignment:** `active` → `completed` (assignment period ends) | `cancelled`.
+**Route Assignment:** follows base Activity lifecycle — `open` (assigned, not yet started) → `in_progress` (first Patrol begins) → `concluded` (every Tour Definition under its Route meets `required_count`, or the assignment period ends) | `cancelled`.
 
 **Patrol:** follows base Activity lifecycle — `open` → `in_progress` (first scan recorded) → `concluded` (completeness/compliance locked) | `cancelled`.
 
@@ -132,17 +137,17 @@ Both sequence enforcement (must checkpoints be visited in order) and scan verifi
 
 - **Location Registry**: Checkpoint's base TPT level.
 - **Item Registry**: source of the physical tag Item a Checkpoint's `CheckpointTagAssociation` points to.
-- **Activity Registry**: Patrol, Checkpoint Scan, and Patrol Finding all register as Activity extensions.
-- **Entity Registry Core**: identity, dedup/merge, and display-label requirements for Checkpoint, Patrol, Checkpoint Scan, and Patrol Finding, same as any other Entity/Activity type.
+- **Activity Registry**: Route Assignment, Patrol, Checkpoint Scan, and Patrol Finding all register as Activity extensions — Route is the only non-Activity layer in this doc.
+- **Entity Registry Core**: identity, dedup/merge, and display-label requirements for Checkpoint, Route Assignment, Patrol, Checkpoint Scan, and Patrol Finding, same as any other Entity/Activity type.
 - **Offline Data Sync**: Checkpoint Scan and Patrol Finding creation both follow the established offline CRDT/client-UUID pattern unmodified.
 - **Settings & Preferences**: owns tenant-default sequence-enforcement and scan-verification-method settings, with per-Tour-Definition override.
 - **Domain Events / Notifications Engine**: missed/late tour detection publishes an automation-eligible event; a Tenant Admin-configured rule decides the actual notification/escalation behavior rather than a hardcoded alert path.
-- **Daily Activity Reports (DAR)**: Patrols, Checkpoint Scans, and Patrol Findings are ordinary Activities and are automatically picked up by any DAR filter matching their guard/site/time window, with no DAR-side change required.
+- **Daily Activity Reports (DAR)**: Route Assignments, Patrols, Checkpoint Scans, and Patrol Findings are all ordinary Activities and are automatically picked up by any DAR filter matching their guard/site/time window, with no DAR-side change required.
 - **Shift Passdowns & Handover Notes**: a missed/late tour, and a still-open Patrol Finding, are both natural candidates for a default Pass-On Rule — a Tenant Admin configures this via Passdown's existing Pass-On Rule mechanism, not a bespoke integration.
 - **Command/Action Bus**: "Assign route," "Start tour," "Scan checkpoint," "Replace checkpoint tag," "Create patrol finding," and "Create [Activity Type] from checkpoint scan" register as invokable actions across every surface, the last one consuming Command/Action Bus's established context-seeding to pre-fill location.
 - **GIS & Mapping Services**: Checkpoint locations render on the map via their inherited Location geometry; a live Patrol's progress is a natural future map overlay.
 - **Patrol Management**: the umbrella assignment layer this doc's Route Assignment executes underneath, via the retrofitted `post_ref` field — a Fixed Post's local patrols and an optional Mobile Patrol Unit's checkpoint coverage are both ordinary Route Assignments referencing a Post. Patrol Management owns the broader roving/non-checkpoint-based patrol concept (Mobile Patrol Unit tracking, ad hoc Patrol Requests) this doc doesn't.
-- **Module 12 (Tour Completeness Logs, Officer Performance Logs) and Module 9 (Location Hierarchy Designer, future)**: future consumers of this doc's Patrol/Checkpoint Scan data and Checkpoint's Location-extension placement, respectively.
+- **Module 12 (Tour Completeness Logs, Officer Performance Logs) and Module 9 (Location Hierarchy Designer, future)**: future consumers of this doc's Route Assignment/Patrol/Checkpoint Scan data and Checkpoint's Location-extension placement, respectively.
 
 ## Permissions
 
@@ -155,7 +160,7 @@ Both sequence enforcement (must checkpoints be visited in order) and scan verifi
 | Create a Patrol Finding from a scan | ✅ (own scan) | ✅ | ❌ |
 | Resolve a Patrol Finding | ✅ (own, if permitted) | ✅ | ✅ |
 | Author/edit Checkpoint inspection instructions | ❌ | ✅ | ✅ |
-| View Patrol compliance / completeness | ✅ (own) | ✅ (own roster) | ✅ |
+| View Route Assignment / Patrol compliance / completeness | ✅ (own) | ✅ (own roster) | ✅ |
 | Configure sequence/verification-method defaults | ❌ | ❌ | ✅ |
 | Configure missed-tour Domain Events rules | ❌ | ❌ | ✅ |
 
@@ -171,7 +176,9 @@ Both sequence enforcement (must checkpoints be visited in order) and scan verifi
 ## Acceptance Criteria
 
 - [ ] A Supervisor can build a Route with four Tour Definitions spanning four different Locations, one of which requires 2 occurrences at least 4 hours apart.
-- [ ] Assigning that Route to a Guard produces a Route Assignment the Guard can see and begin executing.
+- [ ] Assigning that Route to a Guard produces an `open` Route Assignment Activity the Guard can see and begin executing.
+- [ ] A Route Assignment's `completeness_pct` correctly rolls up from its underlying Patrols' own completeness as they conclude.
+- [ ] A Route Assignment reaches `concluded` once every Tour Definition under its Route has met its `required_count`, without requiring manual closure.
 - [ ] Scanning a Checkpoint's tag (online or offline) creates a Checkpoint Scan linked to the correct Patrol and Checkpoint.
 - [ ] A second Patrol against the 4-hour-spaced Tour Definition, started 2 hours after the first, is correctly flagged `spacing_compliant = false`.
 - [ ] An out-of-sequence scan on a sequence-enforced Tour Definition is recorded (not discarded) and flagged as a deviation.
@@ -187,9 +194,10 @@ Both sequence enforcement (must checkpoints be visited in order) and scan verifi
 
 ## Open Questions
 
-- **Exact missed/late detection window logic** (#15 is a reasonable default, not confirmed): how "expected window" is derived from `required_count` + assignment period + `min_interval` — e.g., evenly spread, or Supervisor-defined explicit time windows per occurrence — needs confirmation.
+- **Exact missed/late detection window logic** (#17 is a reasonable default, not confirmed): how "expected window" is derived from `required_count` + assignment period + `min_interval` — e.g., evenly spread, or Supervisor-defined explicit time windows per occurrence — needs confirmation.
 - **Checkpoint Scan as its own Activity extension vs. a lightweight child record** was the recommended option in the original question but not explicitly confirmed before this doc was drafted — flagged for review; if scan volume proves too high for full Activity-table treatment, the fallback is a lightweight child-record table on Patrol instead.
 - Whether Route Assignment should require a DAR/Shift Window link at all times (tying tour execution strictly to a clocked shift) or remain optional as drafted — current default is optional.
+- Exact Route Assignment completion policy when the assignment period ends with some Tour Definitions still short of `required_count` (#9): auto-conclude as incomplete vs. stay open past the period end until manually closed — not confirmed, current default assumes auto-conclude at period end.
 - Exact baseline Domain Events rule(s) shipped out of the box for missed/late tours (e.g., auto-notify Supervisor after N minutes past window) — pending content/UX design.
 - Whether a guard can start an unassigned/ad hoc tour (not tied to any Route Assignment) for flexibility, or execution is always strictly tied to an assignment — not addressed here, leaning toward "assignment required" but not confirmed.
 - Whether CheckpointTagAssociation's replacement action requires elevated permission/step-up (tags are a security-relevant physical asset) — currently modeled as a standard Supervisor+ action, not step-up-gated; open to revisiting.
