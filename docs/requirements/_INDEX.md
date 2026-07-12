@@ -1,0 +1,280 @@
+# Sentinel Suite — Requirements Elicitation Tracker
+
+Ordered working list of every feature (sub-heading) enumerated from `docs/MODULES.md`.
+One requirements doc per feature, written to `docs/requirements/<module-slug>/<feature-slug>.md`.
+
+Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · `[x]` doc written
+
+## 0. Platform Core
+- [x] Authentication & Authorization
+- [x] Structured Logging & Audit Trails
+- [x] Offline Data Sync
+- [x] Notifications Engine
+- [x] GIS & Mapping Services
+- [x] API & Messaging Layer
+- [x] Event & Command Bus Architecture
+- [x] Domain Events *(added during elicitation, split out of Event & Command Bus Architecture)*
+- [x] Command/Action Bus *(added during elicitation, split out of Event & Command Bus Architecture)*
+- [x] Command Palette *(added during elicitation, invocation surface over Command/Action Bus)*
+- [x] CLI-Style Input *(added during elicitation, invocation surface over Command/Action Bus)*
+- [x] Settings & Preferences
+
+## 0.5 Master Records
+- [x] Entity Registry Core
+- [x] Party Registry *(added during elicitation — nc:EntityType base [Person-or-Organization]; Person and Organization both extend it)*
+- [x] Person Registry *(retrofitted to extend Party rather than being a direct base type)*
+- [x] Organization Registry *(added during elicitation — second Party extension, rounds out the base type set)*
+- [x] Item Registry *(generalized from "Vehicle Registry" — generic nc:ItemType-aligned base entity + custody tracking; Vehicle is its first extension type)*
+- [x] Vehicle/Conveyance Registry *(added during elicitation — full depth for Item's Vehicle extension, promoted from stub since it's a cross-cutting core concern like Person)*
+- [x] Location Registry
+- [x] Activity Registry *(added during elicitation — one of five base entity types, given full first-class treatment)*
+- [x] Document Registry *(added during elicitation — nc:DocumentType base, fifth base entity type, with hash/integrity + versioning)*
+- [ ] Entity Relationships & History
+
+## 1. Security Operations
+- [ ] Daily Activity Reports (DAR)
+- [ ] Shift Passdowns & Handover Notes
+- [ ] Guard Tour & Checkpoint Verification
+- [ ] Patrol Management
+- [ ] Courtesy Patrol
+- [ ] Tickets, Citations & Traffic Safety
+- [ ] Incident Reporting & Management
+- [ ] AI-Assisted Incident Report Writing
+
+## 2. Dispatch / CAD
+- [ ] Call Intake & Logging
+- [ ] Unit Dispatch & Proximity Routing
+- [ ] Active Incident Queue (CAD Console)
+- [ ] Status & State Monitors
+- [ ] Silent Mobile Dispatching
+- [ ] Multi-Incident Console
+- [ ] Active Call Alerts & Timers
+- [ ] Historical CAD Log Reconstruction
+
+## 3. Command Center / Dashboard / EOC
+- [ ] Unified Operational Picture (UOP) Map
+- [ ] Command Center Wallboard View
+- [ ] ICS Role Mapping & Visual Org Chart
+- [ ] Situation Reports (SITREPs)
+- [ ] Live Camera Feed Ingestion
+- [ ] EOC Logistics Hub
+- [ ] Alarm Panel Monitors & Panic Alerts
+- [ ] Environmental & Weather Map Overlays
+- [ ] Historical Playback Console
+
+## 4. Access Control
+- [ ] Pre-Registration Portal
+- [ ] Visitor Kiosk App
+- [ ] Host Arrival Notifications
+- [ ] Access Credential Management
+- [ ] Clearance Profiles
+- [ ] Key Ring Registry
+- [ ] Key Custody & Auditing
+- [ ] Lock Core & Cylinder Tracking
+- [ ] BOLO & Trespass Alerts
+- [ ] Remote Gate & Barrier Controls
+
+## 5. Emergency Management
+- [ ] ICS Forms Engine (FEMA-aligned)
+- [ ] Resource Logistics Catalog
+- [ ] After-Action Reports (AAR)
+- [ ] Improvement Plan (IP) Tracking
+- [ ] Exercise & Drill Planner (HSEEP-aligned)
+- [ ] Drill Compliance Logging
+- [ ] Mutual Aid Agreements Tracker
+- [ ] EOC Activation Checklists
+
+## 6. Emergency Planning
+- [ ] Pre-Incident Plans (Preplans)
+- [ ] Incident Action Checklists
+- [ ] Continuity of Operations Plans (COOP)
+- [ ] Muster Check-in App
+- [ ] Evacuation Roster Reconciliation
+- [ ] Hazard Identification & Risk Assessment (HIRA)
+- [ ] Mitigation Task Tracker
+- [ ] Alternate Site Registries
+
+## 7. Safety Management
+- [ ] Safety Inspections & Audits
+- [ ] Corrective Action Pipelines
+- [ ] Hazmat & Chemical Registries
+- [ ] NFPA 704 Placard Mapping
+- [ ] OSHA Incident Loggers
+- [ ] Safety Metrics Calculators
+- [ ] Industrial Hygiene Tracking
+- [ ] PPE Inventory & Issuance
+- [ ] Near-Miss Incident Portal
+
+## 8. Personnel
+- [ ] Post Schedule Builder
+- [ ] Open-Shift Bidding
+- [ ] Geofenced Time & Attendance
+- [ ] Training Curriculum Library
+- [ ] Licensing & Guard Card Tracking
+- [ ] Armed Qualifications Registry
+- [ ] Compliance Schedule Lockouts
+- [ ] Skills & Capabilities Profiles
+
+## 9. Facility & Zone Management
+- [ ] Location Hierarchy Designer
+- [ ] Access Point Bindings
+- [ ] Zone Mapping (GIS)
+- [ ] Work Order Dispatching
+- [ ] Tenant & Occupant Registry
+- [ ] Utility Control Tracking
+- [ ] Spatial Asset Inventory
+
+## 10. Equipment, Assets, Vehicles & Resources
+- [ ] Asset Barcode Registry
+- [ ] Barcode Checkout Station
+- [ ] Calibration & Maintenance Alerts
+- [ ] Vehicle Logbooks
+- [ ] Fuel Card & Expense Log
+- [ ] Weapons Inventory
+- [ ] Ammunition Registry
+- [ ] Armory Compliance Gate
+- [ ] Depreciation & Asset Retirement Logs
+
+## 11. Subcontractor Management
+- [ ] Vendor Profiles
+- [ ] Insurance Compliance Audits
+- [ ] Roster Verifications
+- [ ] SLA Scorecard Generator
+- [ ] Subcontractor License Checks
+- [ ] Billing Verification Logs
+- [ ] Vendor Audit Checklists
+
+## 12. Performance & KPI Reporting
+- [ ] Custom Query & Report Builder
+- [ ] Visual Dashboard Configurator
+- [ ] Automated Emailed Reports
+- [ ] Response Time Analytics
+- [ ] Tour Completeness Logs
+- [ ] Incident Location Heatmaps
+- [ ] Officer Performance Logs
+- [ ] Tenant SLA Metrics
+
+## 13. Investigation Management
+- [ ] Case Files
+- [ ] Digital Evidence Locker
+- [ ] Physical Evidence Tracking
+- [ ] Interview Statement Logs
+- [ ] Audio/Video Transcription
+- [ ] Case Dispositions
+- [ ] Task Logs & Leads Tracker
+- [ ] Search & Seizure Registers
+
+## 14. Policy & Document Management
+- [ ] Post Orders Management
+- [ ] Digital Acknowledgment Logs
+- [ ] Emergency Call Lists
+- [ ] Standard Operating Procedures (SOP) Library
+- [ ] Document Revision Auditing
+- [ ] Shared Library Access
+- [ ] Policy Quiz Engine
+
+## 15. Contract & Client Management
+- [ ] SOW Staffing Rules
+- [ ] Billing Rates Matrices
+- [ ] Client Portal Dashboard
+- [ ] Invoicing Reconciliation Export
+- [ ] Service SLA Trackers
+- [ ] Client Feedback Log
+- [ ] Site Start/Stop Management
+- [ ] Rate Adjustment Calculators
+
+## 16. Lost & Found
+- [ ] Found Item Intake
+- [ ] Barcode Tag Generator
+- [ ] Storage Location Mapping
+- [ ] Owner Claim Processing
+- [ ] Return Signature Logs
+- [ ] Disposition Manager
+- [ ] Inbound Lost Inquiries
+
+## 17. Mass Notification & Crisis Communications
+- [ ] Multi-channel Broadcasts
+- [ ] Safety Status Polls
+- [ ] EOC Response Dashboard
+- [ ] Pre-configured Notification Templates
+- [ ] User Group Directory
+- [ ] Desktop Override Alerts
+- [ ] Alert Escalation Rules
+- [ ] Call Inbound Info Line
+
+## 18. Threat Intelligence & OSINT Ingestion
+- [ ] Public Safety Feed Ingestion
+- [ ] Geofenced Keyword Monitoring
+- [ ] Threat Assessment Radar
+- [ ] Proactive Alerts & Alarms
+- [ ] Social Media Listening
+- [ ] BOLO Alert Ingest
+- [ ] Threat Intelligence Archiving
+
+## 19. Physical Security Integration Gateway (IoT / VMS / Alarms)
+- [ ] Intrusion Alarm IP Listeners
+- [ ] VMS Camera Stream Ingestion
+- [ ] Access Control Panel Ingestion
+- [ ] Fire Panel Watchdogs
+- [ ] IoT Sensor Gateway
+- [ ] Automated Dispatch Generation
+- [ ] Device Status Heartbeats
+- [ ] Custom Integration Profiles
+
+## 20. K9 & Specialized Unit Operations
+- [ ] Canine Profiles
+- [ ] Scent Profile Registry
+- [ ] Training Logs
+- [ ] Deployment & Search Logs
+- [ ] Weapons Certifications Gates
+- [ ] Special Equipment Registers
+- [ ] Bite & Force Reports
+- [ ] Tactical Operations Logs
+
+## 21. Compliance, Self-Assessments & Audits
+- [ ] Compliance Standards Matrices
+- [ ] Self-Assessment Checklists
+- [ ] Auditor Evidence Vault
+- [ ] Audit Trail Immutability
+- [ ] Policy Access Auditing
+- [ ] Compliance Dashboard
+- [ ] Audit Report Packages
+- [ ] Vulnerability Registers
+
+## 22. Business Continuity & Disaster Recovery (BC/DR)
+- [ ] Business Impact Analysis (BIA)
+- [ ] Disaster Checklists
+- [ ] Alternative Supplier Registry
+- [ ] Vital Records Protection
+- [ ] Supply Chain Risk Logs
+- [ ] RTO/RPO Metrics Dashboards
+- [ ] Business Recovery Workflows
+- [ ] BC/DR Tabletop Simulators
+
+## 23. Executive Protection & Secure Transit
+- [ ] VIP Travel Profiles
+- [ ] Route Assessment Tool
+- [ ] Advance Team Reports
+- [ ] Secure In-Transit Tracking
+- [ ] Armored Car Registry
+- [ ] Arrival & Departure Logs
+- [ ] Executive Panic Button Integration
+
+## 24. Special Event & Incident Action Planning (IAP)
+- [ ] IAP Forms Builder
+- [ ] Perimeter GIS Designer
+- [ ] Event Staff Schedule Roster
+- [ ] Crowd Management Checklists
+- [ ] Temporary Access Permits
+- [ ] Local Agency Integration Log
+- [ ] Post-Event De-registration Checklist
+
+## 25. Supply Chain & Cargo Security
+- [ ] C-TPAT Compliance Logs
+- [ ] Container Seal Registries
+- [ ] High-Value Cargo Tracking
+- [ ] Warehouse Security Inspections
+- [ ] Delivery Driver Validations
+- [ ] Loss Prevention Audits
+- [ ] Staging Area Logs
+- [ ] Cargo Incident Reports
