@@ -9,7 +9,7 @@ Courtesy Patrol is a category of goodwill/service-oriented guard activity, disti
 
 **Category is tenant-configurable**, mirroring the pattern already established for DAR Entry and Patrol Finding — Patrol, Escort to Vehicle, Tire Change, Jump Start, and Welfare Check ship as defaults, tenant-editable.
 
-**Some categories need a few extra structured fields the others don't** (a Jump Start cares about battery type/vehicle; a Tire Change cares about which tire; a generic Patrol needs neither). Rather than giving each category its own full Activity-extension TPT level — disproportionate machinery for "a few optional extra fields on a narrative record" — this doc introduces a **bounded, tenant-declared schema + JSONB details field** pattern: a Category Definition can optionally declare a small set of extra fields (key, label, type, required), and a specific Courtesy Patrol record's `category_details` is validated against its category's declared schema at write time. **This is a deliberate, narrow exception to the platform's established "no EAV/generic blob" discipline**, and it's scoped carefully to stay one: it lives on one bounded, optional, leaf-level field (never the Entity/EntityAssociation identity core those docs protect), the schema is tenant-declared rather than truly free-form, and it holds supplementary detail that doesn't need independent indexing, dedup, or relational integrity the way a core entity's own fields do. Flagged in `_DECISIONS.md` as a first-instance pattern other future "many small categories, each with a few different optional fields" features (e.g., Safety Inspections, ICS Forms Engine) may want to reuse rather than reinvent.
+**Some categories need a few extra structured fields the others don't** (a Jump Start cares about battery type; a Tire Change cares about which tire; a generic Patrol needs neither). Rather than giving each category its own full Activity-extension TPT level — disproportionate machinery for "a few optional extra fields on a narrative record" — Courtesy Patrol uses Entity Registry Core's **`extended_fields`** mechanism: a bounded, schema-governed JSONB column living on the base `Entity` row (shared, per TPT, by every level including this one), reserved as an explicit escape hatch and never the default way to add fields. This pattern was drafted locally here first, then **promoted to Entity Registry Core** during elicitation so any future feature with the same "a few optional fields that don't earn a full TPT level" need can reuse one governed mechanism instead of reinventing it — see the retrofitted [entity-registry-core.md](../0.5-master-records/entity-registry-core.md). Courtesy Patrol's own contribution is the **schema selector**: its Category Definition declares which small field set applies (`extra_fields_schema[]`), scoped *per tenant-configurable category* — finer-grained than Entity Registry Core's own type-level default schema — while the actual storage and write-time validation is Entity Registry Core's, not reimplemented here.
 
 **Recipient vs. requestor are kept distinct.** The **requestor** is whoever asked for help — often unregistered/anonymous (someone flags down a guard, or calls in), captured as free text rather than forcing a full Person record for every one-off caller (unlike Person Registry's `EmergencyContactAssociation`, which deliberately requires a real minimal Person entity because it's a durable, dedup-worthy formal relationship — a one-off courtesy caller isn't). The **recipient** — who actually received the help — is tagged via Activity Registry's existing generic `ActivityParticipantAssociation` when they're identifiable, making them a real, searchable participant like on any other Activity; a **subject Item** (the vehicle needing a jump start or tire change) is tagged the same way when relevant. A basic external-request intake (requestor name/contact, intake method) is in scope now, even though full call-logging is deferred to Dispatch/CAD and Module 17's future Call Inbound Info Line.
 
@@ -36,7 +36,7 @@ Where a Courtesy Patrol is a checkpoint-free walk-through, it's also a **launch 
 ### Courtesy Patrol (Activity extension)
 1. **Courtesy Patrol** registers as an Activity extension (per Activity Registry): inherits base Activity identity, offline-safe numbering, standard dedup/merge (no debounce exception here — these are meaningfully distinct occurrences, unlike Checkpoint Scan), and display-label requirements.
 2. `category` references a tenant-configurable **Category Definition** (Settings & Preferences-registered), defaulting to a shipped set: Patrol, Escort to Vehicle, Tire Change, Jump Start, Welfare Check.
-3. A Category Definition may optionally declare an `extra_fields_schema[]` (field key, label, type, required) for categories that need structured detail beyond the base narrative (e.g., Jump Start: battery type; Tire Change: tire position). A specific Courtesy Patrol's `category_details` (JSONB) is validated against its category's declared schema at write time; categories with no schema leave it empty.
+3. A Category Definition may optionally declare an `extra_fields_schema[]` (field key, label, type, required) for categories that need structured detail beyond the base narrative (e.g., Jump Start: battery type; Tire Change: tire position). This schema is what a specific Courtesy Patrol's `extended_fields` (Entity Registry Core's shared, bounded JSONB column — see that doc) is validated against at write time; categories with no schema leave it unpopulated.
 4. `narrative` is free text, always available regardless of category.
 5. **Requestor** — `requestor_name`, `requestor_contact` (free text, capturing an unregistered/anonymous caller), and `intake_method` (phone, in_person, app, self_initiated). An optional `requestor_party_ref` links to a known/registered Party when the requestor is already recognized — never mandatory.
 6. **Recipient** (who was actually helped) and, where relevant, **subject Item** (the vehicle needing a jump start/tire change) are tagged via `ActivityParticipantAssociation` — the same generic mechanism every other Activity type uses, not a bespoke field.
@@ -58,7 +58,7 @@ Where a Courtesy Patrol is a checkpoint-free walk-through, it's also a **launch 
 
 **Courtesy Patrol** (Activity extension, TPT level: entity_id shared PK, FK → Activity.entity_id)
 - entity_id (PK, FK → Activity)
-- category (ref → Category Definition), category_details (JSONB, validated against category's schema)
+- category (ref → Category Definition) — selects which schema its inherited `extended_fields` (Entity Registry Core, on the shared base Entity row — not a field of this table) is validated against
 - narrative
 - requestor_name, requestor_contact (free text), requestor_party_ref (nullable), intake_method (phone, in_person, app, self_initiated)
 - outcome (ref → Outcome Definition, nullable until concluded), outcome_notes
@@ -74,7 +74,7 @@ Where a Courtesy Patrol is a checkpoint-free walk-through, it's also a **launch 
 ## Integrations
 
 - **Activity Registry**: Courtesy Patrol registers as its own Activity extension, using the standard (non-excepted) dedup/merge path.
-- **Entity Registry Core**: identity, dedup/merge, and display-label requirements, same as any other Activity type.
+- **Entity Registry Core**: identity, dedup/merge, and display-label requirements, same as any other Activity type. Also the **source of the `extended_fields` storage/validation mechanism itself** (retrofitted during this doc's elicitation, see that doc's Extended Fields section) — Courtesy Patrol supplies the per-category schema selector (`extra_fields_schema[]` on its own Category Definition), not the underlying storage.
 - **Settings & Preferences**: owns Category Definition (including any `extra_fields_schema`) and Outcome Definition, both tenant-configurable via the existing engine.
 - **Party Registry, Item/Vehicle Registry**: source of recipient and subject-vehicle references via `ActivityParticipantAssociation`.
 - **Location Registry**: source of the Courtesy Patrol's `ActivityLocationAssociation`.
@@ -98,8 +98,8 @@ Where a Courtesy Patrol is a checkpoint-free walk-through, it's also a **launch 
 
 ## Non-Functional / Constraints
 
-- `category_details` schema validation must reject fields not declared on the category's schema, and enforce declared `required` fields — but must never block saving the record entirely if a non-required field is missing (same graceful-degradation principle established for Guard Tour's verification methods).
-- Courtesy Patrol creation must work fully offline, per the platform's established offline model, including when `category_details`/schema data isn't yet synced locally (degrade to accepting the narrative and syncing validation later, never blocking the guard in the field).
+- `extended_fields` schema validation (Entity Registry Core's mechanism, per the category schema this doc selects) must reject fields not declared on the category's schema, and enforce declared `required` fields — but must never block saving the record entirely if a non-required field is missing (same graceful-degradation principle established for Guard Tour's verification methods).
+- Courtesy Patrol creation must work fully offline, per the platform's established offline model, including when category schema data isn't yet synced locally (degrade to accepting the narrative and syncing `extended_fields` validation later, never blocking the guard in the field).
 - WCAG 2.1 / Section 508 accessible logging, category-detail entry, and outcome-recording flows, day one.
 
 ## Acceptance Criteria
@@ -112,12 +112,12 @@ Where a Courtesy Patrol is a checkpoint-free walk-through, it's also a **launch 
 - [ ] A Tenant Admin can add a new Category Definition with its own extra-fields schema without a platform change.
 - [ ] Two independently-logged Courtesy Patrols for the same guard/location/day are NOT collapsed or debounced — both remain distinct records (contrast with Checkpoint Scan's debounce behavior).
 - [ ] A checkpoint-free "Patrol" category Courtesy Patrol can launch creation of a Patrol Finding with location pre-filled, identically to Guard Tour's Checkpoint Scan launch point.
-- [ ] A Courtesy Patrol logged offline, including one with `category_details`, syncs correctly once connectivity returns.
+- [ ] A Courtesy Patrol logged offline, including one populating `extended_fields`, syncs correctly once connectivity returns.
 
 ## Open Questions
 
 - Exact default `extra_fields_schema` for the shipped Jump Start / Tire Change categories — pending UX/content design.
-- Whether `category_details` field types need richer validation (e.g., enum/select options) beyond the basic key/label/type/required shape sketched here — a technical-spec-level decision.
+- Whether `extended_fields` field types need richer validation (e.g., enum/select options) beyond the basic key/label/type/required shape — a technical-spec-level decision, shared with Entity Registry Core's own open question on the same point.
 - Whether a requestor who turns out to be a known Party should be retroactively linkable (`requestor_party_ref` set after the fact) or must be identified at creation time — not addressed here.
 - Exact relationship between Courtesy Patrol's `outcome` taxonomy and any future Incident-escalation path (e.g., does "Unable to Assist" on a Welfare Check nudge toward creating an Incident) — left as an available launch-point action (#10), not a forced/automatic escalation.
 - Whether Courtesy Patrol volume ever justifies its own dedup-debounce exception (like Checkpoint Scan's) in high-traffic sites — current default assumes standard dedup is appropriate since occurrences are meaningfully distinct, not confirmed against real usage data.
