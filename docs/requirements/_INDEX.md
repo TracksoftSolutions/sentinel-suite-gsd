@@ -29,7 +29,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Location Registry
 - [x] Activity Registry *(added during elicitation — one of five base entity types, given full first-class treatment)*
 - [x] Document Registry *(added during elicitation — nc:DocumentType base, fifth base entity type, with hash/integrity + versioning)*
-- [ ] Entity Relationships & History
+- [x] Entity Relationships & History
 
 ## 1. Security Operations
 - [ ] Daily Activity Reports (DAR)
