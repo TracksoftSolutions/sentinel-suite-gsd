@@ -14,6 +14,16 @@ Four layers, from definition down to individual event, each building on Master R
 
 This gives a genuinely nested Activity structure, four levels deep — **Route** is the only non-Activity layer (a plan/build, per the user's own correction), and every level beneath it that represents something actually *happening* is its own Activity extension: **Route Assignment** (an Activity — one instance of a Route being assigned to a Guard and carried through to completion, "each time a route is assigned and completed," per the user's framing) → **Patrol** (one Tour Definition's run within that assignment, an Activity) → **Checkpoint Scan** (an event within a Patrol, itself an Activity) → optionally a **Patrol Finding** or other Activity spawned from a scan. Route Assignment is *not* a plain scope/plan record like DAR's Shift Window — it's a genuine occurrence with its own lifecycle (assigned → in progress → concluded), correcting an earlier draft of this doc that under-modeled it as a bare assignment row.
 
+**Two parallel hierarchies, one-to-one:** a **plan** hierarchy (the reusable definition, authored once, no lifecycle of its own beyond active/archived) and an **execution** hierarchy (a real-world occurrence every time the plan is carried out, each level an Activity extension). Every execution-hierarchy level maps to exactly one plan-hierarchy level above it:
+
+| Plan (definition, not an Activity) | Execution (Activity extension, one per real occurrence) |
+|---|---|
+| **Route** — the overall plan/build | **Route Assignment** — one instance of that Route being assigned to a Guard and carried through to completion |
+| **Tour Definition** — one place + required count + spacing within a Route | **Patrol** — one actual run against a Tour Definition |
+| **Checkpoint** — one scannable stop within a Tour Definition | **Checkpoint Scan** — one actual scan of a Checkpoint |
+
+"Route Assignment" keeps its name rather than adopting a Patrol/Scan-style word swap — it doesn't need to rhyme with the levels below it to read clearly, and it's already consistent with "assignment" language used elsewhere in the platform (e.g., Patrol Management's Post assignment).
+
 **Naming disambiguation:** this doc's **Patrol** (the Activity representing one tour run) is a different concept from Patrol Management's **Mobile Patrol Unit** or **Patrol Request** (assignment/post-layer concepts in that sibling doc) — same root word, deliberately, since both describe real-world patrolling, but they sit at different layers: Patrol Management's Post is *who's assigned and where*; this doc's Patrol is *one completed run of a tour*.
 
 Both sequence enforcement (must checkpoints be visited in order) and scan verification method (tag scan, GPS, or both) are **configurable per Tour Definition**, since a linear indoor sweep and a scattered set of exterior posts have genuinely different real-world needs — registered against Settings & Preferences where tenant-wide defaults make sense, with per-Tour-Definition override.
