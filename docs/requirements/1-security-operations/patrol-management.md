@@ -67,6 +67,7 @@ A Mobile Patrol Unit's location tracking is **configurable, with a graceful fall
 - requested_by, target_location_ref, priority
 - assigned_post_ref (nullable until assigned)
 - notes
+- courtesy_patrol_ref (nullable — FK → Courtesy Patrol, when this request's fulfillment detail was logged as one; retrofit, see [courtesy-patrol.md](courtesy-patrol.md))
 - requested_at, assigned_at (nullable), completed_at (nullable)
 
 ## States & Transitions
@@ -90,6 +91,7 @@ A Mobile Patrol Unit's location tracking is **configurable, with a graceful fall
 - **GIS & Mapping Services**: renders Post locations/coverage areas and each Mobile Patrol Unit's current `last_known_location`; continuous GPS breadcrumb trail rendering (when `tracking_mode = gps_continuous`) is a GIS-level concern consuming this doc's location updates, not implemented here.
 - **Command/Action Bus**: "Create Post," "Assign Post," "Update unit location (manual)," "Request patrol," "Assign patrol request" register as invokable actions across every surface.
 - **Dispatch/CAD (Module 2, future)**: Patrol Request is deliberately shaped to become a natural dispatchable target once that module exists — CAD would consume/extend this Activity type rather than this doc needing to anticipate full dispatch-queue mechanics now.
+- **Courtesy Patrol**: when a Patrol Request is fulfilled as a courtesy service (an escort, jump start, tire change, welfare check), the assigned unit's detailed record is a Courtesy Patrol, optionally referenced back via `courtesy_patrol_ref` — Patrol Request stays the generic dispatch wrapper; Courtesy Patrol owns the richer category-specific detail.
 - **Post Schedule Builder (Module 8, future)**: intended eventual replacement/reconciliation point for Post's interim assignment model, same deferred-integration posture as DAR's Shift Window.
 
 **Cross-doc retrofit note:** [guard-tour-checkpoint-verification.md](guard-tour-checkpoint-verification.md)'s **Route Assignment** data model gains an optional `post_ref` field (FK → this doc's Post) so a checkpoint-based route can declare which Post it's fulfilling. This is additive — Route Assignment's existing `person_ref`/time-range fields are unchanged, and a Route Assignment with no `post_ref` remains valid for a guard/route pairing with no Post concept in play.

@@ -36,7 +36,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Shift Passdowns & Handover Notes
 - [x] Guard Tour & Checkpoint Verification
 - [x] Patrol Management
-- [ ] Courtesy Patrol
+- [x] Courtesy Patrol
 - [ ] Tickets, Citations & Traffic Safety
 - [ ] Incident Reporting & Management
 - [ ] AI-Assisted Incident Report Writing
