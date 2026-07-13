@@ -22,7 +22,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] AI / LLM Services *(added during elicitation, generalized from a dependency first assumed in AI-Assisted Incident Report Writing / CLI-Style Input)*
 - [x] Real-Time Delivery & Server-Side Timers *(added during platform design review — owns the live console channel, server-side escalation timers, alarm state, and the platform's baseline real-time NFR targets)*
 - [x] Tenant Management *(added during Module 0 gap review — provisioning, edition/plan, lifecycle, isolation tier; introduces Client Engagements, the contractor↔client dual-tenancy mechanism.)*
-- [ ] Feature Management *(added during Module 0 gap review — per-tenant/edition entitlement flags, distinct axis from Settings & Preferences' value-chain; flagged as a gap in mvp.md.)*
+- [x] Feature Management *(added during Module 0 gap review — per-tenant/edition entitlement flags (boolean + quota kinds), distinct axis from Settings & Preferences' value-chain; flagged as a gap in mvp.md.)*
 - [ ] Blob/File Storage *(added during Module 0 gap review — adaptor-pattern file storage backend; Document Registry explicitly deferred this as out of scope.)*
 - [ ] Background Job Processing *(added during Module 0 gap review — durable job/scheduled-task infrastructure; already silently assumed by Entity Merge's background rewrite and Offline Sync.)*
 
