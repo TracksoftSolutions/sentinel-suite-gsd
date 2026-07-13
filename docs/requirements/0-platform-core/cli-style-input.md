@@ -91,7 +91,7 @@ Beyond the core syntax, this doc also specifies four capabilities intended to ma
 ### AI-assist mode
 12d. A dedicated, explicit trigger (e.g., a leading `?` character) switches a given input entry into **AI-assist mode**; without it, input is always parsed strictly as structured syntax/aliases, exactly as specified above — AI-assist mode never silently activates or reinterprets a normally-typed command.
 12e. In AI-assist mode, free-form natural language is translated into a proposed structured command (with resolved parameters, drawing on the same active-context and default-resolver model as normal commands) and displayed for the user to review, edit, and explicitly confirm — it is never auto-executed straight from the translation, regardless of the gate/step-up status of the underlying action.
-12f. AI-assist mode supports an optional voice-input affordance (microphone toggle) as an additional way to fill the natural-language entry, reusing the platform's voice transcription capability (also used by AI-Assisted Incident Report Writing). This is a minor, off-by-default convenience — not a primary field-work workflow, since hands-free scenarios in the field are typically already served by radio.
+12f. AI-assist mode supports an optional voice-input affordance (microphone toggle) as an additional way to fill the natural-language entry, reusing the `voice_transcription` AI context established by AI-Assisted Incident Report Writing and resolved through AI/LLM Services. This is a minor, off-by-default convenience — not a primary field-work workflow, since hands-free scenarios in the field are typically already served by radio.
 12g. Tenant Admins can disable AI-assist mode entirely for their tenant, consistent with the platform's general approach of letting each tenant configure capabilities to their own security/compliance posture.
 
 ### Proactive alias suggestion
@@ -110,6 +110,7 @@ Beyond the core syntax, this doc also specifies four capabilities intended to ma
 - extra_args_target (which command in the expansion chain receives flags typed beyond the alias's own placeholders — defaults to the last command)
 - created_by, created_at
 - is_platform_default (bool)
+- extended_fields (JSONB, nullable — registers Alias as a carrier for [Tenant-Defined Types & Custom Fields](tenant-defined-types-custom-fields.md); governance/validation owned by that feature, not here)
 
 **Command Execution** (session-local, feeds into the standard Action Invocation audit record from Command/Action Bus)
 - transcript_entry_id, session_id, chain_id (groups commands submitted together on one line), chain_position
@@ -157,7 +158,9 @@ Beyond the core syntax, this doc also specifies four capabilities intended to ma
 - **Notifications Engine**: toast delivery conventions for command results and the fast Undo affordance.
 - **Command Palette**: sibling surface, distinct trigger, no shared UI state — a user may use either or both.
 - **Settings & Preferences**: personal alias management, AI-assist mode preference, and (where enabled) voice input toggle surface alongside other user preference settings.
-- **AI-Assisted Incident Report Writing** (Security Operations): source of the shared voice transcription capability reused by AI-assist mode's optional voice input, rather than this feature building its own.
+- **AI-Assisted Incident Report Writing** (Security Operations): establishes the `voice_transcription` AI context reused by AI-assist mode's optional voice input, rather than this feature building its own.
+- **AI/LLM Services**: actual owner of the provider abstraction (SaaS-pooled or BYO API key), Prompt Templates, and Custom Instructions that both the `voice_transcription` and this feature's own `cli_assist_translation` AI contexts resolve against — AI-assist mode declares its context and placeholders, never talks to a provider or assembles a prompt directly.
+- **Tenant-Defined Types & Custom Fields**: Alias registers as one of the first two non-entity carriers proving that feature's mechanism generalizes beyond Entity Registry Core.
 
 ## Non-Goals
 
@@ -187,7 +190,7 @@ Beyond the core syntax, this doc also specifies four capabilities intended to ma
 - The fast Undo window must be short and clearly time-bound in the UI (visible countdown); the per-entity Undo history is longer-lived but still clearly scoped to "the last action on this specific entity," not an unbounded revert — both map to a real compensating-action invocation, never a client-side-only visual revert.
 - The confirmation gate (12a) must be enforced server-side per Command/Action Bus's non-functional requirement — the chip is a UI affordance for a check the server performs regardless.
 - AI-assist mode's translation step must never be able to bypass the confirmation gate or step-up requirement of the action it resolves to — translation only proposes; the same execution path (including gating) applies as if the user had typed the structured command directly.
-- Voice transcription (where used) must run through the same platform capability as AI-Assisted Incident Report Writing, not a separately built/maintained speech-to-text integration.
+- Voice transcription (where used) must run through the same `voice_transcription` AI context (AI/LLM Services) as AI-Assisted Incident Report Writing, not a separately built/maintained speech-to-text integration.
 - Must degrade gracefully offline (mobile): locally queued/offline-capable actions (per Offline Data Sync) remain invocable via CLI-style input using the same offline queuing mechanics as any other invocation surface; the transcript reflects pending-sync state clearly.
 - Active context slots must resolve entirely client-side against already-available data (the just-created/just-touched entity, or the ambient screen record) — never a server round-trip just to figure out what "the current incident" refers to, keeping chained commands fast.
 - Double-Enter detection needs a sensible, non-frustrating timing window (fast enough to be deliberate, not so fast it's unreliable for typical typing speed) — a specific threshold is a technical-spec/UX-testing decision, not fixed here.
@@ -240,7 +243,7 @@ Beyond the core syntax, this doc also specifies four capabilities intended to ma
 - Whether active context slots persist across a page navigation that isn't itself a context-seeding record view (e.g., navigating to a settings page) — leaning toward "persist until explicitly cleared or superseded, navigation alone doesn't clear it" but to be confirmed during technical spec.
 - Maximum practical chain length / whether extremely long `;`-chains need a distinct confirmation step before executing — to be decided during technical spec.
 - Whether context chips are visible/interactive on mobile's smaller viewport in the same form, or need a condensed mobile-specific treatment — to be resolved during UI/UX technical spec.
-- Which AI provider/model powers AI-assist translation, and whether it must be self-hostable for DOE/air-gapped tenants (consistent with the platform's general self-hosted-capability requirements) — deferred to technical spec, likely tied to the same decision made for AI-Assisted Incident Report Writing.
+- ~~Which AI provider/model powers AI-assist translation~~ — resolved structurally: [ai-llm-services.md](ai-llm-services.md) provides multi-provider abstraction (Anthropic, OpenAI, Gemini, Azure OpenAI) with SaaS-pooled or BYO-key modes. Whether a DOE/air-gapped tenant's needs are met by a BYO key pointed at a private/self-hosted-compatible endpoint, or require a genuinely self-hostable model outside this doc's four named providers, remains open — none of the four are self-hostable in the platform's usual sense.
 - Exact alias-suggestion repetition threshold (occurrence count / time window) before a suggestion surfaces — to be tuned during technical spec/UX testing.
 - Whether a promoted alias can later be un-promoted (reverted to team/personal scope) and what happens to users who'd adopted it in the meantime — to be decided during technical spec.
 - Exact confirmation-chip and step-up-pause visual treatment mid-chain (e.g., how remaining un-run commands are visually indicated as pending) — to be resolved during UI/UX technical spec.

@@ -18,6 +18,8 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Command Palette *(added during elicitation, invocation surface over Command/Action Bus)*
 - [x] CLI-Style Input *(added during elicitation, invocation surface over Command/Action Bus)*
 - [x] Settings & Preferences
+- [x] Tenant-Defined Types & Custom Fields *(added during elicitation, generalized from a pattern first drafted locally in Courtesy Patrol / Entity Registry Core)*
+- [x] AI / LLM Services *(added during elicitation, generalized from a dependency first assumed in AI-Assisted Incident Report Writing / CLI-Style Input)*
 
 ## 0.5 Master Records
 - [x] Entity Registry Core
@@ -32,14 +34,14 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Entity Relationships & History
 
 ## 1. Security Operations
-- [ ] Daily Activity Reports (DAR)
-- [ ] Shift Passdowns & Handover Notes
-- [ ] Guard Tour & Checkpoint Verification
-- [ ] Patrol Management
-- [ ] Courtesy Patrol
-- [ ] Tickets, Citations & Traffic Safety
-- [ ] Incident Reporting & Management
-- [ ] AI-Assisted Incident Report Writing
+- [x] Daily Activity Reports (DAR)
+- [x] Shift Passdowns & Handover Notes
+- [x] Guard Tour & Checkpoint Verification
+- [x] Patrol Management
+- [x] Courtesy Patrol
+- [x] Tickets, Citations & Traffic Safety
+- [x] Incident Reporting & Management
+- [x] AI-Assisted Incident Report Writing
 
 ## 2. Dispatch / CAD
 - [ ] Call Intake & Logging

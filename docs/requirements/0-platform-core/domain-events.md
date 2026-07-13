@@ -64,6 +64,7 @@ This feature owns the trigger/condition/rule-matching side of automation ("when/
 - status (draft, active, disabled)
 - version, version_history[] (version, changed_by, changed_at, diff)
 - created_by, created_at
+- extended_fields (JSONB, nullable — registers Rule as a carrier for [Tenant-Defined Types & Custom Fields](tenant-defined-types-custom-fields.md), e.g. a tenant-added "owner team" tag; governance/validation owned by that feature, not here)
 
 **Rule Firing Log**
 - firing_id, rule_id, triggering_event_id
@@ -91,6 +92,7 @@ This feature owns the trigger/condition/rule-matching side of automation ("when/
 - **Structured Logging & Audit Trails**: rule configuration changes and firing history are audit-tier; high-volume `not_matched` evaluations are retained in the Rule Firing Log (feature-local) rather than the platform audit store, to avoid audit-volume bloat from routine non-matches.
 - **Notifications Engine**: alerts Tenant/Platform Admins on cascade depth-exceeded or cycle-detected events, and on repeated action-invocation failures.
 - **Every other module**: each feature's own spec designates its automation-eligible events and documents their payload contract.
+- **Tenant-Defined Types & Custom Fields**: Rule registers as one of the first two non-entity carriers proving that feature's mechanism generalizes beyond Entity Registry Core; a Tenant Admin can add custom metadata fields to their own rules without a platform change.
 
 ## Permissions
 
