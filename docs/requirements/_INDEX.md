@@ -38,7 +38,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Guard Tour & Checkpoint Verification
 - [x] Patrol Management
 - [x] Courtesy Patrol
-- [ ] Tickets, Citations & Traffic Safety
+- [x] Tickets, Citations & Traffic Safety
 - [ ] Incident Reporting & Management
 - [ ] AI-Assisted Incident Report Writing
 
