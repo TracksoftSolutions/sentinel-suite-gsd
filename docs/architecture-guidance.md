@@ -39,6 +39,14 @@ This is the platform-specific constraint that outranks any general OO preference
 - Behavioral machinery — sync, notification delivery, report generation, dispatch flows, validation services — is **composed and injected**, not inherited. A Patrol does not "inherit" how it syncs; the sync engine consumes anything `IOfflineCapturable`.
 - Avoid template-method architectures (abstract base workflow + per-type overrides) for cross-module processes; prefer a service operating over capability interfaces. The registries' existing shape — features *register into* shared mechanisms (Settings, Command/Action Bus, Duration Watchdog, Carrier types) rather than subclassing them — is this principle already applied at the platform level. Code should follow the same grain.
 
+### 5. Provider adaptors — anything pointing at an external provider
+
+Any dependency on an external provider — AI/LLM inference, map/GIS services, notification delivery channels, SIEM export, even a logging sink — goes behind an **adaptor interface**, never called directly from feature code. Per explicit platform decision (see `_DECISIONS.md`): swapping or adding a provider must always be adaptor-implementation work, never a rework of the consuming feature.
+
+- GIS & Mapping Services established the pattern (tenant-selectable adaptors, air-gapped tenants restricted to self-hostable ones); AI/LLM Services follows it (four cloud adaptors at launch, self-hosted inference as a future adaptor). New provider-shaped dependencies follow it by default.
+- The tell that something is provider-shaped: a tenant might plausibly want a different one, a deployment model might forbid one (air-gapped), or the vendor might need replacing without a platform release.
+- Adaptor selection is tenant/deployment configuration (Settings & Preferences), and deployment-restricted adaptor lists (e.g., self-hostable-only for air-gapped) are enforced at configuration time, not discovered at call time.
+
 ## The earn-your-existence test
 
 A class, subtype table, or interface earns its existence when it adds at least one of: **fields, members, or genuinely distinct behavior.** Otherwise it's a name pretending to be a type — use an enum, a discriminator value, or registry metadata instead.

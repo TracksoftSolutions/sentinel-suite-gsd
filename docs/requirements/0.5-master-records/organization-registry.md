@@ -46,6 +46,7 @@ Organization inherits Party's identity, deduplication, merge, and BOLO-eligibili
 **Organization** (TPT level: entity_id is the shared PK, FK → Party.entity_id — structured per `nc:OrganizationType`)
 - entity_id (PK, FK → Party; `identifications[]` and `contact_information` are inherited from Party, not redefined here)
 - organization_name, description
+- status (active, inactive — the extension-level lifecycle declared under States & Transitions; previously described there with no field to hold it)
 
 *(Parent/subsidiary nesting is a `HierarchyAssociation` row — see Location Registry's Data Model for the shared subtype definition — not a field here.)*
 
