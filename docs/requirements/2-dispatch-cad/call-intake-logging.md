@@ -77,6 +77,7 @@ This doc scopes strictly to **intake and queue state** — receiving, triaging, 
 - default_priority (ref → Call Priority Definition, nullable)
 - self_service_eligible (bool — whether this type is offered on the occupant-facing portal/app)
 - default_requires_safety_checkin (bool, default false — retrofit, see [status-state-monitors.md](status-state-monitors.md); Dispatcher-overridable per specific Call/Dispatch)
+- default_silent_delivery, default_radio_bypass (bool, default false — retrofit, see [silent-mobile-dispatching.md](silent-mobile-dispatching.md); Dispatcher-overridable per specific Dispatch)
 
 **Call Priority Definition** (Settings & Preferences registration)
 - priority_id, tenant_id, name, enabled, sort_order (for threshold comparisons, e.g., "P1 or higher")
@@ -99,6 +100,7 @@ This doc scopes strictly to **intake and queue state** — receiving, triaging, 
 - **Structured Logging & Audit Trails**: Call creation, triage/priority changes, duplicate linking, and closure are all audit-tier events.
 - **Unit Dispatch & Proximity Routing (next doc)**: owns everything from `dispatched` onward — unit assignment, routing, the Dispatch Activity extension itself (which will set its own `source_call_ref` back to this doc's Call).
 - **Status & State Monitors**: reads `default_requires_safety_checkin` off Call Type Definition to decide whether a Dispatch fulfilling this Call automatically begins a recurring officer check-in cycle.
+- **Silent Mobile Dispatching**: reads `default_silent_delivery`/`default_radio_bypass` off Call Type Definition as part of its delivery-style/radio-posture resolution chain for a Dispatch fulfilling this Call.
 - **Physical Security Integration Gateway (Module 19, future)**: intended eventual source of `intake_method = automated_sensor` (Automated Dispatch Generation) and `intake_method = external_ingest` (911/PSAP, CAD-to-CAD) — both explicitly deferred, flagged here only as forward references, not built now.
 
 **Cross-doc retrofit note:** [patrol-management.md](../1-security-operations/patrol-management.md)'s **Patrol Request** data model gains an optional `source_call_ref` field (FK → this doc's Call) so a Patrol Request can originate from call intake. This is additive — Patrol Request's existing fields and lifecycle are unchanged, and a self-initiated or directly-Supervisor-tasked Patrol Request with no `source_call_ref` remains fully valid.

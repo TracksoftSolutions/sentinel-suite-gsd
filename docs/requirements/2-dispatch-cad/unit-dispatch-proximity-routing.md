@@ -67,6 +67,7 @@
 - corrected (bool), correction_history[] (prior value, changed_by, changed_at)
 - recorded_by (per-phase-log, self or on-behalf-of)
 - reassigned_to_ref (nullable — set on the original Dispatch when reassigned, pointing to the replacement Dispatch record)
+- silent_delivery (nullable bool), radio_bypass (nullable bool), acknowledged_at (nullable) — retrofit, see [silent-mobile-dispatching.md](silent-mobile-dispatching.md)
 
 ## States & Transitions
 
@@ -85,6 +86,7 @@
 - **Structured Logging & Audit Trails**: Dispatch creation, every phase log/correction, cancellation, and reassignment are audit-tier events.
 - **Command/Action Bus**: "Request proximity suggestions," "Assign officer to call," "Log dispatch phase," "Reassign dispatch," "Cancel dispatch" register as invokable actions across every surface.
 - **Status & State Monitors (Module 2)**: as anticipated, now owns the real Unit State record this doc's proximity suggestion filters on directly (`state = available`), superseding this doc's original open-Dispatch-or-not derivation; also owns the confirmation-gate override required to assign an `out_of_service` officer.
+- **Silent Mobile Dispatching (Module 2)**: owns Dispatch's `silent_delivery`/`radio_bypass`/`acknowledged_at` fields (retrofit above) and the notification delivery/acknowledgment mechanics built on top of this doc's own assignment and phase-tracking records.
 - **Active Incident Queue (CAD Console), Multi-Incident Console, Active Call Alerts & Timers (Module 2, future)**: downstream consumers of Dispatch's phase state for real-time queue/console rendering — not built here.
 
 ## Permissions
