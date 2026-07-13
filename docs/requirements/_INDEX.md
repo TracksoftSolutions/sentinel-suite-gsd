@@ -19,6 +19,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] CLI-Style Input *(added during elicitation, invocation surface over Command/Action Bus)*
 - [x] Settings & Preferences
 - [x] Tenant-Defined Types & Custom Fields *(added during elicitation, generalized from a pattern first drafted locally in Courtesy Patrol / Entity Registry Core)*
+- [x] AI / LLM Services *(added during elicitation, generalized from a dependency first assumed in AI-Assisted Incident Report Writing / CLI-Style Input)*
 
 ## 0.5 Master Records
 - [x] Entity Registry Core
