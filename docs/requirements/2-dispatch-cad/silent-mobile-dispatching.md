@@ -74,6 +74,7 @@ A given Dispatch can be silent on one axis and normal on the other (e.g., a busy
 - **Call Intake & Logging — retrofit**: Call Type Definition gains `default_silent_delivery` and `default_radio_bypass`.
 - **Notifications Engine**: owns the actual push/channel delivery mechanics, the Dispatch Assignment category, and the officer's personal Notification Policy preference this doc's delivery-style resolution falls through to — this doc registers the category and consumes the existing mechanism rather than building new delivery infrastructure.
 - **Offline Data Sync**: delivery in poor/no connectivity follows its existing queuing behavior unmodified.
+- **Real-Time Delivery & Server-Side Timers (retrofit)**: the unacknowledged-dispatch escalation timer runs in that doc's server-side Timer Service — the safety net fires reliably even if push delivery itself failed, exactly as this doc's constraint requires, without depending on the officer's device.
 - **Domain Events**: owns the actual unacknowledged-escalation behavior; this doc only publishes the triggering event.
 - **Settings & Preferences**: owns the acknowledgment grace period configuration.
 - **Command/Action Bus**: "Set delivery style," "Set radio posture," "Acknowledge dispatch" register as invokable actions across every surface.

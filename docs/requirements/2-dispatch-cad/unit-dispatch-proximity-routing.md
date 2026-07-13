@@ -144,7 +144,7 @@
 
 - Exact Call-level rollup/status behavior once all of a multi-unit call's Dispatch records reach `cleared` — flagged as a technical-spec-level concern in Functional Requirement #14, not fully specified here.
 - Whether/when driving-distance or ETA-aware routing becomes a real requirement, and which GIS provider adaptors would need to support it — deferred until a concrete need or adaptor capability is identified.
-- Exact real-time delivery mechanism for dispatch notifications to the assigned officer's device — owned by Notifications Engine, not solved here.
+- ~~Exact real-time delivery mechanism for dispatch notifications~~ — resolved: [real-time-delivery-timers.md](../0-platform-core/real-time-delivery-timers.md) owns console propagation (Live Update Channel, ≤2s), device-delivery targets (≤5s via Notifications Engine), and the server-side acknowledgment/escalation timer backstop.
 - Whether Dispatch needs its own tenant-configurable phase list (beyond the fixed dispatched/en_route/arrived/on_scene/cleared vocabulary) for sites with different response-lifecycle terminology — current default is a fixed platform list, mirroring Response Timeline Event's original phase-list decision; revisit if a real tenant need surfaces.
 - ~~Full unit-status model~~ — resolved: see [status-state-monitors.md](status-state-monitors.md), which now owns Unit State and this doc's availability check reads from directly.
 - Queue depth cap default under the `queued` stacking policy (tenant-configurable; a small default like 3 seems right so a queue never silently becomes a backlog) — pending real customer input.
