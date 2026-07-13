@@ -96,7 +96,7 @@ Sentinel Suite is a unified platform designed to serve both contract security co
 ### Accessibility
 
 - Desktop, tablet, and smartphone support
-- Offline capability: critical (underground facilities, dead zones, air-gapped)
+- Offline capability: minimal capture subset (append-only outbox), degraded performance accepted — not 1:1 offline parity; dispatcher radio-relay (on-behalf-of) is the primary disconnected workflow, and air-gapped facilities are served by self-hosted local deployment rather than client-side offline operation
 - Section 508 / WCAG 2.1 compliance from day one
 
 ### Multi-Tenancy
@@ -294,7 +294,7 @@ Sentinel Suite is a unified platform designed to serve both contract security co
 | Risk | Severity | Mitigation |
 | --- | --- | --- |
 | Scope creep | High | Strict module-by-module phasing, MVP discipline, clear per-module scope boundaries |
-| Offline sync complexity | High | Early investment in sync architecture, proven patterns (CRDTs or similar), extensive edge-case testing |
+| Offline sync complexity | Low (downgraded) | Scope narrowed to an idempotent append-only outbox — no offline editing of shared records, so no conflict-resolution engine; dispatcher on-behalf-of relay covers everything outside the capture subset |
 | DOE/FISMA compliance complexity | High | Build compliance into architecture from day one, not bolted on later |
 | Funding runway | Medium | Phased delivery to reach revenue-generating state quickly; commercial SaaS first |
 | Multi-tenancy architecture | Medium | Design tiered isolation model upfront; validate with DOE security requirements early |

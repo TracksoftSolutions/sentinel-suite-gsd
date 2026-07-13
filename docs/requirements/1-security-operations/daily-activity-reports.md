@@ -114,7 +114,7 @@ Supervisor review/sign-off is itself its own governance record (**Shift Review**
 - **Activity Registry**: DAR Entry registers as an Activity extension; report generation is a filtered read over Activity Registry's records, including extensions this doc doesn't own (Incidents, Citations, Dispatches, Alarms, etc., once specified).
 - **Entity Registry Core**: DAR Entry inherits identity, dedup/merge, and display-label requirements like any Activity extension.
 - **Document Registry**: DAR Report is a Document extension, inheriting hash/integrity/versioning.
-- **Offline Data Sync**: DAR Entry creation/editing during a shift follows the established offline CRDT pattern unmodified.
+- **Offline Data Sync**: DAR Entry creation during a shift follows the established offline append-only outbox pattern unmodified (Class 1 create — client UUID, locally editable until first sync).
 - **Settings & Preferences**: owns the tenant-configurable entry category taxonomy, location-required toggle, and report-generation mode — DAR registers against the existing engine rather than building its own override logic.
 - **Structured Logging & Audit Trails**: DAR Entry creation/edit, Shift Window open/close, every Shift Review decision, sign-off, and report generation are audit-tier events.
 - **Party Registry (Person)**: Guards and Supervisors referenced via `person_ref`/`reviewer_ref`/`supervisor_ref`.
@@ -140,7 +140,7 @@ Supervisor review/sign-off is itself its own governance record (**Shift Review**
 
 ## Non-Functional / Constraints
 
-- DAR Entry creation and editing must work fully offline, syncing per the established Offline Data Sync model, with no degraded behavior relative to any other Activity type.
+- DAR Entry creation (including local editing of a not-yet-synced entry) must work fully offline, syncing per the established Offline Data Sync append-only contract, with no degraded behavior relative to any other Activity type.
 - Locking a Guard's entries on Shift Window close must be atomic against any in-flight offline sync — an entry created offline just before clock-out must not slip past the lock silently.
 - Report generation (snapshot creation and hashing) must be efficient enough for a full-site, multi-day ad hoc pull without unreasonable latency — a technical-spec-level concern, likely served by the same CQRS read-model projection approach used for Entity Relationships & History's timeline.
 - A generated report's immutability must be enforced at the data layer, not just the UI — no code path may mutate `included_activity_refs[]` or the report's hash after generation.

@@ -25,7 +25,7 @@ Foundation services shared by all modules.
 
 - **Local-First Storage**: Secure local storage (SQLite/IndexedDB) on mobile and client terminals.
 - **State Sync Engine**: Store-and-forward queue to handle transactions performed while disconnected.
-- **Conflict Resolution**: Conflict-Free Replicated Data Types (CRDTs) to reconcile offline edits cleanly.
+- **Conflict Avoidance**: Offline writes are append-only (create new records / add timeline entries, never edit shared records), making sync conflicts impossible by construction — no conflict-resolution engine needed.
 
 ### Notifications Engine
 
