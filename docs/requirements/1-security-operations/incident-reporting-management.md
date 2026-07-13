@@ -79,6 +79,7 @@ A single **Supervisor Review** governs the whole Incident regardless of report s
 - entity_id (PK, FK → Activity)
 - origin_incident_ref (direct field, fixed at creation)
 - author_ref, narrative, update_timestamp
+- source (typed, voice, canned_phrase, ai_generated — retrofit, see [ai-assisted-incident-report-writing.md](ai-assisted-incident-report-writing.md)), source_draft_ref (nullable, set only when source = ai_generated)
 
 **Incident Report** (Document extension — Document Registry's base fields apply)
 - entity_id (PK, FK → Document)
