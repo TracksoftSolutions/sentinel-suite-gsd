@@ -57,6 +57,7 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 
 ### Deduplication, merge & reversal
 10. The registry runs algorithmic matching (on fields declared per Entity Type as match signals) to surface **potential duplicate** Entity pairs.
+10a. **Mergeability is an explicit per-type declaration, not an implicit consequence of match-signal configuration.** Every Entity Type/Extension Type registration declares `is_mergeable` (default `true`). A type registered `is_mergeable = false` is skipped by dedup matching, can never be a merge survivor or loser, and the machinery ignores it by contract rather than by accident — formalizing the allowance Guard Tour's Checkpoint Scan carve-out anticipated ("dedup is for identity, not events"). High-volume event-shaped Activities (Checkpoint Scan, Safety Check-in, future alarm-type extensions) register `false`; identity-bearing types (Person, Organization, Vehicle, Incident) register `true`.
 11. No match, regardless of confidence score, is ever auto-merged — every potential duplicate is flagged and routed to a Records Admin for explicit human review (confirm merge, reject as not-a-duplicate, or defer).
 12. A rejected potential-duplicate pairing is recorded so it doesn't repeatedly re-flag on subsequent matching passes.
 
@@ -76,6 +77,7 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 13g. **Association collisions created by redirection are auto-resolved and logged**, surfaced in the post-merge review summary rather than silently absorbed: (i) exact duplicates (same type, same two entities, same role, both active) collapse to one row, keeping the earliest `added_at`; (ii) **single-current-value kinds** (custody, ownership, primary location) that end up with two active rows for the same target keep the most recent as active and soft-remove the older — the standard active/removed history mechanism absorbing the collision as history; (iii) a row made **self-referential** by the redirect (e.g., the loser was recorded as the survivor's emergency contact) is soft-removed and flagged for human review, since it usually signals the pair was related, not duplicate — a useful late signal that the merge itself deserves a second look.
 
 14. The merged-away Entity remains a **tombstone** — inactive, retained (never deleted), its pre-merge field values readable in place (survivorship copies values to the survivor; it never strips the tombstone), pointing to the survivor via `merged_into_ref`.
+14a. **Merged Records view — displaced values stay accessible on the survivor, with no new storage.** A survivor's profile surfaces a "Merged records" panel rendered live from data the merge already retains: its tombstones (one indexed lookup on `merged_into_ref`, each showing the merged-away record's full retained values) plus the `survivorship_log[]` (which additionally covers the one case tombstones can't — the **survivor's own original value** when the admin picked the loser's during field-by-field survivorship). Deliberately **not** a denormalized `merged_fields` JSON column on the record: the values already exist in two authoritative places, a third copy would drift, and the platform's single governed JSONB escape hatch (`extended_fields`) stays the only blob on the root. If a future reporting need requires filtering on former values without joining merge history, a derived cache may be added then — explicitly as a rebuild-on-reversal projection of the survivorship log, never a second source of truth.
 
 **Reversal (unmerge):**
 15. A completed merge can be **reversed** by an authorized Records Admin. Reversal restores the tombstoned Entity to `active` **immediately** on initiation — the identity fix is urgent and never waits on the bookkeeping below — and reverts every pre-merge reference per `reference_redirect_log[]` (with `survivorship_log[]` restoring the survivor's original field values), the same instant-switchover-plus-background-mechanics shape as the merge itself, fully audit-logged alongside the original merge.
@@ -127,7 +129,8 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 - is_extension_of (nullable — parent type in the chain)
 - has_independent_lifecycle (bool, extension types only)
 - concrete_schema_ref (nullable — pointer to where this type's developer-built fields are defined; null for a Tenant-Defined Type, see [tenant-defined-types-custom-fields.md](../0-platform-core/tenant-defined-types-custom-fields.md))
-- match_signal_fields[] (which fields the dedup engine matches on — may reference `extended_fields` keys for a Tenant-Defined Type)
+- is_mergeable (bool, default true — false skips dedup matching entirely and blocks the type from ever being a merge survivor or loser, per #10a)
+- match_signal_fields[] (which fields the dedup engine matches on — may reference `extended_fields` keys for a Tenant-Defined Type; only meaningful when `is_mergeable`)
 - display_label_strategy (template: a field-composition string; or computed: a reference to that type's custom summary-generation logic) — required for every registration, no default
 - is_tenant_defined (bool), tenant_id (nullable — set only when `is_tenant_defined`, scoping the type to its defining tenant)
 
@@ -243,6 +246,8 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 - [ ] Post-redirect association collisions (exact duplicate, two-active single-current-value, self-reference) are auto-resolved per #13g, logged in `collision_log[]`, and surfaced in the post-merge review summary.
 - [ ] A reversal with post-merge references cannot reach `reversal_completed` until every worklist item is explicitly allocated, and each allocation is individually logged.
 - [ ] Attempting to reverse a merge whose survivor was later merged into a third Entity is blocked until the later merge is reversed first.
+- [ ] A type registered `is_mergeable = false` never appears in potential-duplicate pairs and cannot be selected as either side of a manual merge.
+- [ ] A survivor's Merged Records panel shows each merged-away record's retained values (via tombstone lookup) and any displaced survivor-original values (via survivorship log), with no dedicated storage column involved.
 - [ ] Entity records and matching for Tenant A are never visible to or matched against Tenant B's data.
 - [ ] Creating a BOLO Flag on a Vehicle and on a Person both go through the identical governance mechanism.
 - [ ] A BOLO Flag past its expiration date automatically shows as expired.

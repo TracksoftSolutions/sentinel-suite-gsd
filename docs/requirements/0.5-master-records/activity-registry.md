@@ -57,7 +57,7 @@ This doc establishes only the base Activity mechanics and this shared machinery.
 12. Confirming an Activity merge follows the same canonical-survivor + reference-redirect + tombstone + reversible model as Party/Item/Location, redirecting every EntityAssociation row (participant, attachment, location) referencing the merged-away Activity.
 
 ### Extension types & display summaries
-13. Future Activity extensions (Call, Incident, Citation, Accident, Alarm, Inspection, Dispatch, Drill) are each registered by their owning module when specified, inheriting base identity, offline-safe numbering, participant/attachment/location tracking, and dedup/merge for free.
+13. Future Activity extensions (Call, Incident, Citation, Accident, Alarm, Inspection, Dispatch, Drill) are each registered by their owning module when specified, inheriting base identity, offline-safe numbering, participant/attachment/location tracking, and dedup/merge for free. Each registration declares Entity Registry Core's `is_mergeable` explicitly: identity-bearing occurrences (Incident, Citation, Accident) register `true`; high-volume event-shaped extensions with no duplicate-identity concept (Checkpoint Scan, Safety Check-in, future high-frequency alarm types) register `false` and are skipped by dedup/merge by contract — dedup is for identity, not events.
 14. Each Activity extension provides its own summary-generation logic (e.g., an Incident's summary might read "Incident #4521: Theft, Building A, concluded") for Entity Relationships & History's timeline to consume uniformly, without that feature needing type-specific rendering logic per extension.
 
 ## Data Model / Fields
