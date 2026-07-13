@@ -47,7 +47,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Call Intake & Logging
 - [x] Unit Dispatch & Proximity Routing
 - [x] Active Incident Queue (CAD Console)
-- [ ] Status & State Monitors
+- [x] Status & State Monitors
 - [ ] Silent Mobile Dispatching
 - [ ] Multi-Incident Console
 - [ ] Active Call Alerts & Timers
