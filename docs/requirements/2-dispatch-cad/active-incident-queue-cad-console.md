@@ -5,15 +5,22 @@
 
 ## Overview
 
-This is the payoff Activity Registry was built for. The console is a real-time **CQRS read-model projection over Activity Registry itself** (per Event & Command Bus Architecture's Query/Event bus pillars, the same materialized-projection discipline Entity Relationships & History already established for historical views) — surfacing **every Activity currently `open` or `in_progress`, platform-wide**, not a bespoke Call/Dispatch/Incident-only list. A currently-running Guard Tour Patrol, an open DAR, a queued Call, an in-progress Incident all appear through the exact same mechanism, filterable/sortable/groupable down from there. Critically, this means any future module's Activity extension (Alarm, Inspection, Drill, whatever Safety Management or Physical Security Integration Gateway eventually register) **automatically appears in this queue with zero console-side changes** the moment it's registered against Activity Registry — mirroring how Entity Relationships & History's timeline already proved this for history; this doc is that same universal mechanism's live/current-state counterpart.
+This is the payoff Activity Registry was built for. The console is a real-time **CQRS read-model projection over Activity Registry itself** (per Event & Command Bus Architecture's Query/Event bus pillars, the same materialized-projection discipline Entity Relationships & History already established for historical views) — surfacing **every Activity currently `open` or `in_progress`, platform-wide**, not a bespoke Call/Dispatch/Incident-only list. Critically, this means any future module's Activity extension (Alarm, Inspection, Drill, whatever Safety Management or Physical Security Integration Gateway eventually register) **is queryable by this console with zero console-side code change** the moment it's registered against Activity Registry — mirroring how Entity Relationships & History's timeline already proved this for history; this doc is that same universal mechanism's live/current-state counterpart.
 
-**Default view is scoped, not everything at once.** The underlying query is universal, but a Dispatcher's default filter preset shows only Dispatch/CAD's own types (Call, Dispatch, Incident) plus Patrol Management's Activity types (Route Assignment, Patrol, Checkpoint Scan, Patrol Request, Patrol Finding, Courtesy Patrol) — the operationally relevant set for day-to-day dispatch work. A Dispatcher can broaden the filter to any registered Activity type at will; the default is a Settings & Preferences-registered preset, tenant-configurable, not a hard console limitation.
+**The board is made of cards, not a flat row-per-Activity list — and not every open Activity is its own card.** A dispatcher thinks in terms of "an officer is touring Building 12 right now" (one card, the Patrol), not "37 separate rows, one per checkpoint scanned so far." So each Activity Type Registration declares one of three **queue roles**, resolved locally by this doc rather than retrofitted onto Activity Registry Core or any producing module's own schema (the same "normalize at the consumer, not the producer" call already made for Queue Urgency Mapping):
+- **Card** — a standalone, top-level queue entry (a Call, an Incident, a Patrol).
+- **Feed** — rolls up as a live, timestamped status-update line *inside* its parent's card, using that type's own already-established direct parent-reference field (no new field required on the producer) — a Checkpoint Scan nests inside the Patrol it belongs to (`patrol_ref`) exactly the way it already nests operationally; a Dispatch nests inside the Call it's fulfilling (`source_call_ref`), each assigned officer showing as their own status line with live phase progress; an Incident Update nests inside its Incident (`origin_incident_ref`) — which is just this doc formally recognizing what Incident Update's timeline already was.
+- **None** — never appears on the board at all, even when broadened (e.g., Route Assignment, DAR) — too coarse-grained/long-lived (a Route Assignment spans a whole shift across many Patrols) or not operationally board-relevant.
+
+A **Feed** Activity whose parent-link field is null (a self-initiated record with nothing to nest under — Courtesy Patrol with no `source_patrol_request_ref`, for instance) is promoted to standalone **Card** display instead of disappearing — nothing a type registers as queue-eligible is ever silently dropped for lack of a parent. Nesting is exactly **one level deep** (a card's direct Feed children only); a Feed type's own children are not transitively pulled up through it — see Open Questions for the deeper-hierarchy case this doesn't yet solve.
+
+**Default view is scoped, not everything at once.** The underlying query is universal, but a Dispatcher's default filter preset shows only Card-role types from Dispatch/CAD and Patrol Management: Call, Incident, Patrol, Patrol Request, Patrol Finding, Courtesy Patrol (as a Card only when it has no Patrol Request parent) — Route Assignment stays `none`-role and never appears, even broadened. A Dispatcher can broaden the filter to any Card-role type registered platform-wide; the default is a Settings & Preferences-registered preset, tenant-configurable, not a hard console limitation.
 
 **Heterogeneous priority is normalized, not retrofitted.** Call has its own Priority Definition, Incident its own Severity Definition, and future types will have their own scales too — deliberately kept independent per feature, per existing decisions. Rather than retrofitting a new universal field onto every Activity extension (which would touch a dozen already-written docs for a benefit only this console needs), a tenant-configurable **Queue Urgency Mapping** normalizes `activity_type` + that type's own priority/severity value into a small shared urgency-tier vocabulary, purely at this doc's read-model layer — any type with no mapping entry simply sorts/groups as "Unclassified," ordered by time only, so an unmapped future Activity type degrades gracefully rather than breaking.
 
-**Distinct from Multi-Incident Console (later, this module).** This doc is the **list/queue view**: see everything in scope, scan, filter, group, drill into one record. Multi-Incident Console is a different interaction mode — a multi-pane workspace for actively working several open incidents side-by-side — built on top of this doc's same underlying read-model, not a competing list.
+**Distinct from Multi-Incident Console (later, this module).** This doc is the **list/queue view**: see everything in scope, scan, filter, group, drill into one card. Multi-Incident Console is a different interaction mode — a multi-pane workspace for actively working several open incidents side-by-side — built on top of this doc's same underlying read-model, not a competing list.
 
-Every row renders via its source Activity's own registered `display_label_strategy` (per Entity Registry Core's universal display-label requirement) — this console never implements per-type rendering logic. Drilling into a row navigates to that Activity's own detail view, owned by its extension's module; any action taken from there (assign a Dispatch, add an Incident Update) invokes that Activity's own already-registered Command/Action Bus actions — the console adds no new business-logic actions of its own.
+Every card and every feed line renders via its own source Activity's registered `display_label_strategy` (per Entity Registry Core's universal display-label requirement) — this console never implements per-type rendering logic. Drilling into a card navigates to that Activity's own detail view, owned by its extension's module; any action taken from there (assign a Dispatch, add an Incident Update) invokes that Activity's own already-registered Command/Action Bus actions — the console adds no new business-logic actions of its own.
 
 ## Actors & Roles
 
@@ -24,53 +31,76 @@ Every row renders via its source Activity's own registered `display_label_strate
 
 ## User Stories
 
-- As a **Dispatcher**, I want one screen showing every call, dispatch, and incident currently open at my site, sorted by urgency, so I never lose track of something in progress.
+- As a **Dispatcher**, I want one screen showing every call and incident currently open at my site, sorted by urgency, so I never lose track of something in progress.
+- As a **Dispatcher**, I want a Patrol card to show me each checkpoint as it's scanned, right there on the card, instead of 30 separate checkpoint-scan rows burying the actual calls and incidents I need to act on.
+- As a **Dispatcher**, I want a multi-officer Call's card to show each assigned officer's own phase (en route, arrived, cleared) as a status line, so I can see the whole response's progress at a glance without opening each Dispatch individually.
 - As a **Dispatcher**, I want to group the queue by activity type so I can scan just the open Incidents separately from queued Calls when I need to.
-- As a **Supervisor**, I want to broaden my view to include in-progress Patrols and DAR entries when I'm doing a shift-wide check, without that noise cluttering the Dispatcher's default screen.
+- As a **Supervisor**, I want to broaden my view to include in-progress Patrols when I'm doing a shift-wide check, without that noise cluttering the Dispatcher's default screen.
 - As a **Dispatcher**, I want the queue to update the instant a new call comes in or a unit clears, without me having to manually refresh.
 - As a **Tenant Admin**, I want to define how our site's call priorities and incident severities map to one shared urgency scale, since Dispatchers need one consistent "what's most urgent" ordering across different record types.
-- As an **EOC Analyst** during a broader response, I want to see every open Activity across every site in scope, not just one Dispatcher's local queue.
-- As a **future Safety Management developer**, I want an Inspection Activity extension I register later to just show up in this queue automatically, without needing to modify this console.
+- As an **EOC Analyst** during a broader response, I want to see every open Card-role Activity across every site in scope, not just one Dispatcher's local queue.
+- As a **future Safety Management developer**, I want to register an Inspection Activity extension as a Card (or as a Feed under something else) and have it behave correctly on this board without needing to modify this console.
 
 ## Functional Requirements
 
 ### Core query
 1. The queue's core data source is every Activity, of any registered type/extension, with `status ∈ {open, in_progress}`, scoped to the sites/tenant the viewing user has RBAC/ABAC access to — a direct, universal query over Activity Registry, not a per-module aggregation.
-2. An Activity leaving `open`/`in_progress` (reaching `concluded` or `cancelled`) drops out of the live queue automatically, following the source Activity's own lifecycle exactly — no separate queue-membership state to maintain.
+2. An Activity leaving `open`/`in_progress` (reaching `concluded` or `cancelled`) drops out of the live queue automatically, following the source Activity's own lifecycle exactly — no separate queue-membership state to maintain. This applies identically whether it was displayed as a Card or nested as a Feed line.
+
+### Queue Role Registration (Card / Feed / None)
+3. Every Activity type/extension that participates in this console at all is registered here (not on Activity Registry Core or any producing module's own doc) with a **queue role**: `card`, `feed`, or `none` (the default for anything unregistered — invisible to the board even when the type filter is broadened).
+4. A `feed`-role registration also declares its **parent link field** — the existing direct field on that type that already points to its parent (e.g., Checkpoint Scan's `patrol_ref`, Dispatch's `source_call_ref`, Incident Update's `origin_incident_ref`, Courtesy Patrol's `source_patrol_request_ref`) — no new field is added to any producing type to support this.
+5. A `feed`-role Activity whose parent link is set, and whose parent is itself a currently-displayed `card`, renders as a status-update line nested inside that card — never as its own top-level entry.
+6. A `feed`-role Activity whose parent link is **null** (no parent to nest under) is promoted to standalone `card` display for as long as it remains parentless — a type registered as `feed` never silently vanishes from the board for lack of a parent.
+7. Nesting is exactly one level: a card shows its own direct Feed children; a Feed child's own children (if any type were ever registered that deep) are not transitively pulled up through it. Deeper hierarchies are an open question, not solved here.
+8. At day one: `card` — Call, Incident, Patrol, Patrol Request, Patrol Finding, Courtesy Patrol (only when parentless, per #6). `feed` — Dispatch (parent: Call), Checkpoint Scan (parent: Patrol), Incident Update (parent: Incident), Courtesy Patrol (parent: Patrol Request, when set). `none` — Route Assignment, Daily Activity Report entries, and every other registered type by default until its owning module explicitly registers it otherwise.
 
 ### Default scope & filtering
-3. A **default filter preset** limits the queue, out of the box, to Dispatch/CAD's own Activity types (Call, Dispatch, Incident) plus Patrol Management's (Route Assignment, Patrol, Checkpoint Scan, Patrol Request, Patrol Finding, Courtesy Patrol) — a Settings & Preferences registration, tenant-configurable, not hardcoded.
-4. A viewer can filter by: activity type(s), status, site/location, assigned unit/person, urgency tier (see below), and an unassigned-only toggle. Filters compose (e.g., "open Incidents at Site B, unassigned").
-5. A viewer can broaden or narrow the type filter to any Activity type registered platform-wide, not limited to the default preset's set.
+9. A **default filter preset** limits the queue, out of the box, to the day-one `card`-role types above — a Settings & Preferences registration, tenant-configurable, not hardcoded.
+10. A viewer can filter by: activity type(s) (Card-role only — Feed types are never independently filterable as top-level rows, only visible nested within their card), status, site/location, assigned unit/person, urgency tier (see below), and an unassigned-only toggle. Filters compose (e.g., "open Incidents at Site B, unassigned").
+11. A viewer can broaden or narrow the type filter to any `card`-role type registered platform-wide, not limited to the default preset's set. `none`-role types remain invisible regardless of filter settings — broadening the filter does not reach them; a type must be registered `card` or `feed` (with a parentless fallback) to ever appear.
 
 ### Sorting & grouping
-6. Supported sort dimensions: time (received/started, oldest- or newest-first), urgency tier, status.
-7. Supported group dimensions: by activity type, by site/location, by urgency tier, by assigned unit — groups are collapsible.
+12. Supported sort dimensions (cards only — Feed lines within a card are always ordered chronologically, oldest first): time (received/started, oldest- or newest-first), urgency tier, status.
+13. Supported group dimensions: by activity type, by site/location, by urgency tier, by assigned unit — groups are collapsible.
 
 ### Queue Urgency Mapping (cross-type normalization)
-8. A tenant-configurable **Queue Urgency Mapping** maps `(activity_type, source_field, source_value)` — e.g., `(call, priority, P1-Emergency)` or `(incident, severity, Critical)` — to one of a small shared urgency tiers (e.g., Critical, High, Medium, Low). This lives entirely at this doc's read-model layer; it does not add a field to Call, Incident, or any other Activity extension's own table.
-9. An Activity type/value combination with no mapping entry defaults to an **Unclassified** tier, sorted/grouped together and ordered by time only within that tier — an unmapped future Activity type degrades gracefully rather than erroring or being hidden.
+14. A tenant-configurable **Queue Urgency Mapping** maps `(activity_type, source_field, source_value)` — e.g., `(call, priority, P1-Emergency)` or `(incident, severity, Critical)` — to one of a small shared urgency tiers (e.g., Critical, High, Medium, Low). This lives entirely at this doc's read-model layer; it does not add a field to Call, Incident, or any other Activity extension's own table. Only Card-role Activities carry an urgency tier — Feed lines inherit their parent card's tier implicitly rather than needing their own mapping.
+15. An Activity type/value combination with no mapping entry defaults to an **Unclassified** tier, sorted/grouped together and ordered by time only within that tier — an unmapped future Card-role type degrades gracefully rather than erroring or being hidden.
 
 ### Rendering & drill-in
-10. Each queue row shows: the source Activity's resolved `display_label`, activity type, status, urgency tier (if mapped), started/received time, and assigned unit (if applicable to that type) — a small, universal column set, no per-type rendering branches.
-11. Selecting a row navigates to that Activity's own detail view, owned by its extension's module (a Call's own screen, an Incident's own screen, etc.) — this console performs no business-logic actions itself.
+16. Each card shows: the source Activity's resolved `display_label`, activity type, status, urgency tier (if mapped), started/received time, assigned unit (if applicable to that type), and its live Feed line list (each Feed line showing its own resolved `display_label` and timestamp) — a small, universal card shape, no per-type rendering branches.
+17. Selecting a card navigates to that Activity's own detail view, owned by its extension's module (a Call's own screen, an Incident's own screen, etc.); selecting an individual Feed line navigates to that Feed Activity's own record instead (e.g., a specific officer's Dispatch, a specific Checkpoint Scan) — this console performs no business-logic actions itself either way.
 
 ### Saved views
-12. A Dispatcher can save a named filter/sort/group configuration as a personal view (Settings & Preferences identity chain). A Tenant/Site Admin can define and optionally **lock** a default view for a role or site (location chain) — narrowest-wins with locking, per Settings & Preferences' existing resolution engine, no new override logic invented here.
+18. A Dispatcher can save a named filter/sort/group configuration as a personal view (Settings & Preferences identity chain). A Tenant/Site Admin can define and optionally **lock** a default view for a role or site (location chain) — narrowest-wins with locking, per Settings & Preferences' existing resolution engine, no new override logic invented here.
 
 ### Real-time updates
-13. Initial queue load reads through the CQRS **Query bus** (RBAC/ABAC-filtered read-model, no side effects); subsequent changes (new Activity created, status/assignment changed) push incrementally via **Event bus** fan-out — the queue reflects change within a small, monitored propagation lag, not literally instantaneous, consistent with the same freshness posture Entity Relationships & History already established for its own projection.
+19. Initial queue load reads through the CQRS **Query bus** (RBAC/ABAC-filtered read-model, no side effects); subsequent changes (new Activity created, status/assignment changed, a Feed child added to an open card) push incrementally via **Event bus** fan-out — the queue reflects change within a small, monitored propagation lag, not literally instantaneous, consistent with the same freshness posture Entity Relationships & History already established for its own projection.
 
 ## Data Model / Fields
 
-**Active Activity Queue Entry** (read-model row — not a stored entity; the source Activity's own `entity_id` is the only identity)
+**Queue Role Registration** (local to this doc — not a retrofit of Activity Registry Core or any producing module)
+- registration_id, activity_type, queue_role (card, feed, none — default none)
+- parent_link_field (required when queue_role = feed — the name of that type's own existing direct parent-reference field)
+- registered_by (owning feature/module)
+
+**Active Activity Queue Card** (read-model row — not a stored entity; the source Activity's own `entity_id` is the only identity)
 - entity_id (source Activity's entity_id)
 - activity_type, status, started_at
 - display_label (resolved via Entity Registry Core's display_label_strategy)
 - location_ref (nullable, from the source Activity's ActivityLocationAssociation, if present)
-- assigned_unit_ref (nullable — resolved per type, e.g. a Dispatch's assigned_person_ref)
+- assigned_unit_ref (nullable — resolved per type, e.g. a Patrol's assigned officer)
 - urgency_tier (resolved via Queue Urgency Mapping; `unclassified` if no mapping entry matches)
 - sensitivity_tags[] (carried from the source record, ABAC-filtered at read time, same discipline as Entity Relationships & History's Timeline Entry)
+- feed_lines[] (ordered, chronological — see Status Update Feed Line, below)
+- promoted_from_feed (bool — true when this card exists only because a `feed`-role Activity's parent link was null, per Functional Requirement #6)
+
+**Status Update Feed Line** (read-model, nested within its parent card — not independently queryable as a top-level row)
+- entity_id (source Feed Activity's entity_id)
+- activity_type, display_label (resolved via Entity Registry Core's display_label_strategy)
+- timestamp (the Feed Activity's own relevant timestamp — e.g. a Checkpoint Scan's scan time, a Dispatch phase's phase_timestamp, an Incident Update's update_timestamp)
+- parent_card_entity_id (the Card this line is nested under)
 
 **Queue Urgency Mapping** (Settings & Preferences registration)
 - mapping_id, tenant_id, activity_type, source_field (e.g., priority, severity), source_value, urgency_tier
@@ -83,15 +113,17 @@ Every row renders via its source Activity's own registered `display_label_strate
 
 ## States & Transitions
 
-**Queue Entry membership:** mirrors the source Activity's own lifecycle exactly — appears at `open`, remains through `in_progress`, disappears at `concluded`/`cancelled`. No independent queue-entry state.
+**Card membership:** mirrors the source Activity's own lifecycle exactly — appears at `open`, remains through `in_progress`, disappears at `concluded`/`cancelled`. No independent card state.
+
+**Card ↔ promoted-from-Feed transition:** a `feed`-role Activity's card status is re-evaluated on every relevant change — if a previously-parentless Feed Activity's parent link is later set (or its parent enters an open/in_progress state after being closed), it demotes from a standalone promoted card into a nested Feed line under that parent's card; the reverse (parent closes or link is cleared) promotes it back. Never a data loss event, purely a display-placement change.
 
 **Read-model projection:** `current` (caught up) → `lagging` (behind a monitored threshold, surfaced to Records Admin) → `current` (catches up) — identical pattern to Entity Relationships & History's own projection.
 
 ## Integrations
 
-- **Activity Registry**: the universal source of every queue entry — any registered Activity type/extension automatically participates, no bespoke per-module integration required, exactly as Entity Relationships & History already established for the historical view.
-- **Entity Registry Core**: source of the display-label mechanism every row renders through.
-- **Call Intake & Logging, Unit Dispatch & Proximity Routing, Guard Tour & Checkpoint Verification, Patrol Management, Incident Reporting & Management, Daily Activity Reports, Tickets/Citations & Traffic Safety, Courtesy Patrol**: default-preset-included Activity type sources; every other current and future Activity-producing module is queryable by broadening the filter, with zero console-side change required when a new type is registered.
+- **Activity Registry**: the universal source of every queue entry — any registered Activity type/extension is queryable once given a Queue Role Registration, no bespoke per-module integration required beyond that registration, in the same spirit Entity Relationships & History already established for the historical view (though that feature's participation is fully automatic — this one requires the explicit `card`/`feed`/`none` opt-in described above, a deliberate difference given a live operational board's clutter/performance sensitivity versus a paginated per-entity history view).
+- **Entity Registry Core**: source of the display-label mechanism every card and Feed line renders through.
+- **Call Intake & Logging** (Call → card), **Unit Dispatch & Proximity Routing** (Dispatch → feed, parent Call), **Guard Tour & Checkpoint Verification** (Patrol → card; Checkpoint Scan → feed, parent Patrol; Route Assignment → none), **Patrol Management** (Patrol Request → card; Post → not an Activity, not applicable), **Incident Reporting & Management** (Incident → card; Incident Update → feed, parent Incident), **Courtesy Patrol** (→ card when parentless, feed under Patrol Request otherwise): day-one Queue Role Registrations. Every other current and future Activity-producing module remains `none` (invisible) until it explicitly registers a role here.
 - **Event & Command Bus Architecture**: owns the underlying CQRS Query bus (initial load) and Event bus (incremental push) infrastructure this projection is built on.
 - **Settings & Preferences**: owns the Queue Urgency Mapping, default filter presets, and personal/admin-locked Saved Views, via its existing location + identity chain resolution — no new override mechanism invented here.
 - **Command/Action Bus, Command Palette**: drill-in navigation and any action taken on a selected Activity reuse that Activity's own already-registered actions; this doc registers no new action types.
@@ -114,21 +146,25 @@ Holding queue-view access does not bypass per-entry ABAC/sensitivity filtering �
 ## Non-Functional / Constraints
 
 - Read-model propagation lag must stay within a defined, monitored bound, with staleness observable by a Records Admin — same requirement as Entity Relationships & History's own projection.
-- Must remain performant and responsive with many concurrent Dispatchers watching a live board and a high Activity-creation/update volume — this is a persistent operational screen, not an occasional lookup.
+- Must remain performant and responsive with many concurrent Dispatchers watching a live board and a high Activity-creation/update volume — this is a persistent operational screen, not an occasional lookup. The Card/Feed model is itself a mitigation here: a high-volume, event-shaped `feed`-role type (Checkpoint Scan) never inflates the top-level row count the board has to render/sort/group, since it's only ever fetched as a nested detail of its already-displayed parent card.
 - Unlike Interaction Timeline Viewer access (a deliberate per-entity lookup, itself audit-tier), simply having the console open and receiving live updates is not individually audit-logged per row — audit-tier logging remains owned by each underlying Activity's own actions (Call creation, Dispatch assignment, etc.), not duplicated here as a viewing log.
 - Urgency-tier indicators must not rely on color alone (WCAG 2.1 non-color-only status indicator requirement, consistent with GIS & Mapping Services' own accessibility posture).
 - WCAG 2.1 / Section 508 accessible list/grouping/filtering interactions, day one.
 
 ## Acceptance Criteria
 
-- [ ] The default queue view for a Dispatcher shows open/in-progress Calls, Dispatches, Incidents, and Patrol Management Activity types, and nothing else, out of the box.
-- [ ] Broadening the type filter to include an Activity type outside the default preset (e.g., DAR entries) correctly includes it without any console-side code change.
-- [ ] A newly registered Activity extension from a future module (simulated via a test type) automatically appears in the universal query when included in a filter, with zero console changes.
-- [ ] An Activity reaching `concluded` or `cancelled` disappears from the live queue automatically.
-- [ ] Grouping by activity type correctly buckets rows; grouping by urgency tier correctly buckets a mix of Call- and Incident-sourced rows using the tenant's Queue Urgency Mapping.
-- [ ] An Activity type/value with no Queue Urgency Mapping entry appears in an "Unclassified" tier, ordered by time, rather than erroring or being hidden.
-- [ ] A new Call appearing, or a Dispatch's phase changing, is reflected in an open queue view within the defined propagation-lag bound, with no manual refresh required.
-- [ ] Selecting a queue row navigates to that Activity's own detail view; no action is performed by the console itself.
+- [ ] The default queue view for a Dispatcher shows open/in-progress Calls, Incidents, Patrols, Patrol Requests, Patrol Findings, and parentless Courtesy Patrols as cards, and nothing else, out of the box.
+- [ ] A Patrol card shows each of its Checkpoint Scans as a chronological Feed line within the card, never as separate top-level queue rows.
+- [ ] A multi-officer Call card shows each assigned officer's Dispatch as its own Feed line, reflecting that officer's current phase, never as separate top-level queue rows.
+- [ ] An Incident card shows its Incident Updates as Feed lines within the card, consistent with how that timeline already behaved on the Incident's own detail view.
+- [ ] A Courtesy Patrol with `source_patrol_request_ref` set nests as a Feed line under its Patrol Request's card; a self-initiated Courtesy Patrol with no Patrol Request appears as its own standalone card instead.
+- [ ] Broadening the type filter to include a `card`-role Activity type outside the default preset correctly includes it without any console-side code change; attempting to broaden to a `none`-role type (e.g., Route Assignment) never surfaces it.
+- [ ] A newly registered `card`-role Activity extension from a future module (simulated via a test type) is queryable and displays correctly once its Queue Role Registration is added, with zero further console changes; a same test type left unregistered (`none` by default) never appears.
+- [ ] An Activity reaching `concluded` or `cancelled` disappears from the live queue automatically, whether it was displayed as a card or nested as a Feed line.
+- [ ] Grouping by activity type correctly buckets cards; grouping by urgency tier correctly buckets a mix of Call- and Incident-sourced cards using the tenant's Queue Urgency Mapping.
+- [ ] A Card-role Activity type/value with no Queue Urgency Mapping entry appears in an "Unclassified" tier, ordered by time, rather than erroring or being hidden.
+- [ ] A new Call appearing, or a nested Dispatch's phase changing, is reflected in an open queue view within the defined propagation-lag bound, with no manual refresh required.
+- [ ] Selecting a card navigates to that Activity's own detail view; selecting a Feed line navigates to that Feed Activity's own record instead. No action is performed by the console itself either way.
 - [ ] A Dispatcher can save a personal Queue View and have it be their default on next login; a Tenant Admin-locked default view cannot be overridden by a narrower personal preference.
 - [ ] A viewer without RBAC/ABAC access to a given site's Activities never sees that site's entries in their queue, regardless of filter settings.
 - [ ] A Records Admin can observe read-model projection lag/health for the queue.
@@ -136,7 +172,8 @@ Holding queue-view access does not bypass per-entry ABAC/sensitivity filtering �
 ## Open Questions
 
 - Exact urgency-tier vocabulary and count (e.g., 4 tiers vs. 5) and default out-of-box Queue Urgency Mapping — pending UX/content design.
-- Whether a just-cleared Activity should linger briefly in the queue (a "recently cleared" grace display) before disappearing, versus dropping instantly — not committed here; a UI-polish decision for technical spec.
+- Whether a just-cleared card (or a promoted-from-feed card) should linger briefly in the queue (a "recently cleared" grace display) before disappearing, versus dropping instantly — not committed here; a UI-polish decision for technical spec.
+- **Deeper-than-one-level hierarchies are not solved here.** Guard Tour's actual chain is Route Assignment → Patrol → Checkpoint Scan; this doc resolves it by making Route Assignment `none` (so the one-level rule never needs to reach three deep). If a future module needs a genuinely three-level card→feed→feed structure, this doc's registration model needs a real extension (transitive rollup, or an intermediate card), not assumed to just work.
 - Whether Dispatcher (single-site) vs. Supervisor/EOC (multi-site) default scope needs its own explicit Settings & Preferences-registered policy, or is fully derived from each role's existing RBAC/ABAC site access — current default assumes the latter (no separate scope-policy concept introduced), revisit if a real gap surfaces.
-- Whether future modules registering a new Activity extension should be expected/required to also register a Queue Urgency Mapping entry and default-preset inclusion, or whether that stays purely optional/tenant-driven — leaning optional (the universal query and Unclassified-tier fallback already guarantee correctness without it), not mandated here.
+- Whether future modules registering a new Activity extension should be expected/required to also register a Queue Role and a Queue Urgency Mapping entry, or whether `none`-by-default is an acceptable permanent state for most types — current default leans toward `none` being genuinely fine (most Activity types, like DAR entries, aren't board-relevant), with `card`/`feed` registration being a deliberate opt-in a module author considers, not a required step.
 - Precise UI hand-off mechanics between this queue and Multi-Incident Console — deferred to that doc.
