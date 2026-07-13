@@ -18,7 +18,7 @@ This still isn't the EAV/generic-blob anti-pattern: TPT's base tables (`Entity`,
 
 Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityType`/`nc:PersonType`/`nc:OrganizationType`/`nc:LocationType`/`nc:ItemType`/`nc:ActivityType`/`nc:DocumentType`) as an internal modeling discipline — not full NIEM XML/IEPD schema conformance at launch. This keeps a future NIEM-conformant exchange (CJIS-adjacent law enforcement BOLO sharing, DOE national lab system interoperability, CAD-to-CAD mutual aid dispatch, many of which use NIEM-based standards) a mapping exercise rather than a data model rewrite. "Entity Registry Core," "Entity," and "EntityAssociation" as platform-level TPT roots are not themselves NIEM concepts.
 
-**Retrofit: a single, bounded `extended_fields` JSONB column on both TPT roots (`Entity` and `EntityAssociation`).** This originated as a pattern drafted locally in Courtesy Patrol, was briefly generalized directly into this doc, and has since been **promoted to its own Platform Core feature, [Tenant-Defined Types & Custom Fields](../0-platform-core/tenant-defined-types-custom-fields.md)** — that feature owns Custom Field Definitions, the write-time validation service, per-tenant caps, and (further generalized there) fully tenant-defined new Extension/Association Types with no developer-built table at all, backed entirely by `extended_fields`. This doc's own role is narrower and purely physical: it carries the `extended_fields` column on its two TPT roots as the **default/primary carrier** that feature's registry validates against, since every other Entity/Extension/Association Type in the platform already inherits it for free by sharing the root's primary key. **This does not weaken the anti-EAV commitment above; it's a narrow, explicit escape hatch, not a second field-addition mechanism competing with it** — concrete columns on TPT subtype tables remain the default and expected way to add fields, full stop; see the owning feature doc for the complete governance model, tenant-defined-type mechanics, and the explicit performance/discoverability tradeoff `extended_fields` carries.
+**Retrofit: a single, bounded `extended_fields` JSONB column on both TPT roots (`Entity` and `EntityAssociation`).** This originated as a pattern drafted locally in Courtesy Patrol, was briefly generalized directly into this doc, and has since been **promoted to its own Platform Core feature, [Tenant-Defined Types & Custom Fields](../0-platform-core/tenant-defined-types-custom-fields.md)** — that feature owns Custom Field Definitions, the write-time validation service, per-tenant caps, and (further generalized there) **Tenant-Defined Subtypes** — tenant-named kinds of existing concrete types, always anchored on a developer-built type, designated via the Entity root's `tenant_subtype_ref` and carrying their custom fields in `extended_fields`; there is no free-floating tenant-defined type with no concrete anchor. This doc's own role is narrower and purely physical: it carries the `extended_fields` column on its two TPT roots as the **default/primary carrier** that feature's registry validates against, since every other Entity/Extension/Association Type in the platform already inherits it for free by sharing the root's primary key. **This does not weaken the anti-EAV commitment above; it's a narrow, explicit escape hatch, not a second field-addition mechanism competing with it** — concrete columns on TPT subtype tables remain the default and expected way to add fields, full stop; see the owning feature doc for the complete governance model, tenant-defined-type mechanics, and the explicit performance/discoverability tradeoff `extended_fields` carries.
 
 ## Actors & Roles
 
@@ -117,6 +117,7 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 - entity_id (PK, tenant-scoped, globally unique within tenant), tenant_id, entity_type
 - status (active, tombstoned)
 - merged_into_ref (nullable, FK → Entity — set when tombstoned by a merge; reads/writes resolve through it transitively)
+- tenant_subtype_ref (nullable, FK → Tenant-Defined Subtype — set when this record is a tenant-defined kind of its concrete type; concrete and filterable, `entity_type` remains the anchor's; see [tenant-defined-types-custom-fields.md](../0-platform-core/tenant-defined-types-custom-fields.md))
 - created_at, created_by
 - extended_fields (JSONB, nullable — physical storage only; schema/governance owned by [Tenant-Defined Types & Custom Fields](../0-platform-core/tenant-defined-types-custom-fields.md), not the default field-addition mechanism)
 
@@ -128,16 +129,14 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 - entity_type_id, owning_feature, name, base_type (party, item, location, activity, document)
 - is_extension_of (nullable — parent type in the chain)
 - has_independent_lifecycle (bool, extension types only)
-- concrete_schema_ref (nullable — pointer to where this type's developer-built fields are defined; null for a Tenant-Defined Type, see [tenant-defined-types-custom-fields.md](../0-platform-core/tenant-defined-types-custom-fields.md))
+- concrete_schema_ref (pointer to where this type's developer-built fields are defined — always present; every registration here is a developer-built type. Tenant-Defined Subtypes are not registrations in this catalog: they live in their own catalog in [tenant-defined-types-custom-fields.md](../0-platform-core/tenant-defined-types-custom-fields.md) and anchor to a registration here)
 - is_mergeable (bool, default true — false skips dedup matching entirely and blocks the type from ever being a merge survivor or loser, per #10a)
-- match_signal_fields[] (which fields the dedup engine matches on — may reference `extended_fields` keys for a Tenant-Defined Type; only meaningful when `is_mergeable`)
-- display_label_strategy (template: a field-composition string; or computed: a reference to that type's custom summary-generation logic) — required for every registration, no default
-- is_tenant_defined (bool), tenant_id (nullable — set only when `is_tenant_defined`, scoping the type to its defining tenant)
+- match_signal_fields[] (which fields the dedup engine matches on; only meaningful when `is_mergeable` — a Tenant-Defined Subtype may add `extended_fields`-keyed signals on top via its own catalog)
+- display_label_strategy (template: a field-composition string; or computed: a reference to that type's custom summary-generation logic) — required for every registration, no default; the subtype name token is available to both strategies for records carrying a `tenant_subtype_ref`
 
 **Association Type Registration** (registered by a feature, symmetric with Entity Type Registration — catalog/metadata only)
 - association_type_id, owning_feature, name
-- extra_fields_schema_ref (nullable — pointer to where this kind's own developer-built TPT-level fields are defined, if any; null for a Tenant-Defined Type)
-- is_tenant_defined (bool), tenant_id (nullable)
+- extra_fields_schema_ref (nullable — pointer to where this kind's own developer-built TPT-level fields are defined, if any; a tenant-defined association kind is not a registration here — it is a base EntityAssociation row with a tenant-defined `association_type` value, per its own catalog in [tenant-defined-types-custom-fields.md](../0-platform-core/tenant-defined-types-custom-fields.md))
 
 **Potential Duplicate**
 - pair_id, tenant_id, entity_id_a, entity_id_b
@@ -205,7 +204,7 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 - **Command Palette, CLI-Style Input**: render search results and context chips via each referenced entity's registered display label, with no per-surface type-switching logic.
 - **Structured Logging & Audit Trails**: entity creation, extension/level changes, association add/remove, merge, and merge-reversal are all audit-tier events.
 - **Every module that references a person, organization, vehicle, location, activity, or document**: consumes `entity_id` as the stable cross-reference key.
-- **Tenant-Defined Types & Custom Fields**: owns the Custom Field Definition registry, write-time validation, per-tenant caps, and Tenant-Defined Type mechanics layered on top of the `extended_fields` storage this doc provides — see that doc for the full governance model.
+- **Tenant-Defined Types & Custom Fields**: owns the Custom Field Definition registry, write-time validation, per-tenant caps, and the Tenant-Defined Subtype catalog layered on top of the `extended_fields` storage and `tenant_subtype_ref` column this doc provides — see that doc for the full governance model.
 - **Courtesy Patrol** (Security Operations): first consumer of `extended_fields` — its per-category detail fields (Jump Start battery type, Tire Change tire position) are stored here, with Courtesy Patrol's own Category Definition supplying the finer-grained (per-category, not per-TPT-level) schema selection to the owning feature above.
 
 ## Permissions
