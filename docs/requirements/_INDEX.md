@@ -39,7 +39,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Patrol Management
 - [x] Courtesy Patrol
 - [x] Tickets, Citations & Traffic Safety
-- [ ] Incident Reporting & Management
+- [x] Incident Reporting & Management
 - [ ] AI-Assisted Incident Report Writing
 
 ## 2. Dispatch / CAD
