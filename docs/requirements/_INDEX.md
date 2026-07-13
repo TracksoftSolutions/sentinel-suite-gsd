@@ -220,6 +220,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [ ] Fire Panel Watchdogs
 - [ ] IoT Sensor Gateway
 - [ ] Automated Dispatch Generation
+- [ ] Alarm Pattern & Nuisance Analysis *(added during platform design review — the metadata-capture rationale for the integrate-don't-replace boundary, made a first-class feature)*
 - [ ] Device Status Heartbeats
 - [ ] Custom Integration Profiles
 
