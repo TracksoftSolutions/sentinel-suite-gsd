@@ -40,9 +40,9 @@ All three build directly on records already established in this module — Dispa
 5. Assigning a new Dispatch to an officer currently `out_of_service` (a Dispatcher's deliberate override) requires passing the Command/Action Bus's existing confirmation gate before the assignment proceeds — reusing that established mechanism rather than inventing new override logic.
 6. Every Unit State transition is an audit-tier event (per Structured Logging & Audit Trails), consistent with how every other state-bearing mechanism in the platform is logged; Unit State itself is not a versioned history table (the current value is what's tracked in place, same as Post's location).
 
-### Time-on-Scene Watchdog
-7. A tenant-configurable **Watchdog Threshold** (a duration, settable per Call Type/Priority or as a flat platform default) applies to a Dispatch's time spent in `on_scene`, computed directly from that Dispatch's own `phase_timestamps` — no new field required on Dispatch.
-8. Exceeding the threshold publishes an automation-eligible domain event; a Tenant Admin configures the actual notification/escalation behavior via Domain Events, per the platform's standard trigger/effect split — this doc never hardcodes an alert path.
+### Time-on-Scene Watchdog (a Duration Watchdog instance)
+7. A tenant-configurable **Duration Watchdog** — generalized (retrofit, per Active Call Alerts & Timers) beyond a Dispatch-on-scene-only mechanism into a reusable `(activity_type, watched_field, watched_value)` → duration threshold, settable per Call Type/Priority or as a flat platform default — applies here as one registered instance: `(dispatch, phase, on_scene)`, computed directly from that Dispatch's own `phase_timestamps` — no new field required on Dispatch.
+8. Exceeding the threshold publishes an automation-eligible domain event; a Tenant Admin configures the actual notification/escalation behavior via Domain Events, per the platform's standard trigger/effect split — this doc never hardcodes an alert path. Each Duration Watchdog instance also declares a tenant-configurable **alarm_mode** (`one_shot` — a normal distinctive alert, or `persistent` — keeps re-notifying at a configured resend interval until the underlying condition resolves or is explicitly acknowledged); see [active-call-alerts-timers.md](active-call-alerts-timers.md) for the full mechanism, this doc's own Time-on-Scene use is a plain consumer of it.
 9. A Dispatch exceeding its threshold is visually flagged wherever it's already rendered (its Feed line on the Active Incident Queue's parent Call card) — a computed display attribute, not a stored one, and never relying on color alone (non-color-only status indicator, per the platform's established accessibility discipline).
 
 ### Officer Check-in Safety Timer
@@ -66,8 +66,11 @@ All three build directly on records already established in this module — Dispa
 **Completed State Policy** (Settings & Preferences registration)
 - policy_id, tenant_id, mode (manual, auto, timer), timer_duration (nullable, required when mode = timer)
 
-**Watchdog Threshold** (Settings & Preferences registration)
-- threshold_id, tenant_id, call_type (nullable — null = platform default), call_priority (nullable, further narrows), duration
+**Duration Watchdog** (Settings & Preferences registration — generalized, retrofit per Active Call Alerts & Timers; was "Watchdog Threshold," Dispatch-on-scene-only, in this doc's original draft)
+- threshold_id, tenant_id
+- activity_type, watched_field, watched_value (this doc's own instance: `dispatch`, `phase`, `on_scene`)
+- call_type (nullable — null = platform default), call_priority (nullable, further narrows), duration
+- alarm_mode (one_shot, persistent), resend_interval (nullable, required when alarm_mode = persistent)
 
 **Safety Check-in Policy** (Settings & Preferences registration)
 - policy_id, tenant_id, interval, trigger_phases[] (default: [on_scene]), grace_period, prompt_method (officer_device, dispatcher_contact, both)
@@ -99,8 +102,9 @@ All three build directly on records already established in this module — Dispa
 - **Command/Action Bus**: "Set unit out of service," "Return unit to available," "Trigger ad hoc check-in," "Confirm check-in" (self or on-behalf-of), "Escalate missed check-in" register as invokable actions across every surface; assigning an `out_of_service` officer reuses the existing confirmation-gate mechanism rather than a new one.
 - **Incident Reporting & Management**: the Escalate action on a missed Safety Check-in reuses the platform's established launch-point mechanism, setting a new Incident's `escalated_from_ref` to the missed Safety Check-in — no changes needed to that doc.
 - **GIS & Mapping Services**: a natural downstream consumer of Unit State for map-pin coloring by status — a forward reference only, not built here.
-- **Structured Logging & Audit Trails**: every Unit State transition, Watchdog Threshold breach, and Safety Check-in confirmation/miss is an audit-tier event.
-- **Settings & Preferences**: owns Watchdog Threshold and Safety Check-in Policy configuration.
+- **Structured Logging & Audit Trails**: every Unit State transition, Duration Watchdog breach, and Safety Check-in confirmation/miss is an audit-tier event.
+- **Settings & Preferences**: owns Duration Watchdog and Safety Check-in Policy configuration.
+- **Active Call Alerts & Timers (Module 2)**: registers two more Duration Watchdog instances (`call`/`status`/`queued`, `dispatch`/`phase`/`en_route`) against this doc's generalized mechanism, and owns the Critical Event Escalation Policy that can subscribe to any Duration Watchdog instance's (or a missed Safety Check-in's) domain event as a second-tier Supervisor escalation.
 
 ## Permissions
 
@@ -111,7 +115,7 @@ All three build directly on records already established in this module — Dispa
 | Force-assign an `out_of_service` officer (confirmation-gated) | ❌ | ✅ | ✅ | ❌ |
 | Confirm own Safety Check-in | ✅ | ❌ | ❌ | ❌ |
 | Trigger an ad hoc check-in on another officer | ❌ | ✅ | ✅ | ❌ |
-| Configure Watchdog Thresholds / Safety Check-in Policy | ❌ | ❌ | ❌ | ✅ |
+| Configure Duration Watchdog instances / Safety Check-in Policy | ❌ | ❌ | ❌ | ✅ |
 
 ## Non-Functional / Constraints
 
@@ -127,7 +131,7 @@ All three build directly on records already established in this module — Dispa
 - [ ] Under a `manual` Completed State Policy, an officer's Unit State remains `completed` until explicitly moved to `available` or `out_of_service`; under `auto`, it advances to `available` immediately on Dispatch clearing; under `timer`, it advances automatically after the configured buffer unless the officer/Supervisor intervenes first.
 - [ ] A Dispatcher can manually set an on-duty officer to `out_of_service` with an optional reason, and clear it back to `available`.
 - [ ] Assigning a Dispatch to an `out_of_service` officer requires passing the confirmation gate before the assignment completes.
-- [ ] A Dispatch left in `on_scene` past its configured Watchdog Threshold publishes a domain event a configured Domain Events rule can act on, and is visually flagged on its Active Incident Queue Feed line.
+- [ ] A Dispatch left in `on_scene` past its configured Duration Watchdog threshold publishes a domain event a configured Domain Events rule can act on, and is visually flagged on its Active Incident Queue Feed line.
 - [ ] A Call Type marked `default_requires_safety_checkin` automatically begins a recurring check-in cycle once its Dispatch reaches the configured trigger phase, with no manual opt-in.
 - [ ] An officer confirming a check-in prompt within the grace period marks it `confirmed`; letting the grace period lapse marks it `missed` and publishes a domain event.
 - [ ] With `prompt_method = dispatcher_contact`, the interval prompt reminds the Dispatcher rather than the officer's device, and the Dispatcher can log a confirmation on the officer's behalf (`confirmed_by` set to the Dispatcher).
@@ -139,7 +143,7 @@ All three build directly on records already established in this module — Dispa
 ## Open Questions
 
 - Exact precedence when an on-duty officer has more than one concurrently open Dispatch (a multi-tasking override case Unit Dispatch & Proximity Routing already allows) — current default is that Unit State reflects whichever Dispatch most recently changed phase; not deeply resolved here.
-- Exact default Watchdog Threshold durations and Safety Check-in intervals/grace periods — pending UX/content design and likely informed by real customer input.
+- Exact default Duration Watchdog thresholds and Safety Check-in intervals/grace periods — pending UX/content design and likely informed by real customer input.
 - Whether `out_of_service_reason` needs to be a full tenant-configurable Definition (like Call Type) or stays simple free text/short fixed list — leaning toward a short fixed list at launch, revisit if reporting needs (Module 12) require richer categorization.
 - Exact default Completed State Policy mode and timer duration, and default Safety Check-in prompt method, shipped out of the box — pending UX/content design.
 - Whether Time-on-Scene watchdog thresholds ever need to vary by site/location in addition to call type/priority — not addressed here, a Settings & Preferences location-chain extension if a real need surfaces.

@@ -50,7 +50,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Status & State Monitors
 - [x] Silent Mobile Dispatching
 - [x] Multi-Incident Console
-- [ ] Active Call Alerts & Timers
+- [x] Active Call Alerts & Timers
 - [ ] Historical CAD Log Reconstruction
 
 ## 3. Command Center / Dashboard / EOC
