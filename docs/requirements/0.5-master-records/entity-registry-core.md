@@ -59,9 +59,30 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 10. The registry runs algorithmic matching (on fields declared per Entity Type as match signals) to surface **potential duplicate** Entity pairs.
 11. No match, regardless of confidence score, is ever auto-merged — every potential duplicate is flagged and routed to a Records Admin for explicit human review (confirm merge, reject as not-a-duplicate, or defer).
 12. A rejected potential-duplicate pairing is recorded so it doesn't repeatedly re-flag on subsequent matching passes.
-13. Confirming a merge designates one Entity as the **canonical survivor**; every reference to the merged-away Entity across every module — including every `EntityAssociation` row where it appears as `entity_id_a` or `entity_id_b` — is redirected to the survivor.
-14. The merged-away Entity becomes a **tombstone** — inactive, retained (not deleted), pointing to the survivor.
-15. A completed merge can be **reversed** by an authorized Records Admin, restoring the tombstoned Entity to active status and reverting redirected references, with the reversal itself fully audit-logged alongside the original merge.
+
+**Reference enumerability — the precondition for honest redirection:**
+12a. Every feature that stores a **direct entity-reference field** (e.g., Dispatch's `assigned_person_ref`, Checkpoint Scan's `patrol_ref`) registers it in a **Reference Field Registration** catalog (module, record type, field name) at feature-build time — the same registration discipline used for Entity Types, Settings, and Command/Action Bus actions. `EntityAssociation` rows need no registration (they are structurally enumerable via `entity_id_a`/`entity_id_b`). This catalog is what makes "redirect every reference" a mechanically enumerable operation rather than an aspiration, and is the source the Merge Record's `reference_redirect_log[]` is built from. An unregistered reference field is a build-time discipline violation, not a runtime surprise.
+
+**Merge — confirmation & survivorship:**
+13. Confirming a merge designates one Entity as the **canonical survivor**. Merge is an online-only Records Admin operation (consistent with the offline contract — it mutates shared records) and requires the survivor to be `active`: a tombstone can never be a merge target, and merging into a record that is itself mid-reversal is blocked.
+13a. **Field survivorship is field-by-field pick with survivor default.** The confirmation flow presents only the fields where the two records genuinely conflict (at every shared TPT level — e.g., Party contact fields, Person physical-description fields — plus colliding `extended_fields` keys), with the survivor's value pre-selected for each; the Records Admin can flip any individual field to the loser's value before confirming. Non-conflicting fields carry no decision. Every choice is recorded in the Merge Record's `survivorship_log[]` (field, survivor value, loser value, chosen value) — which is also exactly what makes reversal's field restoration possible.
+13b. **Extension-level survivorship follows the same rule.** Where both records carry the same Extension Type (e.g., both have an Employee level), the extension rows' conflicting fields join the same field-by-field pick and resolve into the survivor's extension row; an extension the loser has and the survivor lacks carries over to the survivor wholesale. The loser's own extension rows tombstone with it.
+13c. **BOLO Flags always carry over — both sides', unmodified.** Active flags on either record attach to the survivor as independent governed records, each keeping its own justification, expiration, and step-up-verified creation; nothing is auto-cleared or auto-picked. If the merge results in more than one active flag on the survivor, a post-merge review notification (Notifications Engine) prompts a Supervisor to review and, if redundant, clear one — clearance passing the standard step-up gate as always. Flag governance is never delegated to the merge flow or the merging admin.
+
+**Merge — execution (instant switchover + background rewrite):**
+13d. Confirming executes an **atomic switchover** in a single transaction: the loser's Entity row becomes a tombstone with `merged_into_ref` set to the survivor, and the chosen survivorship values are written. From that instant, the merge is behaviorally complete — nothing observable depends on the rewrite that follows.
+13e. **Reads resolve redirects.** Any lookup landing on a tombstoned `entity_id` follows `merged_into_ref` (transitively, since survivors can later be merged themselves) to the terminal active Entity. Any **write** arriving with a tombstoned reference is resolved to the survivor at write time, so new stale references never accumulate during (or after) the rewrite window.
+13f. A **background rewrite** then physically re-points stored references — every registered Reference Field (12a) and every `EntityAssociation` row on either side — to the survivor, recording each in `reference_redirect_log[]`. The rewrite is idempotent and resumable: interrupted mid-run, it continues where it left off, and because reads resolve redirects regardless (13e), a partially-rewritten state is never user-visible. On completion the Merge Record transitions `switched` → `completed`.
+13g. **Association collisions created by redirection are auto-resolved and logged**, surfaced in the post-merge review summary rather than silently absorbed: (i) exact duplicates (same type, same two entities, same role, both active) collapse to one row, keeping the earliest `added_at`; (ii) **single-current-value kinds** (custody, ownership, primary location) that end up with two active rows for the same target keep the most recent as active and soft-remove the older — the standard active/removed history mechanism absorbing the collision as history; (iii) a row made **self-referential** by the redirect (e.g., the loser was recorded as the survivor's emergency contact) is soft-removed and flagged for human review, since it usually signals the pair was related, not duplicate — a useful late signal that the merge itself deserves a second look.
+
+14. The merged-away Entity remains a **tombstone** — inactive, retained (never deleted), its pre-merge field values readable in place (survivorship copies values to the survivor; it never strips the tombstone), pointing to the survivor via `merged_into_ref`.
+
+**Reversal (unmerge):**
+15. A completed merge can be **reversed** by an authorized Records Admin. Reversal restores the tombstoned Entity to `active` **immediately** on initiation — the identity fix is urgent and never waits on the bookkeeping below — and reverts every pre-merge reference per `reference_redirect_log[]` (with `survivorship_log[]` restoring the survivor's original field values), the same instant-switchover-plus-background-mechanics shape as the merge itself, fully audit-logged alongside the original merge.
+15a. **Post-merge references are allocated by the admin, never defaulted.** References created during the merged period (identifiable as: pointing at the survivor, absent from `reference_redirect_log[]`, created after `merged_at`) go onto a **reversal allocation worklist**; the Records Admin assigns each to the survivor or the restored Entity, and the reversal record reaches `reversal_completed` only when the worklist is empty. Misattribution is precisely the harm reversal exists to fix — no automatic default is permitted, and every allocation is individually logged (`reversal_allocation_log[]`).
+15b. While allocation is open (`reversing`), both Entities are active and fully operable; unallocated post-merge references continue resolving to the survivor (their current physical value) until explicitly allocated — an honest interim state, visibly flagged on both records, rather than a blocking lock or a hidden default.
+15c. BOLO Flags follow the same split: flags that existed pre-merge revert with their original Entity per the redirect log; flags created during the merged period are worklist items like any other post-merge reference.
+15d. **Reversals unwind in order**: if the survivor was later merged into a third Entity, the later merge must be reversed first (last-in, first-out) — reversal always operates against a currently-active survivor, never through an intermediate tombstone.
 
 ### BOLO Flag (generic, cross-entity-type, unary)
 16. Any Entity — regardless of base type or extension depth — can carry a **BOLO Flag**: a single generic, governed mechanism rather than each type reimplementing its own. This is deliberately *not* modeled as an EntityAssociation, since it's an annotation on one Entity, not a relationship between two.
@@ -93,6 +114,7 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 **Entity** (TPT root)
 - entity_id (PK, tenant-scoped, globally unique within tenant), tenant_id, entity_type
 - status (active, tombstoned)
+- merged_into_ref (nullable, FK → Entity — set when tombstoned by a merge; reads/writes resolve through it transitively)
 - created_at, created_by
 - extended_fields (JSONB, nullable — physical storage only; schema/governance owned by [Tenant-Defined Types & Custom Fields](../0-platform-core/tenant-defined-types-custom-fields.md), not the default field-addition mechanism)
 
@@ -120,11 +142,18 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 - status (pending_review, confirmed_merge, rejected_not_duplicate)
 - reviewed_by (nullable), reviewed_at (nullable)
 
+**Reference Field Registration** (build-time catalog — what makes redirection enumerable, #12a)
+- registration_id, owning_feature, record_type, field_name
+
 **Merge Record**
 - merge_id, tenant_id, survivor_entity_id, tombstoned_entity_id
-- reference_redirect_log[] (module, reference_type, reference_id)
+- status (switched — atomic switchover done, background rewrite running; completed — all references physically rewritten; reversing — reversal initiated, allocation worklist open; reversal_completed)
+- survivorship_log[] (tpt_level, field, survivor_value, loser_value, chosen_value)
+- collision_log[] (association_id, collision_kind: duplicate_collapsed | single_current_value_superseded | self_reference_removed, resolution)
+- reference_redirect_log[] (module, reference_type, reference_id — built from Reference Field Registration + EntityAssociation enumeration as the background rewrite progresses)
 - merged_by, merged_at
-- reversed (bool), reversed_by (nullable), reversed_at (nullable)
+- reversed_by (nullable), reversal_initiated_at (nullable), reversal_completed_at (nullable)
+- reversal_allocation_log[] (reference_type, reference_id, allocated_to: survivor | restored, allocated_by, allocated_at)
 
 **Cross-Tenant Identity Bridge** (owned by Authentication & Authorization, referenced here)
 - bridge_id, account_id, linked_entity_refs[] (tenant_id, entity_id)
@@ -149,7 +178,9 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 
 ## States & Transitions
 
-**Entity:** `active` → `tombstoned` (merged away, points to survivor) → `active` (merge reversed).
+**Entity:** `active` → `tombstoned` (merged away, `merged_into_ref` set, atomic with the merge switchover) → `active` (restored immediately on reversal initiation, not on reversal completion).
+
+**Merge Record:** `switched` (atomic switchover committed; reads resolve via redirect; background rewrite running) → `completed` (every reference physically rewritten and logged) → `reversing` (reversal initiated: restored Entity active, pre-merge references reverted, post-merge allocation worklist open) → `reversal_completed` (worklist empty — every post-merge reference explicitly allocated). Reversal is only initiable from `completed`; chained merges reverse last-in-first-out (#15d).
 
 **Extension levels:** independent per level's own lifecycle where declared (e.g., an Employee level: `active` → `inactive`/`terminated`) — not tied to an ancestor level's own active/tombstoned status except that tombstoning the root Entity renders every level beneath it inactive for practical purposes (data survives, redirected to the survivor's chain where applicable).
 
@@ -188,7 +219,8 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 ## Non-Functional / Constraints
 
 - Deduplication matching must run without ever exposing data across the tenant isolation boundary.
-- Merge/reversal must be transactionally safe against reference redirection — a partially-completed merge (some references redirected, others not) must not be possible.
+- Merge/reversal safety is achieved by construction, not by one giant transaction: the **atomic unit is the switchover** (tombstone + `merged_into_ref` + survivorship writes, one transaction), after which reads/writes resolving through the redirect make a partially-rewritten state **behaviorally invisible** — the background rewrite is idempotent and resumable, and its progress is observable in the Merge Record, never in user-facing behavior. "Partially completed merge" in the user-visible sense must not be possible; physical rewrite completing over minutes is expected and fine.
+- Redirect resolution (13e) must be cheap on the hot path — a redirect chain is followed only when a reference is actually stale, chains are shortened as the background rewrite path-compresses them, and post-`completed` merges add zero read overhead.
 - NIEM Core alignment is a modeling-time discipline verified during technical spec review, not a runtime validation requirement at launch.
 - `entity_id` must be stable for the lifetime of the record, including through a merge (the survivor's ID never changes).
 - BOLO Flag creation/clearance auditability and step-up enforcement must be airtight regardless of entity type.
@@ -203,7 +235,14 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 - [ ] A single Person Entity can carry an active Employee level and an active BOLO Flag simultaneously.
 - [ ] Two Person records with matching name and phone are flagged as a potential duplicate and never auto-merge.
 - [ ] Confirming a merge redirects every reference, including every EntityAssociation row on either side, to the survivor; the merged-away Entity becomes a tombstone.
-- [ ] Reversing a completed merge restores the tombstoned Entity and reverts redirected references, fully audit-visible.
+- [ ] Reversing a completed merge restores the tombstoned Entity to active immediately on initiation and reverts pre-merge references per the redirect log, with the survivor's original field values restored per the survivorship log, fully audit-visible.
+- [ ] The merge confirmation flow presents only genuinely conflicting fields, survivor's value pre-selected, and records every choice in `survivorship_log[]`; a merge with zero field conflicts presents zero field decisions.
+- [ ] Merging two records that both carry active BOLO Flags results in both flags active on the survivor, unmodified, plus a post-merge review notification — at no point does the merge flow clear or pick between flags.
+- [ ] After switchover but before background rewrite completes, a query against the tombstoned entity_id resolves to the survivor with no user-visible inconsistency; killing and resuming the rewrite mid-run produces the same final state.
+- [ ] A write arriving with a tombstoned reference is stored pointing at the survivor, not the tombstone.
+- [ ] Post-redirect association collisions (exact duplicate, two-active single-current-value, self-reference) are auto-resolved per #13g, logged in `collision_log[]`, and surfaced in the post-merge review summary.
+- [ ] A reversal with post-merge references cannot reach `reversal_completed` until every worklist item is explicitly allocated, and each allocation is individually logged.
+- [ ] Attempting to reverse a merge whose survivor was later merged into a third Entity is blocked until the later merge is reversed first.
 - [ ] Entity records and matching for Tenant A are never visible to or matched against Tenant B's data.
 - [ ] Creating a BOLO Flag on a Vehicle and on a Person both go through the identical governance mechanism.
 - [ ] A BOLO Flag past its expiration date automatically shows as expired.
