@@ -49,7 +49,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Active Incident Queue (CAD Console)
 - [x] Status & State Monitors
 - [x] Silent Mobile Dispatching
-- [ ] Multi-Incident Console
+- [x] Multi-Incident Console
 - [ ] Active Call Alerts & Timers
 - [ ] Historical CAD Log Reconstruction
 
