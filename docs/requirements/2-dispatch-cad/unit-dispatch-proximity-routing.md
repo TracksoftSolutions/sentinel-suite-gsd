@@ -51,8 +51,17 @@
 10. A Dispatch record tracks its assigned officer's own response phases: `dispatched` (set automatically at assignment) → `en_route` → `arrived` → `on_scene` → `cleared`, each with its own `phase_timestamp`.
 11. Phases are logged **self- or on-behalf-of**, the identical posture already established for Mobile Patrol Unit location and Response Timeline Events: the assigned officer taps their own phase, or a Supervisor/Dispatcher logs it on their behalf (e.g., relayed by radio).
 12. A logged phase timestamp is correctable after the fact, with a retained correction history (audit-logged), same as Response Timeline Event's existing correction mechanic.
-13. A Dispatch may be **cancelled** or **reassigned** before reaching `cleared` (e.g., the officer gets pulled to a higher-priority call) — cancelling frees the officer for availability purposes immediately; a reassignment creates a new Dispatch record for the new officer while the original is marked `cancelled`, preserving its partial phase history rather than overwriting it.
-14. A Call's own status only reaches its terminal dispatch-related state once every non-cancelled Dispatch under it reaches `cleared` — the exact rollup/notification mechanics are a technical-spec-level concern, but at minimum a Dispatcher must be able to see at a glance which of a multi-unit call's Dispatch records are still open.
+13. A Dispatch may be **cancelled** or **reassigned** before reaching `cleared` — cancelling frees the officer for availability purposes immediately; a reassignment creates a new Dispatch record for the new officer while the original is marked `cancelled`, preserving its partial phase history rather than overwriting it. Pulling an officer off a call specifically *for a higher-priority call* is not a cancel — it is a **preemption** (#17), a distinct terminal state so reporting can tell the two apart.
+14. A Call's own status only reaches its terminal dispatch-related state once every non-cancelled, non-preempted-without-resumption Dispatch under it reaches `cleared` — the exact rollup/notification mechanics are a technical-spec-level concern, but at minimum a Dispatcher must be able to see at a glance which of a multi-unit call's Dispatch records are still open.
+
+### Stacking, queueing & preemption
+15. A tenant-configurable **Dispatch Stacking Policy** (Settings & Preferences-registered: `single_active` | `queued`) governs whether an officer may hold more than one unresolved Dispatch. Under **either** policy, at most **one** Dispatch per officer is ever *active* (in the `dispatched` → `cleared` phase range) at a time — this is what keeps Unit State honestly single-valued (see Status & State Monitors retrofit).
+    - `single_active` (platform default): assigning a Call to an officer with an unresolved Dispatch requires explicitly resolving the existing one as part of the assignment — preempt it (#17) or cancel it — via the Command/Action Bus confirmation gate. Nothing waits silently on a busy officer.
+    - `queued`: the new Dispatch is created in a **`queued`** phase, joining that officer's ordered personal queue (ordered by `queued_at`). Queued Dispatches are visible to both the Dispatcher (roster/console) and the officer (their own device), but drive nothing — no phase timeline, no Unit State effect — until activated.
+16. **Queue advance is always an explicit human action, never automatic.** The officer (self) or a Dispatcher/Supervisor (on-behalf-of, e.g., radio-relayed) activates the next queued Dispatch, transitioning it `queued` → `dispatched`. Advancing is explicitly permitted while the officer's Unit State is `completed` — taking the next call temporarily cuts short the report-writing buffer; the Completed State Policy governs return-to-available, not queue advance. Consistent with the platform's established explicit-action-over-silent-automation posture (patrol starts, safety check-ins), the system never silently launches an officer at the next call.
+17. **Preemption**: a Dispatcher may preempt an officer's active Dispatch to assign a higher-priority Call. The active Dispatch transitions to a terminal **`preempted`** state — a real, queryable row (same discipline as `missed` Patrols), recording `preempted_by_dispatch_ref` (the new Dispatch that displaced it) and preserving all partial phase history. Preemption passes the Command/Action Bus confirmation gate before executing.
+18. **The interrupted call's disposition is the Dispatcher's per-preemption choice**: return it to the pending pool for reassignment (any officer — including the original one later), or, under the `queued` policy, re-queue it to the same officer's queue. Either way, the resumed response is a **new** Dispatch record with `resumes_dispatch_ref` pointing at the preempted row — never a reopening of the preempted Dispatch itself.
+19. `cancelled` vs. `preempted` vs. `resumes_dispatch_ref` together make a call's full response chain walkable and honest: reporting (Module 12's future Response Time Analytics) can distinguish an abandoned response from an officer pulled for higher priority, and can reconstruct a preempt-and-resume sequence end to end.
 
 ## Data Model / Fields
 
@@ -61,8 +70,11 @@
 - source_call_ref (direct field, fixed at creation)
 - assigned_person_ref (direct field, fixed at creation)
 - assigned_post_ref (nullable), assigned_vehicle_ref (nullable)
-- phase (dispatched, en_route, arrived, on_scene, cleared)
+- phase (queued, dispatched, en_route, arrived, on_scene, cleared)
 - phase_timestamps{} (one per phase reached, set as each is logged)
+- queued_at (nullable — set when created into `queued` under the `queued` stacking policy; ordering key for the officer's personal queue)
+- preempted_by_dispatch_ref (nullable — set when this Dispatch is preempted, pointing to the displacing Dispatch)
+- resumes_dispatch_ref (nullable — set on a new Dispatch created to resume a previously preempted response)
 - source_location_ref (nullable — meaningful for `en_route`, where the officer started from; same field shape as Response Timeline Event's)
 - corrected (bool), correction_history[] (prior value, changed_by, changed_at)
 - recorded_by (per-phase-log, self or on-behalf-of)
@@ -71,7 +83,9 @@
 
 ## States & Transitions
 
-**Dispatch:** `dispatched` → `en_route` → `arrived` → `on_scene` → `cleared` (terminal) | `cancelled` (terminal, reachable from any non-cleared phase; `reassigned_to_ref` set if the cancellation was specifically a reassignment rather than an outright cancel).
+**Dispatch:** (`queued` — only under the `queued` stacking policy, exits solely via explicit human advance or cancellation →) `dispatched` → `en_route` → `arrived` → `on_scene` → `cleared` (terminal) | `cancelled` (terminal, reachable from `queued` or any non-cleared phase; `reassigned_to_ref` set if the cancellation was specifically a reassignment rather than an outright cancel) | `preempted` (terminal, reachable from any active phase via confirmation-gated Dispatcher preemption; `preempted_by_dispatch_ref` always set).
+
+**Invariant:** an officer has at most one Dispatch in the active range (`dispatched`–`on_scene`) at any moment, under either stacking policy — enforced at assignment, queue-advance, and preemption time.
 
 ## Integrations
 
@@ -81,7 +95,8 @@
 - **Patrol Management**: source of Post/Mobile Patrol Unit context (`assigned_post_ref`, `assigned_vehicle_ref`) when a dispatched officer has one; a Post is never required for an officer to be dispatchable.
 - **Entity Registry Core**: identity, display-label, and standard dedup/merge for Dispatch, same as any other Activity extension.
 - **AI-Assisted Incident Report Writing — retrofit**: Response Timeline Event gains an optional `source_dispatch_ref` (nullable, FK → Dispatch). When an Incident is escalated from a Call that has a corresponding Dispatch record for the responding officer, that officer's `dispatched`/`en_route`/`arrived`/`on_scene`/`cleared` phase timestamps are sourced from the linked Dispatch record rather than independently logged a second time — Response Timeline Event's `call_received` phase continues to source from the originating Call's own `received_at` (Call Intake & Logging). A self-initiated Incident with no upstream Call/Dispatch (the case Response Timeline Event was originally built for) is unaffected and continues logging phases directly, `source_dispatch_ref` simply staying null.
-- **Settings & Preferences**: owns any tenant-level dispatch phase-list configuration.
+- **Settings & Preferences**: owns any tenant-level dispatch phase-list configuration, and the **Dispatch Stacking Policy** (`single_active` | `queued`, plus the queue depth cap under `queued`).
+- **Guard Tour & Checkpoint Verification — retrofit**: an in-progress Patrol whose officer's Dispatch activates (assignment or queue advance) auto-transitions to that doc's new `interrupted` status with `interrupted_by_dispatch_ref` set — a real row explaining any resulting missed checkpoints, never a silent gap. See that doc for resume mechanics.
 - **Domain Events / Notifications Engine**: Dispatch creation (a new assignment) publishes an automation-eligible event, letting a Tenant Admin configure the actual "notify the assigned officer" behavior, consistent with the platform's trigger/effect split.
 - **Structured Logging & Audit Trails**: Dispatch creation, every phase log/correction, cancellation, and reassignment are audit-tier events.
 - **Command/Action Bus**: "Request proximity suggestions," "Assign officer to call," "Log dispatch phase," "Reassign dispatch," "Cancel dispatch" register as invokable actions across every surface.
@@ -113,7 +128,11 @@
 - [ ] Requesting suggestions for a Call with no location returns the full available-officer list, unranked, with no error.
 - [ ] Assigning an officer to a Call creates a Dispatch record, sets its phase to `dispatched`, and transitions the Call to `dispatched` status.
 - [ ] A Call with three assigned officers produces three independent Dispatch records, each with its own phase progression.
-- [ ] An officer with an open (non-cleared, non-cancelled) Dispatch does not appear in the default available-officer suggestion list, but can still be manually assigned by a Dispatcher.
+- [ ] An officer with an active Dispatch does not appear in the default available-officer suggestion list; under `single_active` policy, assigning them anyway forces an explicit confirmation-gated preempt-or-cancel of their current Dispatch; under `queued` policy, the new Dispatch is created `queued` with no effect on the active one.
+- [ ] A queued Dispatch activates only via explicit advance by the officer or a Dispatcher/Supervisor on-behalf-of — never automatically — including from the officer's `completed` Unit State.
+- [ ] Preempting an active Dispatch marks it `preempted` (not `cancelled`) with `preempted_by_dispatch_ref` set and full partial phase history preserved, and prompts the Dispatcher to choose the interrupted call's disposition (pending pool vs. re-queue to the same officer under `queued` policy).
+- [ ] A resumed response to a preempted call is a new Dispatch with `resumes_dispatch_ref` set, and the full preempt/resume chain is queryable.
+- [ ] At no point, under either stacking policy, can one officer hold two Dispatches in the active phase range simultaneously.
 - [ ] A Guard logging "En Route" then "Arrived" on their own Dispatch correctly timestamps each phase and is visible to the Dispatcher in near-real-time.
 - [ ] A Supervisor can log a phase on an officer's behalf and later correct a previously-logged timestamp, with the correction retained in history.
 - [ ] Reassigning a Dispatch marks the original `cancelled` (with `reassigned_to_ref` set) and creates a new Dispatch for the replacement officer, preserving the original's partial phase history.
@@ -128,3 +147,5 @@
 - Exact real-time delivery mechanism for dispatch notifications to the assigned officer's device — owned by Notifications Engine, not solved here.
 - Whether Dispatch needs its own tenant-configurable phase list (beyond the fixed dispatched/en_route/arrived/on_scene/cleared vocabulary) for sites with different response-lifecycle terminology — current default is a fixed platform list, mirroring Response Timeline Event's original phase-list decision; revisit if a real tenant need surfaces.
 - ~~Full unit-status model~~ — resolved: see [status-state-monitors.md](status-state-monitors.md), which now owns Unit State and this doc's availability check reads from directly.
+- Queue depth cap default under the `queued` stacking policy (tenant-configurable; a small default like 3 seems right so a queue never silently becomes a backlog) — pending real customer input.
+- Whether a queued Dispatch should generate its Silent Mobile Dispatching acknowledgment at queue time or only at activation — leaning activation-only (acknowledging a call you can't act on yet is noise), to be confirmed when a real tenant uses `queued` mode.
