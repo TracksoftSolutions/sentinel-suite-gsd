@@ -20,6 +20,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Settings & Preferences
 - [x] Tenant-Defined Types & Custom Fields *(added during elicitation, generalized from a pattern first drafted locally in Courtesy Patrol / Entity Registry Core)*
 - [x] AI / LLM Services *(added during elicitation, generalized from a dependency first assumed in AI-Assisted Incident Report Writing / CLI-Style Input)*
+- [x] Real-Time Delivery & Server-Side Timers *(added during platform design review — owns the live console channel, server-side escalation timers, alarm state, and the platform's baseline real-time NFR targets)*
 
 ## 0.5 Master Records
 - [x] Entity Registry Core
@@ -220,6 +221,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [ ] Fire Panel Watchdogs
 - [ ] IoT Sensor Gateway
 - [ ] Automated Dispatch Generation
+- [ ] Alarm Pattern & Nuisance Analysis *(added during platform design review — the metadata-capture rationale for the integrate-don't-replace boundary, made a first-class feature)*
 - [ ] Device Status Heartbeats
 - [ ] Custom Integration Profiles
 

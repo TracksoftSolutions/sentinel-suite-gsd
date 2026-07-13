@@ -96,7 +96,7 @@ Sentinel Suite is a unified platform designed to serve both contract security co
 ### Accessibility
 
 - Desktop, tablet, and smartphone support
-- Offline capability: critical (underground facilities, dead zones, air-gapped)
+- Offline capability: minimal capture subset (append-only outbox), degraded performance accepted — not 1:1 offline parity; dispatcher radio-relay (on-behalf-of) is the primary disconnected workflow, and air-gapped facilities are served by self-hosted local deployment rather than client-side offline operation
 - Section 508 / WCAG 2.1 compliance from day one
 
 ### Multi-Tenancy
@@ -138,7 +138,7 @@ Sentinel Suite is a unified platform designed to serve both contract security co
 | 16 | Lost & Found | Found property logging, chain of custody, owner claim tracking |
 | 17 | Mass Notification & Crisis Communications | Outbound emergency notification dispatching, check-ins, desktop alerts |
 | 18 | Threat Intelligence & OSINT Ingestion | Public safety feeds, geofenced keyword scans, threat assessment radar |
-| 19 | Physical Security Integration Gateway (IoT / VMS / Alarms) | Intrusion alarms, VMS stream, fire panels, IoT sensors, auto-dispatch triggers |
+| 19 | Physical Security Integration Gateway (IoT / VMS / Alarms) | Integration boundary with existing PSIM/ACS/VMS/alarm platforms (adaptor per upstream system) — escalating their events into documented incidents; never a PSIM/ACS/VMS replacement |
 | 20 | K9 & Specialized Unit Operations | Canine profiles, scent registries, training logs, force reviews, tactical operations |
 | 21 | Compliance, Self-Assessments & Audits | Control mapping (NIST/FISMA), assessments, evidence vault, audit trails |
 | 22 | Business Continuity & Disaster Recovery (BC/DR) | Business impact analysis (BIA), RTO/RPO target registries, disaster checksheets, simulators |
@@ -248,8 +248,8 @@ Sentinel Suite is a unified platform designed to serve both contract security co
 
 ### Module 19: Physical Security Integration Gateway (IoT / VMS / Alarms)
 
-**Purpose:** Hardware connector layer linking physical devices to platform operations
-**Scope:** Intrusion alarm IP listeners, VMS camera stream ingestion (RTSP/WebRTC), access control panel swipe and status watchdogs, fire panel telemetry, IoT environmental sensor thresholds, automated dispatch triggers, and device heartbeat monitoring.
+**Purpose:** Integration boundary with the physical-security systems a site already runs — the reporting engine those systems talk to best
+**Scope:** Ingest events from existing intrusion/alarm, VMS, access-control, fire-panel, and IoT platforms via each system's own APIs/event streams (one adaptor per upstream platform, per the platform-wide provider-adaptor pattern — never native device protocols), route them through Activity Registry's Signal Disposition valve (display-only → telemetry → activity → auto-incident+dispatch), embed/deep-link upstream video and consoles rather than re-implementing them, monitor upstream-connection health, and own the automated dispatch triggers. Explicitly not a PSIM, VMS, or access-control system — escalation of alarm handling into documented incidents is the entire value proposition.
 
 ### Module 20: K9 & Specialized Unit Operations
 
@@ -288,13 +288,14 @@ Sentinel Suite is a unified platform designed to serve both contract security co
 - Legal case management
 - Insurance claims processing
 - Physical security hardware sales/installation
+- Being a PSIM, VMS, alarm-management, or access-control system — excellent platforms exist for all four; Sentinel Suite integrates with them (adaptor per upstream system) as the reporting/records engine they escalate into, and never speaks native device protocols (BACnet, Modbus, Wiegand, RTSP)
 
 ## Risks & Mitigations
 
 | Risk | Severity | Mitigation |
 | --- | --- | --- |
 | Scope creep | High | Strict module-by-module phasing, MVP discipline, clear per-module scope boundaries |
-| Offline sync complexity | High | Early investment in sync architecture, proven patterns (CRDTs or similar), extensive edge-case testing |
+| Offline sync complexity | Low (downgraded) | Scope narrowed to an idempotent append-only outbox — no offline editing of shared records, so no conflict-resolution engine; dispatcher on-behalf-of relay covers everything outside the capture subset |
 | DOE/FISMA compliance complexity | High | Build compliance into architecture from day one, not bolted on later |
 | Funding runway | Medium | Phased delivery to reach revenue-generating state quickly; commercial SaaS first |
 | Multi-tenancy architecture | Medium | Design tiered isolation model upfront; validate with DOE security requirements early |

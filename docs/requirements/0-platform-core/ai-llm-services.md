@@ -32,7 +32,8 @@ Three parts:
 ## Functional Requirements
 
 ### Provider & credential configuration
-1. **AI Provider Configuration** declares `mode` (`platform_pooled` or `byo_key`), `provider` (anthropic, openai, google_gemini, azure_openai), and `model` — one per tenant by default (see Open Questions for per-context override).
+1. **AI Provider Configuration** declares `mode` (`platform_pooled` or `byo_key`), `provider_adaptor`, and `model` — one per tenant by default (see Open Questions for per-context override). Providers are **adaptors** behind one interface (the same architecture GIS & Mapping Services established, per the platform-wide provider-adaptor decision in `_DECISIONS.md`): launch adaptors are anthropic, openai, google_gemini, and azure_openai; a **self-hosted inference adaptor** (local model server) is the designed-but-not-built future adaptor for air-gapped/DOE tenants — adding it is adaptor implementation work, never a rework of this feature or its consumers.
+1a. **Air-gapped limitation, disclosed**: until a self-hosted adaptor ships, AI features are unavailable in air-gapped deployments — a documented, bounded limitation (same posture as AI drafting being online-only within the offline-first flow), not a silent gap. Air-gapped/DOE tenant configurations are restricted to self-hostable adaptors, exactly mirroring GIS's adaptor restriction rule for those tenants.
 2. A BYO API key is encrypted at rest, write-only after initial entry (never redisplayed in plaintext, to any role including Platform Super Admin), and independently rotatable/revocable, consistent with Authentication & Authorization's existing secrets-handling posture.
 3. `platform_pooled` usage is metered per tenant (token/request counts) — this doc records usage only; actual billing/invoicing is a future Module 15 integration, not built here.
 4. A failed BYO key (invalid, revoked, rate-limited, provider outage) surfaces a clear, actionable error to the requesting user — it never silently falls back to platform-pooled tokens on the tenant's behalf, avoiding surprise cross-billing; the tenant explicitly fixes the key or switches modes.
@@ -55,7 +56,7 @@ Three parts:
 
 **AI Provider Configuration**
 - config_id, tenant_id, mode (platform_pooled, byo_key)
-- provider (anthropic, openai, google_gemini, azure_openai), model
+- provider_adaptor (launch: anthropic, openai, google_gemini, azure_openai; future: self_hosted_inference), model
 - byo_api_key_ref (nullable, encrypted secret reference, only when mode = byo_key)
 - status (active, key_invalid, disabled)
 

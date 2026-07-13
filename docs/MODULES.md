@@ -25,7 +25,7 @@ Foundation services shared by all modules.
 
 - **Local-First Storage**: Secure local storage (SQLite/IndexedDB) on mobile and client terminals.
 - **State Sync Engine**: Store-and-forward queue to handle transactions performed while disconnected.
-- **Conflict Resolution**: Conflict-Free Replicated Data Types (CRDTs) to reconcile offline edits cleanly.
+- **Conflict Avoidance**: Offline writes are append-only (create new records / add timeline entries, never edit shared records), making sync conflicts impossible by construction — no conflict-resolution engine needed.
 
 ### Notifications Engine
 
@@ -1064,7 +1064,7 @@ Automated monitoring of external threat vectors to inform proactive responses.
 
 ## 19. Physical Security Integration Gateway (IoT / VMS / Alarms)
 
-Hardware connector layer linking physical devices directly to operational logging and dispatching.
+Integration boundary with the physical-security systems a site already runs — **not** a PSIM, VMS, or access-control replacement. Truly great platforms exist for alarm management, video, and door control; Sentinel Suite's role is to be the reporting engine those systems talk to best: ingesting their events (via each platform's own APIs/event streams, adaptor per upstream system — never native device protocols) so alarm handling can escalate into documented incidents, dispatches, and reports. The feature list below is read through that boundary when this module is specified — e.g., "camera stream" means embedding/deep-linking the VMS's own streams and playback, "alarm reset"/"gate control" means invoking the upstream system's API where offered, and every signal enters through Activity Registry's Signal Disposition valve. Crucially, integration captures the **full upstream metadata** each platform exposes (precise timings, device/zone identity, condition codes) — the detail most reporting software never keeps — because that metadata is what turns a guard's "nuisance alarm" log entry into a findable pattern (a 05:45-weekdays/08:00-weekends recurrence is an HVAC schedule, and the fix is a sensor adjustment, not another patrol response).
 
 ### Intrusion Alarm IP Listeners
 
@@ -1101,6 +1101,12 @@ Hardware connector layer linking physical devices directly to operational loggin
 - **CAD Integration Triggers**: System auto-creating dispatches based on panel alarms.
 - **Playbook Links**: Direct links to safety manuals on active CAD dispatches.
 - **Dispatches Auditing logs**: Logs documenting automated dispatches.
+
+### Alarm Pattern & Nuisance Analysis
+
+- **Recurrence Detection**: Surfacing time-of-day/day-of-week/source patterns across a device's signal history (telemetry tier), so condition-based false alarms (heat → fans → dust → "motion") become diagnosable instead of chronically responded-to.
+- **Nuisance Designation Workflow**: Marking a source's recurring pattern as a known nuisance with a documented root cause and corrective action (adjust/move/replace sensor, facilities coordination), auditable like any governance record.
+- **Pattern-to-Report Bridge**: Pulling a detected pattern's evidence (signal history chart, response history) into an Incident or report Document for facilities/vendor escalation.
 
 ### Device Status Heartbeats
 

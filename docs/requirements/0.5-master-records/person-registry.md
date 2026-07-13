@@ -39,7 +39,7 @@ This doc establishes each extension type's *core* identifying fields and lifecyc
 3. **Identification**: uses Party's inherited generic `identifications[]` structure (an ID value + a category, e.g., SSN, driver's license, passport, government ID, employee badge) — not a separately defined Person-specific structure.
 4. **Citizenship & birth**: citizenship/nationality and birth date/location, relevant to DOE facility-access and security-clearance determination; same on-by-default-but-configurable-and-sensitive treatment as physical description.
 5. **Contact information & base identification**: inherited from Party Registry's base fields (`contact_information`, `identifications[]`) — not redefined here. Person's own `identifications[]` usage (SSN, driver's license, passport, government ID, employee badge) simply populates the categories relevant to a person, using the structure Party already provides.
-6. **Emergency contacts**: modeled as an `EmergencyContactAssociation` — a TPT subtype of Entity Registry Core's EntityAssociation, `entity_id_a` = this Person, `entity_id_b` = the contact's own Person entity, `role` = the relationship (e.g., "spouse," "parent"). The contact is always a real Person entity in the registry, even if minimal (name + phone only, no other extensions) — there is no free-text/dual-mode fallback, keeping the relationship genuinely Person-to-Person and giving it the same add/remove audit trail as any other association.
+6. **Emergency contacts**: modeled as an `EmergencyContactAssociation` — a TPT subtype of Entity Registry Core's EntityAssociation, `entity_id_a` = this Person, `entity_id_b` = the contact's own Person entity, `role` = the relationship (e.g., "spouse," "parent"). The contact is always a real Person entity in the registry, even if minimal (name + phone only, no other extensions) — there is no free-text/dual-mode fallback, keeping the relationship genuinely Person-to-Person and giving it the same add/remove audit trail as any other association. Two mitigations govern **contact-only Persons** (a Person with no extensions, referenced only via `EmergencyContactAssociation`), confirmed during the platform design review: (a) **dedup pairs involving a contact-only Person are low-priority suggestions**, never mandatory review-queue items — a stub matching a real Person is useful signal (an employee's spouse may also be a visitor) but must not flood the Records Admin queue; the pair upgrades to normal priority if the stub ever gains an extension; (b) **contact-only Persons are excluded from general person search**, visible only through the association that references them — they become generally searchable only once they acquire an extension of their own.
 7. **Photo**: stored as the canonical reference image for the person; badge printing and kiosk display (Access Control) consume it rather than maintaining separate copies.
 8. **Platform-specific augmentations (no NIEM Core equivalent)**: medical alerts and language fluencies. Clearly modeled as additive, non-NIEM fields rather than misrepresented as part of the core taxonomy.
 9. Every base field above is optional/nullable — a given profile type collects only what's relevant to it (e.g., a brief Visitor record typically populates name and photo only; a BOLO/Trespass Subject record leans heavily on physical description).
@@ -47,7 +47,7 @@ This doc establishes each extension type's *core* identifying fields and lifecyc
 
 ### Extension types
 10. **Employee** — active/inactive employment lifecycle; core fields: employee identifier, employment status, primary site/assignment. Richer fields (position, reporting structure, licensing) are added by Personnel's own future feature docs.
-11. **Visitor** — checked-in/checked-out lifecycle per visit; core fields: visit purpose, host reference. Richer fields (pre-registration, document signing, badge details) are added by Access Control's future feature docs.
+11. **Visitor** — a durable "known visitor" profile, deliberately carrying **no per-visit state**: a Visitor extension row is one-per-person and cannot represent check-in/check-out across many visits (the corrected defect — per-visit state on a per-person row breaks on the second visit). Core fields: default visit purpose, default host reference. Each actual **Visit** (check-in → check-out occurrence) will be its own record — anticipated as an Activity extension registered by Access Control (Pre-Registration Portal / Visitor Kiosk App, Module 4, not yet specified), referencing the Person via the standard participant mechanism — consistent with the platform's "everything trackable is an Activity" discipline. Richer fields (pre-registration, document signing, badge details) are likewise Access Control's.
 12. **Contractor** — active/inactive lifecycle; core fields: vendor/company affiliation reference. Richer fields (license/insurance compliance) are added by Subcontractor Management's future feature docs.
 13. **Occupant** — active/inactive residency lifecycle; core fields: unit/location reference. Richer fields (lease details, special assistance needs) are added by Facility & Zone Management's future feature docs.
 14. **BOLO/Trespass Subject** — a Person-typed application of Entity Registry Core's generic **BOLO Flag** mechanism (see that doc's § BOLO Flag), not a separately governed extension. Person Registry's contribution is a context field (trespass_notice_ref, nullable) and leaning heavily on the physical-description and identification fields (items 2–4) rather than the base name/contact fields alone, matching real-world BOLO practice. All governance (elevated permission, justification, expiration, step-up authentication, audit) is inherited unmodified from the shared mechanism.
@@ -79,7 +79,7 @@ This doc establishes each extension type's *core* identifying fields and lifecyc
 - entity_id (PK, FK → Person), employee_identifier, employment_status, primary_site_ref
 
 **Visitor** (TPT level)
-- entity_id (PK, FK → Person), visit_purpose, host_ref, check_in_status
+- entity_id (PK, FK → Person), default_visit_purpose (nullable), default_host_ref (nullable) — no per-visit state; see #11
 
 **Contractor** (TPT level)
 - entity_id (PK, FK → Person), vendor_ref
@@ -99,7 +99,7 @@ This doc establishes each extension type's *core* identifying fields and lifecyc
 
 **Employee/Contractor/Occupant:** `active` → `inactive` (independent per TPT level, per item 3–6).
 
-**Visitor:** `checked_in` → `checked_out` (per-visit; a returning visitor's existing Person/Visitor row is reused, not recreated).
+**Visitor:** `active` → `inactive` (profile-level only). Per-visit check-in/check-out lifecycle belongs to the future Visit Activity (Access Control, #11) — a returning visitor's existing Person/Visitor row is reused, never recreated, with each visit its own record.
 
 **BOLO/Trespass Subject:** follows Entity Registry Core's shared BOLO Flag lifecycle unmodified (`active` → `cleared` | `expired`).
 

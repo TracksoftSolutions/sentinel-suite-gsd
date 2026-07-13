@@ -77,6 +77,7 @@ A scan is also a **launch point** for follow-on records with location pre-seeded
 16. A Patrol reaching `concluded` is when its final completeness/compliance is locked; a still-`in_progress` Patrol's compliance is provisional/live and rolls up into its parent Route Assignment's own completeness (#11).
 17. If an expected Tour Definition occurrence's window closes with no Patrol ever started, the system creates that occurrence's Patrol directly in a `missed` status — a real, queryable row, giving Tour Completeness Logs and Officer Performance Logs one row per expected occurrence regardless of outcome, not a silent gap.
 18. A `missed` Patrol accepts a `resolution_note` from the Guard or a Supervisor — free-text context on why it was missed. The note never changes the `missed` status itself; a miss stays a miss.
+18a. **Dispatch interruption (retrofit, per Unit Dispatch & Proximity Routing's stacking/preemption model):** when an in-progress Patrol's guard has a Dispatch become active (assignment, or explicit queue advance), the Patrol auto-transitions to an **`interrupted`** status with `interrupted_by_dispatch_ref` set — a real, queryable row explaining any resulting completeness gap, never a silent one. An `interrupted` Patrol resumes to `in_progress` when the guard scans its next in-scope Checkpoint or explicitly resumes it (self or on-behalf-of); if its Tour Definition occurrence window closes while still `interrupted`, the Patrol concludes with its partial completeness as-is — missed points are missed points, but Tour Completeness Logs and Officer Performance Logs can attribute the gap to the referenced Dispatch rather than to the guard. Repeated interrupt/resume cycles within one Patrol append to `interruption_history[]` rather than overwriting the reference.
 
 ### Checkpoint Scan (Activity extension)
 19. **Checkpoint Scan** registers as a thin Activity extension: `patrol_ref` (direct field, fixed at creation), `checkpoint_ref` (direct field), `scan_method` (tag, gps, manual_override), `verified` (bool), `captured_gps` (optional corroboration), `scanned_by`, `scan_timestamp`.
@@ -132,6 +133,8 @@ A scan is also a **launch point** for follow-on records with location pre-seeded
 - start_method (explicit_self, explicit_dispatched, implicit_first_scan)
 - completeness_pct, order_compliant (bool, nullable if unordered), spacing_compliant (bool, nullable if no min_interval or first occurrence)
 - resolution_note (nullable — set by Guard or Supervisor when status = missed)
+- interrupted_by_dispatch_ref (nullable — the Dispatch that most recently interrupted this Patrol, per #18a)
+- interruption_history[] (dispatch_ref, interrupted_at, resumed_at nullable — one entry per interrupt/resume cycle)
 
 **Checkpoint Scan** (Activity extension, TPT level — excluded from standard Activity dedup matching, see #20)
 - entity_id (PK, FK → Activity)
@@ -151,7 +154,7 @@ A scan is also a **launch point** for follow-on records with location pre-seeded
 
 **Route Assignment:** follows base Activity lifecycle — `open` (assigned, not yet started) → `in_progress` (first Patrol begins) → `concluded` (every Tour Definition under its pinned Route version meets `required_count`, or the assignment period ends) | `cancelled`.
 
-**Patrol:** follows base Activity lifecycle with an extension-level status nuance (explicitly allowed by Activity Registry) — `open` → `in_progress` (first scan recorded) → `concluded` (completeness/compliance locked) | `cancelled` | **`missed`** (auto-created directly in this status if the expected window closes with no Patrol ever started — never transitions elsewhere except a Guard/Supervisor attaching a `resolution_note`, #18).
+**Patrol:** follows base Activity lifecycle with extension-level status nuance (explicitly allowed by Activity Registry) — `open` → `in_progress` (first scan recorded) ⇄ **`interrupted`** (auto on the guard's Dispatch becoming active, #18a; back to `in_progress` on next in-scope scan or explicit resume) → `concluded` (completeness/compliance locked — reachable from `interrupted` too, at window close, with partial completeness attributed to the referenced Dispatch) | `cancelled` | **`missed`** (auto-created directly in this status if the expected window closes with no Patrol ever started — never transitions elsewhere except a Guard/Supervisor attaching a `resolution_note`, #18).
 
 **Checkpoint Scan:** created once, immutable — no further states, consistent with an event record. A near-duplicate read within the debounce window doesn't create a new row at all (#20), rather than creating and later reconciling one.
 
@@ -164,10 +167,11 @@ A scan is also a **launch point** for follow-on records with location pre-seeded
 - **Location Registry**: Checkpoint's base TPT level.
 - **Item Registry**: source of the physical tag Item a Checkpoint's `CheckpointTagAssociation` points to.
 - **Activity Registry**: Route Assignment, Patrol, Checkpoint Scan, and Patrol Finding all register as Activity extensions — Route and Tour Definition are the only non-Activity (versioned plan) layers. Patrol's `missed` status uses Activity Registry's explicit allowance for extensions to layer richer status nuance on the base lifecycle.
-- **Entity Registry Core**: identity, dedup/merge, and display-label requirements for Checkpoint, Route Assignment, Patrol, and Patrol Finding, same as any other Entity/Activity type — **Checkpoint Scan is a deliberate exception**, excluded from standard dedup matching in favor of a narrow write-time debounce (#20); a candidate precedent for Activity Registry to eventually document a general "high-volume event-type Activities may opt out of dedup" allowance, not resolved here.
-- **Offline Data Sync**: Checkpoint Scan and Patrol Finding creation both follow the established offline CRDT/client-UUID pattern unmodified.
+- **Entity Registry Core**: identity, dedup/merge, and display-label requirements for Checkpoint, Route Assignment, Patrol, and Patrol Finding, same as any other Entity/Activity type — **Checkpoint Scan is a deliberate exception**, excluded from standard dedup matching in favor of a narrow write-time debounce (#20) — now formalized platform-wide: Checkpoint Scan registers `is_mergeable = false` per Entity Registry Core's explicit per-type mergeability declaration (#10a there), which resolved this doc's earlier "candidate precedent" flag.
+- **Offline Data Sync**: Checkpoint Scan and Patrol Finding creation both follow the established offline append-only outbox/client-UUID pattern unmodified; a Patrol's own start/complete transitions are offline-appendable as Class 2 events since the assigned officer is the sole actor on their own Patrol.
 - **Settings & Preferences**: owns tenant-default sequence-enforcement and scan-verification-method settings; Route/Tour Definition's versioning discipline mirrors (but isn't literally stored by) the pattern this feature established.
 - **Domain Events / Notifications Engine**: missed/late tour detection publishes an automation-eligible event (#22) alongside the `missed` Patrol record itself (#17); a Tenant Admin-configured rule decides notification/escalation behavior.
+- **Unit Dispatch & Proximity Routing (Module 2) — retrofit**: a Dispatch becoming active for a guard with an in-progress Patrol drives the Patrol's `interrupted` transition (#18a); the Patrol's completeness gap is attributable to the referenced Dispatch in reporting rather than reading as an unexplained skip.
 - **Daily Activity Reports (DAR)**: Route Assignments, Patrols (including `missed` ones), Checkpoint Scans, and Patrol Findings are all ordinary Activities and are automatically picked up by any DAR filter matching their guard/site/time window.
 - **Shift Passdowns & Handover Notes**: a `missed` Patrol, and a still-open Patrol Finding, are both natural candidates for a default Pass-On Rule.
 - **Command/Action Bus**: "Assign route," "Start patrol" (self or on behalf of a unit), "Scan checkpoint," "Replace checkpoint tag," "Create patrol finding," and "Create [Activity Type] from checkpoint scan" register as invokable actions across every surface.
@@ -215,6 +219,8 @@ A scan is also a **launch point** for follow-on records with location pre-seeded
 - [ ] Editing a Tour Definition's `required_count` does not change the requirements of an already-in-progress Route Assignment/Patrol pinned to the prior version.
 - [ ] An expected Tour Definition occurrence whose window closes with no Patrol started auto-creates a `missed` Patrol record.
 - [ ] A Guard or Supervisor can attach a `resolution_note` to a missed Patrol without changing its `missed` status.
+- [ ] A Dispatch becoming active for a guard mid-Patrol auto-transitions the Patrol to `interrupted` with `interrupted_by_dispatch_ref` set; the guard's next in-scope Checkpoint Scan (or an explicit resume) returns it to `in_progress` with the cycle recorded in `interruption_history[]`.
+- [ ] A Patrol whose occurrence window closes while `interrupted` concludes with partial completeness, and its gap is attributable to the referenced Dispatch in completeness reporting.
 - [ ] Two scans of the same checkpoint 2 seconds apart within the same Patrol collapse into a single Checkpoint Scan row; two scans of the same checkpoint on separate required occurrences (hours apart) do not.
 - [ ] A second Patrol against the 4-hour-spaced Tour Definition, started 2 hours after the first, is correctly flagged `spacing_compliant = false`.
 - [ ] Replacing a Checkpoint's tag preserves the Checkpoint's own identity and full prior scan history.
