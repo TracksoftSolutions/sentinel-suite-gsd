@@ -44,14 +44,14 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] AI-Assisted Incident Report Writing
 
 ## 2. Dispatch / CAD
-- [ ] Call Intake & Logging
-- [ ] Unit Dispatch & Proximity Routing
-- [ ] Active Incident Queue (CAD Console)
-- [ ] Status & State Monitors
-- [ ] Silent Mobile Dispatching
-- [ ] Multi-Incident Console
-- [ ] Active Call Alerts & Timers
-- [ ] Historical CAD Log Reconstruction
+- [x] Call Intake & Logging
+- [x] Unit Dispatch & Proximity Routing
+- [x] Active Incident Queue (CAD Console)
+- [x] Status & State Monitors
+- [x] Silent Mobile Dispatching
+- [x] Multi-Incident Console
+- [x] Active Call Alerts & Timers
+- [x] Historical CAD Log Reconstruction
 
 ## 3. Command Center / Dashboard / EOC
 - [ ] Unified Operational Picture (UOP) Map
