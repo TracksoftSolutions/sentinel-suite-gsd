@@ -1064,7 +1064,7 @@ Automated monitoring of external threat vectors to inform proactive responses.
 
 ## 19. Physical Security Integration Gateway (IoT / VMS / Alarms)
 
-Hardware connector layer linking physical devices directly to operational logging and dispatching.
+Integration boundary with the physical-security systems a site already runs — **not** a PSIM, VMS, or access-control replacement. Truly great platforms exist for alarm management, video, and door control; Sentinel Suite's role is to be the reporting engine those systems talk to best: ingesting their events (via each platform's own APIs/event streams, adaptor per upstream system — never native device protocols) so alarm handling can escalate into documented incidents, dispatches, and reports. The feature list below is read through that boundary when this module is specified — e.g., "camera stream" means embedding/deep-linking the VMS's own streams and playback, "alarm reset"/"gate control" means invoking the upstream system's API where offered, and every signal enters through Activity Registry's Signal Disposition valve.
 
 ### Intrusion Alarm IP Listeners
 
