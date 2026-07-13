@@ -15,7 +15,7 @@ We're mid-way through a structured requirements-elicitation exercise for Sentine
 
 ## Process to follow (unchanged from the rest of the session)
 
-- One feature at a time. Use `AskUserQuestion` in rounds — keep asking until nothing about the feature is ambiguous. Adaptive depth: simple registry-style features get 1-2 rounds, complex workflow/lifecycle features get more.
+- One feature at a time. Use `AskUserQuestion` in rounds — keep asking until nothing about the feature is ambiguous. Adaptive depth: simple registry-style features get 1-2 rounds, complex workflow/lifecycle features get more. **This applies even when a feature is heavily pre-shaped by earlier docs' forward references** (e.g., Status & State Monitors had a lot of context already established) — a real elicitation round is still required, not optional just because you can draft something plausible from existing context alone. Caught mid-session once already; don't repeat it.
 - Write the doc to `docs/requirements/<module-slug>/<feature-slug>.md` using the template above.
 - Mark the feature `[x]` in `_INDEX.md` immediately after writing its doc.
 - If a feature reveals a cross-cutting decision (a new shared mechanism, a naming collision, a pattern that should generalize), log it in `_DECISIONS.md` — that file is what keeps 200+ features consistent with each other across sessions.
