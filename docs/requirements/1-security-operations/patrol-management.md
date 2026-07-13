@@ -68,6 +68,7 @@ A Mobile Patrol Unit's location tracking is **configurable, with a graceful fall
 - assigned_post_ref (nullable until assigned)
 - notes
 - courtesy_patrol_ref (nullable — FK → Courtesy Patrol, when this request's fulfillment detail was logged as one; retrofit, see [courtesy-patrol.md](courtesy-patrol.md))
+- source_call_ref (nullable — FK → Call, when this request originated from CAD call intake rather than a self-initiated or direct Supervisor tasking; retrofit, see [call-intake-logging.md](../2-dispatch-cad/call-intake-logging.md))
 - requested_at, assigned_at (nullable), completed_at (nullable)
 
 ## States & Transitions
@@ -90,7 +91,7 @@ A Mobile Patrol Unit's location tracking is **configurable, with a graceful fall
 - **Domain Events / Notifications Engine**: Patrol Request creation, and a unit's `last_known_location` going stale past a configurable threshold, both publish automation-eligible events rather than a hardcoded alert path.
 - **GIS & Mapping Services**: renders Post locations/coverage areas and each Mobile Patrol Unit's current `last_known_location`; continuous GPS breadcrumb trail rendering (when `tracking_mode = gps_continuous`) is a GIS-level concern consuming this doc's location updates, not implemented here.
 - **Command/Action Bus**: "Create Post," "Assign Post," "Update unit location (manual)," "Request patrol," "Assign patrol request" register as invokable actions across every surface.
-- **Dispatch/CAD (Module 2, future)**: Patrol Request is deliberately shaped to become a natural dispatchable target once that module exists — CAD would consume/extend this Activity type rather than this doc needing to anticipate full dispatch-queue mechanics now.
+- **Call Intake & Logging (Module 2 Dispatch/CAD)**: as anticipated, Call now generalizes/supersedes Patrol Request as the CAD front door; Patrol Request gains `source_call_ref` (retrofit above) so a triaged Call can result in direct-unit tasking here, while Patrol Request keeps its own simpler lifecycle for tasking that bypasses full call intake entirely.
 - **Courtesy Patrol**: when a Patrol Request is fulfilled as a courtesy service (an escort, jump start, tire change, welfare check), the assigned unit's detailed record is a Courtesy Patrol, optionally referenced back via `courtesy_patrol_ref` — Patrol Request stays the generic dispatch wrapper; Courtesy Patrol owns the richer category-specific detail.
 - **Post Schedule Builder (Module 8, future)**: intended eventual replacement/reconciliation point for Post's interim assignment model, same deferred-integration posture as DAR's Shift Window.
 
