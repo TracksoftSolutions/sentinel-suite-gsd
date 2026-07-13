@@ -4,7 +4,8 @@ We're mid-way through a structured requirements-elicitation exercise for Sentine
 
 1. Read `docs/requirements/_INDEX.md` — the ordered, checkbox-tracked list of every feature (from `docs/MODULES.md`, plus several features added during elicitation). `[x]` = doc written, `[ ]` = not started yet. Find the first unchecked item — that's where we continue.
 2. Read `docs/requirements/_DECISIONS.md` in full — it's the accumulated log of every cross-cutting architectural decision made so far. This is not optional context; several decisions (see below) constrain how every future feature doc must be written. Do not contradict or re-litigate anything in it without flagging the conflict to the user first.
-3. Skim 2-3 of the already-written docs in `docs/requirements/0.5-master-records/` (e.g., `entity-registry-core.md` and `person-registry.md`) to internalize the template and level of depth expected: Overview, Actors & Roles, User Stories, Functional Requirements, Data Model/Fields, States & Transitions, Integrations, Permissions, Non-Functional/Constraints, Acceptance Criteria, Open Questions.
+3. If the work touches code-level design (or you're advising on implementation), also read `docs/architecture-guidance.md` — the code-architecture guidance doc (inheritance for the identity taxonomy, interfaces for capabilities with the runtime registry authoritative, composition for services). It's guidance, not a feature spec, and defers to `_DECISIONS.md` where they touch.
+4. Skim 2-3 of the already-written docs in `docs/requirements/0.5-master-records/` (e.g., `entity-registry-core.md` and `person-registry.md`) to internalize the template and level of depth expected: Overview, Actors & Roles, User Stories, Functional Requirements, Data Model/Fields, States & Transitions, Integrations, Permissions, Non-Functional/Constraints, Acceptance Criteria, Open Questions.
 
 ## Where things stand
 
