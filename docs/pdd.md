@@ -41,6 +41,35 @@ Sentinel Suite is a unified platform designed to serve both contract security co
 10. **Reduce liability exposure** through thorough documentation, audit trails, and compliance enforcement
 11. **Improve incident documentation quality** including AI-assisted report writing
 
+## MVP Definition & Target Customers
+
+*Added during the platform design review — resolves Open Question #3 (module build order / phased rollout prioritization).*
+
+### MVP scope
+
+The MVP is an **in-house facility/campus security department product** — the buyer profile the founder has held for 20+ years — not a contract-firm product (client portal, billing, SOW staffing, and subcontractor oversight are all post-MVP):
+
+- **Module 1 (Security Operations) — complete** (all 8 features, already spec'd), including AI-Assisted Incident Report Writing, which stays in the MVP as a headline differentiator despite being technically deferrable.
+- **Module 2 (Dispatch/CAD) — complete** (all 8 features, already spec'd).
+- **Locations in the full facilities sense** — Location Registry (spec'd) plus a pulled-forward slice of Module 9: the Location Hierarchy Designer UI and zone definitions. Registration-shaped over existing mechanisms.
+- **Hazmat & hazard warnings tied to location** — a pulled-forward slice of Module 7, deliberately framed as a *dispatch-context* feature: a responder dispatched to a building sees its NFPA 704 placards, chemical presence, and hazard warnings before arrival. Hazard records associate to Locations; Call/Dispatch surfaces them. No new mechanism; a safety differentiator no guard-ops competitor offers.
+- **Kernel subset of Modules 0/0.5**: authentication (IdP federation + local), settings, audit logging, notifications, offline outbox, real-time delivery & timers, event/command bus + domain events, and the Master Records spine. **Fast-follows, not MVP-blocking**: Command Palette, CLI-Style Input, Tenant-Defined Subtypes.
+- **Consciously accepted consequence**: Module 8 (scheduling) is out of MVP, so the interim Shift Window (DAR) and Post (Patrol Management) constructs ship to production as load-bearing features — exactly the fallback they were designed to be. In-house facility teams feel scheduling pain far less than contract firms.
+
+**Elicitation order consequence**: the next specs to elicit are the Module 9 location slice and the Module 7 hazard-by-location slice (MVP-blocking, unspec'd), ahead of Module 3 — replacing both strict MODULES.md order and the earlier Module-8-first recommendation.
+
+### Ideal first customers (founder-experience-validated)
+
+Three targets, each drawn from the founder's own operational history, each stressing a different edge of the platform while all three share the MVP core loop (capture → dispatch → document → report):
+
+| Target | Founder background | What it stresses | Natural fast-follow pull |
+| --- | --- | --- | --- |
+| **National Laboratory of the Rockies** (previously NREL) | Worked there; informed several design decisions | Self-hosted deployment, IdP federation, NIEM/compliance posture, hazard-by-location (labs are the canonical case), protective-force operations | Compliance evidence packaging (Module 21 slice) |
+| **Large-scale hotels** (e.g., Gaylord Rockies-class) | Security manager at Gaylord Rockies opening | High incident volume, courtesy patrol (lockouts/jump starts), trespass/BOLO, liability documentation, guest-facing operations | Lost & Found (Module 16 — registration-cheap) |
+| **Casinos** | Investigations & risk manager at Colorado's largest casino by market share and guest count | Gaming-commission regulatory posture, exclusion/trespass lists, surveillance adjacency (integrate-don't-replace VMS), evidence chain of custody | Investigation Management (Module 13 slice) |
+
+Deployment implication: hotel and casino targets exercise commercial SaaS; the national lab exercises self-hosted — both deployment models get a real customer early, but self-hosted can phase-gate behind the first SaaS deployments given lab procurement timelines.
+
 ## Constraints
 
 ### Tech Stack
@@ -308,7 +337,7 @@ Sentinel Suite is a unified platform designed to serve both contract security co
 
 1. Backend language/framework selection (to be determined in technical spec)
 2. Database selection (to be determined in technical spec)
-3. Module build order / prioritization for phased rollout
+3. ~~Module build order / prioritization for phased rollout~~ — resolved: see MVP Definition & Target Customers above
 4. GIS/mapping provider selection
 5. Offline sync strategy (CRDTs, operational transforms, or custom)
 6. AI provider/approach for incident report writing assistance
