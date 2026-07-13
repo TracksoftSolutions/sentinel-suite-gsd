@@ -56,7 +56,7 @@ The MVP is an **in-house facility/campus security department product** — the b
 - **Kernel subset of Modules 0/0.5**: authentication (IdP federation + local), settings, audit logging, notifications, offline outbox, real-time delivery & timers, event/command bus + domain events, and the Master Records spine. **Fast-follows, not MVP-blocking**: Command Palette, CLI-Style Input, Tenant-Defined Subtypes.
 - **Consciously accepted consequence**: Module 8 (scheduling) is out of MVP, so the interim Shift Window (DAR) and Post (Patrol Management) constructs ship to production as load-bearing features — exactly the fallback they were designed to be. In-house facility teams feel scheduling pain far less than contract firms.
 
-**Elicitation order consequence**: the next specs to elicit are the Module 9 location slice and the Module 7 hazard-by-location slice (MVP-blocking, unspec'd), ahead of Module 3 — replacing both strict MODULES.md order and the earlier Module-8-first recommendation.
+**Elicitation order consequence**: Module 3 (Command Center / Dashboard / EOC) is elicited next — its features are the heaviest consumers of facilities-grade locations/zones, and defining the consumers first informs the location-slice design — followed immediately by the MVP-blocking Module 9 location slice and Module 7 hazard-by-location slice. The earlier Module-8-first recommendation is retired (Module 8 is out of MVP).
 
 ### Ideal first customers (founder-experience-validated)
 

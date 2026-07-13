@@ -38,8 +38,8 @@ Every move, either direction, gets a Change Log row and (if architectural) a `_D
 - [ ] Call Intake & Logging · Unit Dispatch & Proximity Routing · Active Incident Queue · Status & State Monitors · Silent Mobile Dispatching · Multi-Incident Console · Active Call Alerts & Timers · Historical CAD Log Reconstruction
 
 ### Module 9 slice — Locations in the full facilities sense
-- [ ] Location Hierarchy Designer (build/manage the site→building→floor→room/zone tree over Location Registry's existing `HierarchyAssociation` spine) — **needs elicitation (next up)**
-- [ ] Zone definitions/mapping (GIS-backed zone geometry as Location records) — **needs elicitation (next up)**
+- [ ] Location Hierarchy Designer (build/manage the site→building→floor→room/zone tree over Location Registry's existing `HierarchyAssociation` spine) — **needs elicitation (after Module 3, whose features are its heaviest consumers)**
+- [ ] Zone definitions/mapping (GIS-backed zone geometry as Location records) — **needs elicitation (after Module 3)**
 
 ### Module 7 slice — Hazard & hazmat warnings by location
 - [ ] Hazmat/chemical presence + NFPA 704 placard data associated to Locations — **needs elicitation**
@@ -66,3 +66,4 @@ Every move, either direction, gets a Change Log row and (if architectural) a `_D
 | 2026-07-13 | Initial MVP defined: Modules 1+2 complete, kernel subset, Module 9 location slice, Module 7 hazard-by-location slice; targets = National Laboratory of the Rockies, Gaylord-class hotels, casinos | — | Founder-defined; recorded in pdd.md and `_DECISIONS.md`; resolves PDD Open Question #3 |
 | 2026-07-13 | AI-Assisted Incident Report Writing confirmed IN despite deferability | in | Headline differentiator for all three targets |
 | 2026-07-13 | Command Palette, CLI-Style Input, Tenant-Defined Subtypes moved to fast-follow | out | Core loop works without them; already spec'd, cheap to trail |
+| 2026-07-13 | Elicitation order: Module 3 before the Module 9/7 slices (scope unchanged) | — | Module 3's features are the heaviest consumers of locations/zones; defining consumers first informs the slice design (consumers-before-mechanism) |
