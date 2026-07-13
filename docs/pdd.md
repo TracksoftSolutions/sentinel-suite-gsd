@@ -43,7 +43,7 @@ Sentinel Suite is a unified platform designed to serve both contract security co
 
 ## MVP Definition & Target Customers
 
-*Added during the platform design review — resolves Open Question #3 (module build order / phased rollout prioritization).*
+*Added during the platform design review — resolves Open Question #3 (module build order / phased rollout prioritization). This section is the stable summary; the **living scope ledger** (feature-level in/out tracking, scope gates, change log) is [docs/mvp.md](mvp.md) — scope moves there first.*
 
 ### MVP scope
 
