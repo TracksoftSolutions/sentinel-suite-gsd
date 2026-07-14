@@ -89,7 +89,7 @@ Two more pieces, both smaller and more self-contained:
 ## Integrations
 
 - **Active Incident Queue (CAD Console)**: source of the Card read-model both Queue and Kanban panels render; Agency Handoff Log registers as a `feed`-role type under Incident (retrofit — a Queue Role Registration entry, same mechanism Incident Update already uses).
-- **GIS & Mapping Services**: source of the Map panel — this doc embeds it, doesn't reimplement it.
+- **Command Center's Unified Operational Picture (UOP) Map**: source of the Map panel *(retrofit)* — the panel embeds that doc's full live composition (unit positions, Active Incident Queue activity pins, geofences, overlays), not a bare GIS & Mapping Services map view as originally described here; UOP Map registers itself as this Panel Registry's `map` type rather than the console defining a second, thinner map implementation.
 - **Status & State Monitors**: source of the Unit Roster panel's live Unit State data.
 - **Unit Dispatch & Proximity Routing, Call Intake & Logging, Incident Reporting & Management, Guard Tour & Checkpoint Verification, Patrol Management**: owning modules of whatever record a Detail panel pins — the panel reuses their own action surfaces and rendering unmodified.
 - **Party Registry / Organization Registry**: source of `receiving_agency_ref`, including inline creation when the agency isn't already registered.
