@@ -67,7 +67,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Situation Reports (SITREPs)
 - [x] Live Camera Feed Ingestion
 - [x] EOC Logistics Hub
-- [ ] Alarm Panel Monitors & Panic Alerts
+- [x] Alarm Panel Monitors & Panic Alerts
 - [ ] Environmental & Weather Map Overlays
 - [ ] Historical Playback Console
 

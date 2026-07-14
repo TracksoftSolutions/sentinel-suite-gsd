@@ -36,6 +36,7 @@ Elicited now, ahead of the MVP-blocking Module 9 (Location Hierarchy Designer, z
    - **Geofences** — static shapes from GIS & Mapping Services (polygon/radius), rendered as drawn boundaries.
    - **Overlay Layers** — GIS & Mapping Services' versioned KML/GeoJSON/shapefile toggle layers (current version only, by default).
    - **Camera Positions** *(retrofit, by Live Camera Feed Ingestion)* — fixed pins for every registered Camera Position; clicking one opens that Camera's feed via embed or deep-link, per that doc's `embed_mode` resolution — off by default in both day-one presets (#5), available to any role permitted to view that Location.
+   - **Alarm Zones** *(retrofit, by Alarm Panel Monitors & Panic Alerts)* — fixed pins for every registered Alarm Zone, styled by `zone_category` and current Signal Disposition-consumed state (armed, disarmed, alarm, trouble/fault) — off by default in both day-one presets (#5), same viewing posture as Camera Positions.
 3. Only **current position** is shown — no trail/breadcrumb. Any movement history, trail, or time-scrub is explicitly out of scope here and belongs entirely to Historical Playback Console (Module 3, not yet specified), which queries GIS's Position Record history directly.
 4. UOP Map is always available as a normal console — it is not gated behind an active EOC Activation (Multi-Incident Console's lightweight escalation trigger). EOC Activation remains a separate, heavier incident-command escalation signal, not a prerequisite for ordinary situational-awareness viewing.
 
@@ -94,6 +95,7 @@ UOP Map itself has no record lifecycle — it is a live console, not a governed 
 - **Historical Playback Console (Module 3, not yet specified)**: explicit boundary — all trail/breadcrumb/time-scrub display belongs there; this doc is strictly current-state.
 - **Module 9 (Location Hierarchy Designer, zones) and Module 7 (hazard-by-location) slices, not yet specified**: forward reference only — when built, hazard and zone-hierarchy content register as additional Overlay Layer content consumed here with no change to this doc.
 - **Live Camera Feed Ingestion** *(retrofit)*: source of the Camera Positions layer (#2); a pin click opens that doc's feed viewer, embed or deep-link per its own `embed_mode` resolution — no camera-specific rendering logic introduced here.
+- **Alarm Panel Monitors & Panic Alerts** *(retrofit)*: source of the Alarm Zones layer (#2); zone state comes from Activity Registry's Signal Disposition, not a new mechanism introduced here.
 
 ## Permissions
 
