@@ -72,7 +72,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Historical Playback Console
 
 ## 4. Access Control
-- [ ] Pre-Registration Portal
+- [x] Pre-Registration Portal
 - [ ] Visitor Kiosk App
 - [ ] Host Arrival Notifications
 - [ ] Access Credential Management
