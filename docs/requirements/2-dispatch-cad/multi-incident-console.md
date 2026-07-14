@@ -61,7 +61,7 @@ Two more pieces, both smaller and more self-contained:
 ## Data Model / Fields
 
 **Panel Registry** (shared catalog — physically defined here, consumed cross-doc)
-- panel_type_id, name (map, queue, kanban, unit_roster, detail, health, org_chart — `health` contributed by Command Center Wallboard View, `org_chart` contributed by ICS Role Mapping & Visual Org Chart), config_schema_ref, registered_by
+- panel_type_id, name (map, queue, kanban, unit_roster, detail, health, org_chart, camera — `health` contributed by Command Center Wallboard View, `org_chart` contributed by ICS Role Mapping & Visual Org Chart, `camera` contributed by Live Camera Feed Ingestion), config_schema_ref, registered_by
 
 **Console Layout** (Settings & Preferences registration)
 - layout_id, tenant_id, owner_scope (a specific user, or a location-chain level for an admin default), name

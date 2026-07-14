@@ -65,7 +65,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Command Center Wallboard View
 - [x] ICS Role Mapping & Visual Org Chart
 - [x] Situation Reports (SITREPs)
-- [ ] Live Camera Feed Ingestion
+- [x] Live Camera Feed Ingestion
 - [ ] EOC Logistics Hub
 - [ ] Alarm Panel Monitors & Panic Alerts
 - [ ] Environmental & Weather Map Overlays
