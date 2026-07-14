@@ -64,7 +64,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Unified Operational Picture (UOP) Map
 - [x] Command Center Wallboard View
 - [x] ICS Role Mapping & Visual Org Chart
-- [ ] Situation Reports (SITREPs)
+- [x] Situation Reports (SITREPs)
 - [ ] Live Camera Feed Ingestion
 - [ ] EOC Logistics Hub
 - [ ] Alarm Panel Monitors & Panic Alerts

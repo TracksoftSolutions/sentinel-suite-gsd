@@ -31,7 +31,7 @@ Under `mandatory_limited`, enforcement lives at the point an officer is actually
 
 ### EOC Activation lifecycle (retrofit)
 1. EOC Activation is promoted from Multi-Incident Console's lightweight record to a full Activity extension — the same "the moment it has a real start/complete lifecycle, it's an Activity" rule already applied to Route Assignment. States: `active` → `deactivated` (Supervisor/EOC Coordinator action, confirmation-gated given operational consequence).
-2. Deactivating an EOC Activation auto-closes (sets `end`) every still-open ICS Role Assignment and Command Post Designation against it.
+2. Deactivating an EOC Activation auto-closes (sets `end`) every still-open ICS Role Assignment and Command Post Designation against it. *(Retrofit, by Situation Reports)* Deactivation additionally halts any future recurring SITREP generation for that activation — an already-generated, unpublished Draft remains publishable afterward as the activation's final SITREP.
 
 ### ICS Org Chart Template (plan layer)
 3. A tenant-configurable **ICS Org Chart Template**, one of two independently authored **scopes**: **`full`** (the entire Section/Branch hierarchy, seeded from a standard ICS/NIMS starter set) and **`limited`** (a small subset — seeded default: Incident Commander, Communications, Support). Both are versioned sets of **Position** definitions (title, section — command/operations/planning/logistics/finance_admin, `parent_position_ref` for reporting line, `is_command_staff` bool). A tenant customizes either scope's Position set freely — Limited is not required to be a literal subset of Full's Positions, though it typically will be in practice. Exact starter vocabulary for either scope is a content/UX concern, not committed here.
