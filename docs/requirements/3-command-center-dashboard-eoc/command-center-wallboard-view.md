@@ -18,7 +18,8 @@ This also resolves Real-Time Delivery & Server-Side Timers' own flagged open que
 - As a **Site Admin**, I want to provision a wall-mounted screen as a Display Device with a one-time pairing token, so it displays live operational data without anyone ever logging into it.
 - As a **Site Admin**, I want to build a Display Profile that assigns different panels to each screen in a TV array, with some screens rotating between views on a timer.
 - As a **Site Admin**, I want to cap what a lobby-visible wallboard can ever render, so a BOLO subject's details or a sensitive Incident never appears there regardless of which panel is assigned to it.
-- As a **Dispatcher or Supervisor**, I want the dispatch-room wallboard to flash a full-screen alarm the instant a persistent alarm fires, and return to normal the moment it's acknowledged from any console.
+- As a **Dispatcher or Supervisor**, I want a signage-only wallboard to flash a full-screen alarm the instant a persistent alarm fires, and return to normal the moment it's acknowledged from any console.
+- As a **Dispatcher** who actively works off one of the wallboard screens as part of my own flow (e.g., a dedicated Queue monitor), I want that screen to show a non-blocking alarm indicator instead of a full-screen takeover, so an unrelated unit's missed check-in doesn't obscure what I'm actively watching — while still never letting me miss that the alarm happened.
 - As a **Supervisor**, I want a System Health tile showing connectivity, active-tour counts, and integration status, so I notice a problem before someone reports it to me.
 - As a **Site Admin**, I want an integration that hasn't registered a health signal to simply not appear on the health tile rather than error, so this doc's mechanism doesn't need a change every time a new integration ships.
 - As a **Dispatcher**, I want to optionally pin the same Health panel into my own personal Multi-Incident Console layout, since it's the same shared panel catalog Wallboard uses.
@@ -41,7 +42,7 @@ This also resolves Real-Time Delivery & Server-Side Timers' own flagged open que
 9. A Display Profile assigns to one or more Display Devices; an admin-locked profile blocks a narrower override, the same lock discipline used throughout Settings & Preferences.
 
 ### Alarm Alert Banner
-10. A Display Device rendering a persistent, active, unacknowledged alarm from Real-Time Delivery's Alarm State Service (scoped to the device's site) shows a full-screen flashing banner that overrides whatever its zones are currently displaying, reverting automatically the instant the alarm is acknowledged (from any console, per that service's existing "silences every console" rule) or resolved. This is a direct rendering of existing server-side alarm state — no new alarm logic, and deliberately no per-device suppression toggle, since a wallboard is precisely the safety-relevant surface a persistent alarm exists to reach.
+10. A Display Device rendering a persistent, active, unacknowledged alarm from Real-Time Delivery's Alarm State Service (scoped to the device's site) always shows a visible indication — this cannot be turned off entirely, since a wallboard is precisely the safety-relevant surface a persistent alarm exists to reach. **How** it's shown is a per-Display-Device `alarm_banner_mode`, admin-set at provisioning (or edited later): **`full_screen_takeover`** (default — overrides whatever its zones are currently displaying, the right default for a pure situational-awareness/signage screen) or **`overlay_banner`** (a non-blocking strip at the top/bottom; zone content stays fully visible underneath — for a screen a Dispatcher is actively working from as part of their own flow, where a full-screen interrupt over someone else's missed check-in would obscure what they're actively monitoring). Either mode reverts/clears automatically the instant the alarm is acknowledged (from any console, per the service's existing "silences every console" rule) or resolved. Audio (where the device has speakers) is unaffected by banner mode — sound continues to signal urgency even when the visual is non-blocking. No new alarm logic either way; this is purely a rendering choice over existing server-side alarm state.
 11. A Display Device cannot itself acknowledge an alarm — it has no user session. Acknowledgment happens from an actual console per Real-Time Delivery's existing permission table; the wallboard's banner clears the moment it does, same as every other subscribed console.
 
 ### Health Signal Monitor
@@ -57,6 +58,7 @@ This also resolves Real-Time Delivery & Server-Side Timers' own flagged open que
 - assigned_display_profile_ref
 - viewing_scope (panel types/layers permitted, capped at provisioning Admin's own access)
 - max_sensitivity_tier (ceiling, excludes flagged-sensitive records regardless of profile content)
+- alarm_banner_mode (full_screen_takeover [default], overlay_banner — cannot be set to "none"/off)
 - provisioning_token (one-time, admin-generated, single-use)
 - status (active, revoked), last_seen_at (heartbeat)
 
@@ -113,7 +115,8 @@ This also resolves Real-Time Delivery & Server-Side Timers' own flagged open que
 - [ ] A Display Device's rendered content never includes a record above its configured max sensitivity tier, even if that record would otherwise fall within its viewing scope's site/panel access.
 - [ ] Revoking a Display Device blanks its screen immediately and its prior pairing token no longer authenticates.
 - [ ] A Display Profile's rotation zone cycles through its configured panel list at the configured interval; a static zone never changes without an explicit profile edit.
-- [ ] A persistent, unacknowledged alarm scoped to a Display Device's site triggers a full-screen flashing banner overriding its current display; acknowledging it from any other console clears the banner on the wallboard within the platform's standard propagation latency.
+- [ ] A persistent, unacknowledged alarm scoped to a Display Device's site triggers that device's configured `alarm_banner_mode` — a full-screen override for `full_screen_takeover` devices, a non-blocking strip with zone content still visible for `overlay_banner` devices; acknowledging it from any other console clears the indicator on the wallboard within the platform's standard propagation latency.
+- [ ] There is no way to configure a Display Device to show no alarm indication at all — `alarm_banner_mode` accepts only `full_screen_takeover` or `overlay_banner`.
 - [ ] The `health` panel shows a tile for every currently-registered Health Signal and cleanly omits any unregistered integration rather than erroring.
 - [ ] A Health Signal whose status-query callback fails or times out shows `unknown`, not `degraded`/`down` and not blank.
 - [ ] A Dispatcher can add the `health` panel type to their own personal Multi-Incident Console layout using the same shared catalog Wallboard draws from.
