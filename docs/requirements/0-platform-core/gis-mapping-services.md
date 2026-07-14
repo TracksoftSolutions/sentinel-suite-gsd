@@ -81,9 +81,10 @@ Module-specific map screens elsewhere in the platform (Command Center's UOP Map,
 - event_id, geofence_id, entity_ref, trigger_type, timestamp
 
 **Overlay Layer**
-- layer_id, tenant_id, name, source_format (kml, geojson, shapefile)
-- current_version, version_history[] (version, uploaded_by, uploaded_at, file_ref)
+- layer_id, tenant_id, name, source_format (kml, geojson, shapefile, live_feed)
+- current_version, version_history[] (version, uploaded_by, uploaded_at, file_ref) — n/a for `live_feed`, see states below
 - default_visibility (bool)
+- feed_adaptor_ref (nullable, required when source_format = live_feed) *(retrofit, by Environmental & Weather Map Overlays — a `live_feed` layer is adaptor-driven and always-current: weather radar, lightning, traffic congestion. No versioning applies since there's nothing to snapshot, unlike an uploaded file.)*
 
 **Offline Tile Cache Manifest** (device-local)
 - device_id, cached_regions[] (site/zone/route refs), last_refreshed_at
@@ -97,7 +98,7 @@ Module-specific map screens elsewhere in the platform (Command Center's UOP Map,
 
 **Geofence:** `draft` → `active` → `inactive` (disabled without deletion, preserves history) → `deleted` (soft-delete, event history retained).
 
-**Overlay Layer:** `uploading` → `validating` → `active` (current version) | `rejected` (validation failure, with reason surfaced to uploader). New uploads to an existing layer create a new version; prior versions remain in history but are not rendered by default.
+**Overlay Layer:** `uploading` → `validating` → `active` (current version) | `rejected` (validation failure, with reason surfaced to uploader). New uploads to an existing layer create a new version; prior versions remain in history but are not rendered by default. *(Retrofit — `live_feed` layers skip upload/validation entirely: `active`/`inactive` only, toggled the moment a feed adaptor is configured.)*
 
 ## Integrations
 

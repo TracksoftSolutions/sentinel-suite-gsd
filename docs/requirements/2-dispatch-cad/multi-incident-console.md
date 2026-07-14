@@ -36,7 +36,7 @@ Two more pieces, both smaller and more self-contained:
 ## Functional Requirements
 
 ### Panel Registry & dock
-1. A **Panel Registry** defines the pluggable panel types available to this console. Day one: `map`, `queue`, `kanban`, `unit_roster`, `detail`. Future features may register additional panel types against this registry.
+1. A **Panel Registry** defines the pluggable panel types available to this console. Day one: `map`, `queue`, `kanban`, `unit_roster`, `detail`. Future features may register additional panel types against this registry. *(Retrofit: confirmed as a cross-doc shared catalog, not exclusively owned by this doc, once Command Center Wallboard View registered as its second real consumer — that doc's `health` panel type is selectable here too, arrangement mechanism unchanged. See [command-center-wallboard-view.md](../3-command-center-dashboard-eoc/command-center-wallboard-view.md).)*
 2. Panels arrange into dock zones (e.g., left/right/top/bottom/center), tab together within a zone, resize, and rearrange via drag — with a full non-drag keyboard-accessible alternative for every rearrangement action (see Non-Functional).
 3. Multiple instances of the same panel type can be open simultaneously, each with its own instance config (e.g., two Detail panels pinning two different Incidents; two Queue panels with different filters).
 
@@ -60,17 +60,18 @@ Two more pieces, both smaller and more self-contained:
 
 ## Data Model / Fields
 
-**Panel Registry** (local to this doc)
-- panel_type_id, name (map, queue, kanban, unit_roster, detail), config_schema_ref, registered_by
+**Panel Registry** (shared catalog — physically defined here, consumed cross-doc)
+- panel_type_id, name (map, queue, kanban, unit_roster, detail, health, org_chart, camera, alarm_monitor — `health` contributed by Command Center Wallboard View, `org_chart` contributed by ICS Role Mapping & Visual Org Chart, `camera` contributed by Live Camera Feed Ingestion, `alarm_monitor` contributed by Alarm Panel Monitors & Panic Alerts), config_schema_ref, registered_by
 
 **Console Layout** (Settings & Preferences registration)
 - layout_id, tenant_id, owner_scope (a specific user, or a location-chain level for an admin default), name
 - panel_instances[] (panel_type, dock_zone, tab_position, size, instance_config — e.g. a Queue panel's filter, a Kanban panel's group-by dimension, a Detail panel's target entity_id)
 - locked (bool, admin-set)
 
-**EOC Activation** (lightweight — full lifecycle deferred to Command Center / Emergency Management)
-- activation_id, tenant_id, incident_ref
+**EOC Activation** *(retrofit — promoted to a full Activity extension by [ics-role-mapping-visual-org-chart.md](../3-command-center-dashboard-eoc/ics-role-mapping-visual-org-chart.md), which completes the lifecycle this doc deliberately left thin; TPT level: entity_id shared PK, FK → Activity.entity_id)*
+- entity_id (PK, FK → Activity), incident_ref
 - activated_by, activated_at, step_up_verified (bool, when tenant-required)
+- status (active, deactivated), deactivated_by, deactivated_at, org_chart_template_version_ref
 
 **Agency Handoff Log** (thin Activity extension, TPT level: entity_id shared PK, FK → Activity.entity_id)
 - entity_id (PK, FK → Activity)
@@ -82,14 +83,14 @@ Two more pieces, both smaller and more self-contained:
 
 **Console Layout:** created/edited freely by its owner; `locked` admin defaults block narrower override, same as Queue View's existing lock mechanic.
 
-**EOC Activation:** created once, `active` — no further lifecycle owned here; downstream deactivation/resolution mechanics belong to Command Center/Emergency Management once specified.
+**EOC Activation:** `active` → `deactivated` *(retrofit — see [ics-role-mapping-visual-org-chart.md](../3-command-center-dashboard-eoc/ics-role-mapping-visual-org-chart.md) for the completed lifecycle and cascading close of role assignments/command post designations)*.
 
 **Agency Handoff Log:** created once, immutable.
 
 ## Integrations
 
 - **Active Incident Queue (CAD Console)**: source of the Card read-model both Queue and Kanban panels render; Agency Handoff Log registers as a `feed`-role type under Incident (retrofit — a Queue Role Registration entry, same mechanism Incident Update already uses).
-- **GIS & Mapping Services**: source of the Map panel — this doc embeds it, doesn't reimplement it.
+- **Command Center's Unified Operational Picture (UOP) Map**: source of the Map panel *(retrofit)* — the panel embeds that doc's full live composition (unit positions, Active Incident Queue activity pins, geofences, overlays), not a bare GIS & Mapping Services map view as originally described here; UOP Map registers itself as this Panel Registry's `map` type rather than the console defining a second, thinner map implementation.
 - **Status & State Monitors**: source of the Unit Roster panel's live Unit State data.
 - **Unit Dispatch & Proximity Routing, Call Intake & Logging, Incident Reporting & Management, Guard Tour & Checkpoint Verification, Patrol Management**: owning modules of whatever record a Detail panel pins — the panel reuses their own action surfaces and rendering unmodified.
 - **Party Registry / Organization Registry**: source of `receiving_agency_ref`, including inline creation when the agency isn't already registered.
@@ -97,8 +98,8 @@ Two more pieces, both smaller and more self-contained:
 - **Authentication & Authorization**: source of the optional step-up requirement a tenant can flag on EOC activation.
 - **Domain Events / Notifications Engine**: EOC activation publishes an automation-eligible event; actual notification/escalation behavior is Tenant Admin-configured, not hardcoded here.
 - **Settings & Preferences**: owns Console Layouts (personal and admin-locked).
-- **Command Center — Command Center Wallboard View (Module 3, future)**: a likely second consumer of this doc's Panel Registry/dock mechanism — if confirmed when that module is specified, promote the mechanism to Platform Core rather than rebuilding it there.
-- **Command Center / Emergency Management (Modules 3 & 5, future)**: intended eventual owners of full EOC activation mechanics once an Incident's EOC Activation record exists — forward reference only, not built here.
+- **Command Center — Command Center Wallboard View**: confirmed second consumer of this doc's panel_type catalog (retrofit — see #1) via its own admin-authored Display Profile, a deliberately separate arrangement mechanism from this doc's personal Console Layout.
+- **Command Center — ICS Role Mapping & Visual Org Chart**: completes EOC Activation's lifecycle (retrofit — see Data Model/States above) and contributes the `org_chart` panel type to this doc's shared Panel Registry catalog. Emergency Management (Module 5, future) remains the intended eventual owner of anything beyond ICS command staffing (e.g. full EOC Activation Checklists) — forward reference only, not built here.
 
 ## Permissions
 
@@ -135,6 +136,5 @@ Two more pieces, both smaller and more self-contained:
 
 - Exact panel-count/performance bounds (how many simultaneous panels before layout or data-freshness degrades) — a technical-spec-level concern.
 - Exact drag-to-column business-rule mapping per Activity type in the Kanban panel (e.g., what happens if a dragged transition isn't actually valid for that record's current state) — needs a defined fallback (reject with explanation vs. open the normal action flow pre-filled), not fully specified here.
-- Whether the Panel Registry/dock mechanism should promote to Platform Core once Command Center Wallboard View is specified and confirmed as a second consumer — flagged, not decided, per the platform's established promote-on-second-consumer pattern.
-- Default EOC step-up requirement (on by default vs. tenant opt-in) — pending a broader Emergency Management posture once that module exists.
+- Default EOC step-up requirement (on by default vs. tenant opt-in) — pending a broader Emergency Management posture once that module exists. *(EOC Activation's own post-activation lifecycle is no longer open — see the retrofit above.)*
 - Exact handoff-log content requirements beyond the fields specified (e.g., whether items/evidence transferred needs its own structured list rather than free-text notes) — deferred to Investigation Management's future evidence-tracking features if a real need surfaces.

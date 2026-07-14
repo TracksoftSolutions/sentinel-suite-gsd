@@ -61,14 +61,14 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Historical CAD Log Reconstruction
 
 ## 3. Command Center / Dashboard / EOC
-- [ ] Unified Operational Picture (UOP) Map
-- [ ] Command Center Wallboard View
-- [ ] ICS Role Mapping & Visual Org Chart
-- [ ] Situation Reports (SITREPs)
-- [ ] Live Camera Feed Ingestion
-- [ ] EOC Logistics Hub
-- [ ] Alarm Panel Monitors & Panic Alerts
-- [ ] Environmental & Weather Map Overlays
+- [x] Unified Operational Picture (UOP) Map
+- [x] Command Center Wallboard View
+- [x] ICS Role Mapping & Visual Org Chart
+- [x] Situation Reports (SITREPs)
+- [x] Live Camera Feed Ingestion
+- [x] EOC Logistics Hub
+- [x] Alarm Panel Monitors & Panic Alerts
+- [x] Environmental & Weather Map Overlays
 - [ ] Historical Playback Console
 
 ## 4. Access Control
