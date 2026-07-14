@@ -6,6 +6,8 @@ This doc completes the lifecycle Multi-Incident Console deliberately left thin: 
 
 ICS adoption is deliberately two-tiered, not one-size-fits-all: **Full ICS** (the entire Section/Branch hierarchy) stands up only via EOC Activation, exactly as originally scoped — available, never forced. **Limited ICS** (a small, tenant-customizable subset of Positions — typically Incident Commander, Communications, and Support) can be assigned directly to **any Incident**, with no EOC Activation prerequisite at all. This matters for tenants with a mandatory NIMS/ICS adoption posture (a DOE national lab, most notably) that need at minimum-viable command accountability on ordinary incidents that never escalate to a full EOC response. An **ICS Adoption Policy**, tenant-configured, governs whether Limited ICS is merely available (default, every other target customer) or expected on every Incident.
 
+Within Limited ICS, "expected" is per-Position, not all-or-nothing: only **Incident Commander is absolutely required** by default — a minor incident (e.g., a trespasser who leaves on challenge, no additional units needed) still gets logged as an Incident per policy and must therefore have at minimum an IC, but has no real need for a Communications or Support role. Each Position (either scope) carries its own tenant-configurable `is_required` flag — seeded `true` only for Incident Commander — so mandatory adoption never forces staffing beyond what an incident actually needed.
+
 ## Actors & Roles
 
 - **Incident Commander / Section Chiefs / other ICS role holders** — real Person entities; may be platform users or inline-created external/mutual-aid personnel.
@@ -31,11 +33,11 @@ ICS adoption is deliberately two-tiered, not one-size-fits-all: **Full ICS** (th
 2. Deactivating an EOC Activation auto-closes (sets `end`) every still-open ICS Role Assignment and Command Post Designation against it.
 
 ### ICS Org Chart Template (plan layer)
-3. A tenant-configurable **ICS Org Chart Template**, one of two independently authored **scopes**: **`full`** (the entire Section/Branch hierarchy, seeded from a standard ICS/NIMS starter set) and **`limited`** (a small subset — seeded default: Incident Commander, Communications, Support). Both are versioned sets of **Position** definitions (title, section — command/operations/planning/logistics/finance_admin, `parent_position_ref` for reporting line). A tenant customizes either scope's Position set freely — Limited is not required to be a literal subset of Full's Positions, though it typically will be in practice. Exact starter vocabulary for either scope is a content/UX concern, not committed here.
+3. A tenant-configurable **ICS Org Chart Template**, one of two independently authored **scopes**: **`full`** (the entire Section/Branch hierarchy, seeded from a standard ICS/NIMS starter set) and **`limited`** (a small subset — seeded default: Incident Commander, Communications, Support). Both are versioned sets of **Position** definitions (title, section — command/operations/planning/logistics/finance_admin, `parent_position_ref` for reporting line, `is_required` bool — seeded `true` only for Incident Commander, `false` for every other seeded Position). A tenant customizes either scope's Position set and each Position's `is_required` flag freely — Limited is not required to be a literal subset of Full's Positions, though it typically will be in practice. Exact starter vocabulary for either scope is a content/UX concern, not committed here.
 4. Template edits version rather than mutate in place (same discipline as Route/Tour Definition) — a standing chart pins the template version it started against; a later template edit never retroactively changes an in-progress chart's structure.
 
 ### ICS Adoption Policy
-5. A tenant-level **ICS Adoption Policy** (Settings & Preferences-registered) governs Limited ICS's posture: **`optional`** (default — Limited ICS is available as an action on any Incident, never required) or **`mandatory_limited`** (every Incident is expected to have its Limited Positions staffed at least once). `mandatory_limited` never blocks an ordinary operational action mid-incident — it extends Incident Reporting & Management's existing Supervisor Review sign-off gate (retrofit — see Integrations), the same "gate at closure/sign-off, never mid-operation" shape already used by Ticket Book's must-reconcile-before-closing rule.
+5. A tenant-level **ICS Adoption Policy** (Settings & Preferences-registered) governs Limited ICS's posture: **`optional`** (default — Limited ICS is available as an action on any Incident, never required) or **`mandatory_limited`** (every Incident is expected to have every `is_required = true` Limited Position staffed at least once — Incident Commander by default, plus whatever else a tenant has additionally flagged required). `mandatory_limited` never blocks an ordinary operational action mid-incident — it extends Incident Reporting & Management's existing Supervisor Review sign-off gate (retrofit — see Integrations), the same "gate at closure/sign-off, never mid-operation" shape already used by Ticket Book's must-reconcile-before-closing rule. A non-required Position (Communications, Support by default) stays fully assignable when an incident's scale actually calls for it, but its absence never blocks sign-off.
 
 ### ICS Role Assignment (execution layer)
 6. Standing up a chart instantiates its Position set from the pinned template version; every Position is then independently staffable. **Full** ICS stands up only when EOC Response is activated, anchored to the EOC Activation. **Limited** ICS stands up directly on any Incident — no EOC Activation prerequisite — anchored to that Incident.
@@ -66,7 +68,7 @@ ICS adoption is deliberately two-tiered, not one-size-fits-all: **Full ICS** (th
 - template_id, tenant_id, scope (full, limited), version, name, status (active, archived)
 
 **Position**
-- position_id, template_version_ref, title, section (command, operations, planning, logistics, finance_admin), parent_position_ref (nullable), is_command_staff (bool)
+- position_id, template_version_ref, title, section (command, operations, planning, logistics, finance_admin), parent_position_ref (nullable), is_command_staff (bool), is_required (bool — default true only for the seeded Incident Commander Position, false otherwise; meaningful for sign-off enforcement only under a `mandatory_limited` policy)
 
 **ICS Role Assignment** (EntityAssociation Extension — entity_id_a = Person, entity_id_b = Incident [Limited scope] or EOC Activation [Full scope]; association_id is the shared PK)
 - position_ref, start, end (nullable — null means current holder), assigned_by
@@ -79,7 +81,7 @@ ICS adoption is deliberately two-tiered, not one-size-fits-all: **Full ICS** (th
 - **EOC Activation:** `active` → `deactivated` (terminal; cascades close to open Full-ICS Role Assignments and Command Post Designations).
 - **ICS Org Chart Template:** `active` → `archived` per version, same as any versioned Definition, independently for each scope.
 - **ICS Role Assignment / Command Post Designation:** no separate status field — current vs. historical is purely `end is null`, same discipline as Custody's active/removed sequence.
-- **Incident (retrofit — see Integrations):** under a `mandatory_limited` ICS Adoption Policy, Supervisor Review sign-off additionally requires at least one historical ICS Role Assignment per mandatory Limited Position on that Incident — extending the existing `concluded`-gating sign-off check, not a new gate.
+- **Incident (retrofit — see Integrations):** under a `mandatory_limited` ICS Adoption Policy, Supervisor Review sign-off additionally requires at least one historical ICS Role Assignment per `is_required = true` Limited Position on that Incident (Incident Commander by default) — extending the existing `concluded`-gating sign-off check, not a new gate. A non-required Position's absence never affects sign-off.
 
 ## Integrations
 
@@ -119,7 +121,8 @@ ICS adoption is deliberately two-tiered, not one-size-fits-all: **Full ICS** (th
 - [ ] Assigning/relieving a Command Staff Position requires passing the confirmation gate before the change commits; a non-Command-Staff Position does not.
 - [ ] A Limited ICS Position can be assigned directly to any Incident with no EOC Activation in effect.
 - [ ] At an `optional`-policy tenant, an Incident can reach `concluded` with zero ICS Role Assignments of any kind.
-- [ ] At a `mandatory_limited`-policy tenant, Supervisor Review sign-off is blocked until every mandatory Limited Position has at least one historical ICS Role Assignment on that Incident; ordinary mid-incident actions (Incident Updates, etc.) remain unaffected by unstaffed positions.
+- [ ] At a `mandatory_limited`-policy tenant, Supervisor Review sign-off is blocked until every `is_required = true` Limited Position (Incident Commander by default) has at least one historical ICS Role Assignment on that Incident; ordinary mid-incident actions (Incident Updates, etc.) remain unaffected by unstaffed positions.
+- [ ] A minor Incident with only an Incident Commander assigned (e.g., a trespasser who left on challenge) reaches sign-off cleanly at a `mandatory_limited` tenant — an unstaffed, non-required Communications or Support Position never blocks it.
 - [ ] An Incident's existing Limited ICS Role Assignments remain queryable unchanged after that Incident triggers Activate EOC Response and a separate Full ICS chart stands up.
 
 ## Open Questions
