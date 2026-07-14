@@ -61,16 +61,17 @@ Two more pieces, both smaller and more self-contained:
 ## Data Model / Fields
 
 **Panel Registry** (shared catalog — physically defined here, consumed cross-doc)
-- panel_type_id, name (map, queue, kanban, unit_roster, detail, health — `health` contributed by Command Center Wallboard View), config_schema_ref, registered_by
+- panel_type_id, name (map, queue, kanban, unit_roster, detail, health, org_chart — `health` contributed by Command Center Wallboard View, `org_chart` contributed by ICS Role Mapping & Visual Org Chart), config_schema_ref, registered_by
 
 **Console Layout** (Settings & Preferences registration)
 - layout_id, tenant_id, owner_scope (a specific user, or a location-chain level for an admin default), name
 - panel_instances[] (panel_type, dock_zone, tab_position, size, instance_config — e.g. a Queue panel's filter, a Kanban panel's group-by dimension, a Detail panel's target entity_id)
 - locked (bool, admin-set)
 
-**EOC Activation** (lightweight — full lifecycle deferred to Command Center / Emergency Management)
-- activation_id, tenant_id, incident_ref
+**EOC Activation** *(retrofit — promoted to a full Activity extension by [ics-role-mapping-visual-org-chart.md](../3-command-center-dashboard-eoc/ics-role-mapping-visual-org-chart.md), which completes the lifecycle this doc deliberately left thin; TPT level: entity_id shared PK, FK → Activity.entity_id)*
+- entity_id (PK, FK → Activity), incident_ref
 - activated_by, activated_at, step_up_verified (bool, when tenant-required)
+- status (active, deactivated), deactivated_by, deactivated_at, org_chart_template_version_ref
 
 **Agency Handoff Log** (thin Activity extension, TPT level: entity_id shared PK, FK → Activity.entity_id)
 - entity_id (PK, FK → Activity)
@@ -82,7 +83,7 @@ Two more pieces, both smaller and more self-contained:
 
 **Console Layout:** created/edited freely by its owner; `locked` admin defaults block narrower override, same as Queue View's existing lock mechanic.
 
-**EOC Activation:** created once, `active` — no further lifecycle owned here; downstream deactivation/resolution mechanics belong to Command Center/Emergency Management once specified.
+**EOC Activation:** `active` → `deactivated` *(retrofit — see [ics-role-mapping-visual-org-chart.md](../3-command-center-dashboard-eoc/ics-role-mapping-visual-org-chart.md) for the completed lifecycle and cascading close of role assignments/command post designations)*.
 
 **Agency Handoff Log:** created once, immutable.
 
@@ -98,7 +99,7 @@ Two more pieces, both smaller and more self-contained:
 - **Domain Events / Notifications Engine**: EOC activation publishes an automation-eligible event; actual notification/escalation behavior is Tenant Admin-configured, not hardcoded here.
 - **Settings & Preferences**: owns Console Layouts (personal and admin-locked).
 - **Command Center — Command Center Wallboard View**: confirmed second consumer of this doc's panel_type catalog (retrofit — see #1) via its own admin-authored Display Profile, a deliberately separate arrangement mechanism from this doc's personal Console Layout.
-- **Command Center / Emergency Management (Modules 3 & 5, future)**: intended eventual owners of full EOC activation mechanics once an Incident's EOC Activation record exists — forward reference only, not built here.
+- **Command Center — ICS Role Mapping & Visual Org Chart**: completes EOC Activation's lifecycle (retrofit — see Data Model/States above) and contributes the `org_chart` panel type to this doc's shared Panel Registry catalog. Emergency Management (Module 5, future) remains the intended eventual owner of anything beyond ICS command staffing (e.g. full EOC Activation Checklists) — forward reference only, not built here.
 
 ## Permissions
 
@@ -135,5 +136,5 @@ Two more pieces, both smaller and more self-contained:
 
 - Exact panel-count/performance bounds (how many simultaneous panels before layout or data-freshness degrades) — a technical-spec-level concern.
 - Exact drag-to-column business-rule mapping per Activity type in the Kanban panel (e.g., what happens if a dragged transition isn't actually valid for that record's current state) — needs a defined fallback (reject with explanation vs. open the normal action flow pre-filled), not fully specified here.
-- Default EOC step-up requirement (on by default vs. tenant opt-in) — pending a broader Emergency Management posture once that module exists.
+- Default EOC step-up requirement (on by default vs. tenant opt-in) — pending a broader Emergency Management posture once that module exists. *(EOC Activation's own post-activation lifecycle is no longer open — see the retrofit above.)*
 - Exact handoff-log content requirements beyond the fields specified (e.g., whether items/evidence transferred needs its own structured list rather than free-text notes) — deferred to Investigation Management's future evidence-tracking features if a real need surfaces.

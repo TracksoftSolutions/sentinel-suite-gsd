@@ -63,7 +63,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 ## 3. Command Center / Dashboard / EOC
 - [x] Unified Operational Picture (UOP) Map
 - [x] Command Center Wallboard View
-- [ ] ICS Role Mapping & Visual Org Chart
+- [x] ICS Role Mapping & Visual Org Chart
 - [ ] Situation Reports (SITREPs)
 - [ ] Live Camera Feed Ingestion
 - [ ] EOC Logistics Hub
