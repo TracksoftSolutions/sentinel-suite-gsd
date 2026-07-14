@@ -60,6 +60,7 @@ A single **Supervisor Review** governs the whole Incident regardless of report s
 13. A **Supervisor Review** gates an Incident's move to `closed` — reviewer, status, comments — following exactly the same "governance record references but never mutates what it judges" discipline DAR's Shift Review established, appropriate given an incident's liability/investigation significance.
 14. One Supervisor Review governs the whole Incident regardless of report scope mode — reviewing the full update timeline once, not once per responder, keeping the review gate simple even when reporting output is split per-responder.
 15. Sign-off is only reachable once the Supervisor has reviewed the current update timeline; the Incident can still receive new Incident Updates after sign-off (e.g., new information surfaces), which reopens the review (mirrors DAR's kickback-reopens-editing posture, applied here as new-information-reopens-review).
+15a. *(Retrofit, added by ICS Role Mapping & Visual Org Chart)* At a tenant whose ICS Adoption Policy is `mandatory_limited`, sign-off additionally requires at least one historical ICS Role Assignment per mandatory Limited Position on that Incident — the sign-off criteria grow by one check, not a second gate. At the default `optional` policy, this adds nothing.
 
 ### Severity-driven escalation
 16. Reaching a configured severity level (e.g., an Incident created or updated to `severity = Critical`) publishes an automation-eligible domain event, letting a Tenant Admin configure the actual notification/escalation behavior via Domain Events — this doc never hardcodes a single alert path.
@@ -118,6 +119,7 @@ A single **Supervisor Review** governs the whole Incident regardless of report s
 - **AI-Assisted Incident Report Writing (next in queue)**: will enhance how an Incident Update's `narrative` gets drafted (voice/AI-assisted composition) — not built here, this doc only owns the record/workflow the AI-assist feature writes into.
 - **Investigation Management (future — Case Files, Digital/Physical Evidence Tracking)**: an Incident is the natural seed record for a future Case File; full evidentiary chain-of-custody is deferred to that module.
 - **Dispatch/CAD (future)**: consumes Incident's merge mechanism directly for its own Incident Merging feature, per Activity Registry's existing forward reference.
+- **Command Center — ICS Role Mapping & Visual Org Chart** *(retrofit)*: Supervisor Review sign-off's criteria extend per that doc's `mandatory_limited` ICS Adoption Policy — see FR #15a.
 
 ## Permissions
 
