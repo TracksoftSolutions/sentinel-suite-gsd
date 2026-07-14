@@ -24,7 +24,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Tenant Management *(added during Module 0 gap review — provisioning, edition/plan, lifecycle, isolation tier; introduces Client Engagements, the contractor↔client dual-tenancy mechanism.)*
 - [x] Feature Management *(added during Module 0 gap review — per-tenant/edition entitlement flags (boolean + quota kinds), distinct axis from Settings & Preferences' value-chain; flagged as a gap in mvp.md.)*
 - [x] Blob/File Storage *(added during Module 0 gap review — adaptor-pattern file storage backend, malware scanning, tenant-scoped content-hash dedup, orphan cleanup; Document Registry explicitly deferred this as out of scope.)*
-- [ ] Background Job Processing *(added during Module 0 gap review — durable job/scheduled-task infrastructure; already silently assumed by Entity Merge's background rewrite and Offline Sync.)*
+- [x] Background Job Processing *(added during Module 0 gap review — durable job/scheduled-task infrastructure, platform-enforced idempotency, retry/dead-letter, isolation-tier-aware placement; already silently assumed by Entity Merge's background rewrite and Offline Sync.)*
 
 ## 0.5 Master Records
 - [x] Entity Registry Core
