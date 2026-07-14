@@ -21,6 +21,12 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Tenant-Defined Types & Custom Fields *(added during elicitation, generalized from a pattern first drafted locally in Courtesy Patrol / Entity Registry Core)*
 - [x] AI / LLM Services *(added during elicitation, generalized from a dependency first assumed in AI-Assisted Incident Report Writing / CLI-Style Input)*
 - [x] Real-Time Delivery & Server-Side Timers *(added during platform design review — owns the live console channel, server-side escalation timers, alarm state, and the platform's baseline real-time NFR targets)*
+- [x] Tenant Management *(added during Module 0 gap review — provisioning, edition/plan, lifecycle, isolation tier; introduces Client Engagements, the contractor↔client dual-tenancy mechanism.)*
+- [x] Feature Management *(added during Module 0 gap review — per-tenant/edition entitlement flags (boolean + quota kinds), distinct axis from Settings & Preferences' value-chain; flagged as a gap in mvp.md.)*
+- [x] Blob/File Storage *(added during Module 0 gap review — adaptor-pattern file storage backend, malware scanning, tenant-scoped content-hash dedup, orphan cleanup; Document Registry explicitly deferred this as out of scope.)*
+- [x] Background Job Processing *(added during Module 0 gap review — durable job/scheduled-task infrastructure, platform-enforced idempotency, retry/dead-letter, isolation-tier-aware placement; already silently assumed by Entity Merge's background rewrite and Offline Sync.)*
+- [x] Global Search & Data Indexing *(added during Module 0 second-pass gap review — precomputed adaptor-pattern index, opt-in per record type, permission always re-checked live at query time; Command Palette's "universal search" and CLI-Style Input's identifier lookups both assumed this existed.)*
+- [x] Bulk Import & Data Migration *(added during Module 0 second-pass gap review — mandatory dry-run validation, dedicated `bulk_import` permission, duplicates routed through Entity Registry Core's existing dedup/merge review; closes the "tenant exists but has no legacy data" gap left by Tenant Management.)*
 
 ## 0.5 Master Records
 - [x] Entity Registry Core
