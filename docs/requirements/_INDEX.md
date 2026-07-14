@@ -68,7 +68,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Live Camera Feed Ingestion
 - [x] EOC Logistics Hub
 - [x] Alarm Panel Monitors & Panic Alerts
-- [ ] Environmental & Weather Map Overlays
+- [x] Environmental & Weather Map Overlays
 - [ ] Historical Playback Console
 
 ## 4. Access Control
