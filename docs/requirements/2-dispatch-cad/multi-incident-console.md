@@ -36,7 +36,7 @@ Two more pieces, both smaller and more self-contained:
 ## Functional Requirements
 
 ### Panel Registry & dock
-1. A **Panel Registry** defines the pluggable panel types available to this console. Day one: `map`, `queue`, `kanban`, `unit_roster`, `detail`. Future features may register additional panel types against this registry.
+1. A **Panel Registry** defines the pluggable panel types available to this console. Day one: `map`, `queue`, `kanban`, `unit_roster`, `detail`. Future features may register additional panel types against this registry. *(Retrofit: confirmed as a cross-doc shared catalog, not exclusively owned by this doc, once Command Center Wallboard View registered as its second real consumer — that doc's `health` panel type is selectable here too, arrangement mechanism unchanged. See [command-center-wallboard-view.md](../3-command-center-dashboard-eoc/command-center-wallboard-view.md).)*
 2. Panels arrange into dock zones (e.g., left/right/top/bottom/center), tab together within a zone, resize, and rearrange via drag — with a full non-drag keyboard-accessible alternative for every rearrangement action (see Non-Functional).
 3. Multiple instances of the same panel type can be open simultaneously, each with its own instance config (e.g., two Detail panels pinning two different Incidents; two Queue panels with different filters).
 
@@ -60,8 +60,8 @@ Two more pieces, both smaller and more self-contained:
 
 ## Data Model / Fields
 
-**Panel Registry** (local to this doc)
-- panel_type_id, name (map, queue, kanban, unit_roster, detail), config_schema_ref, registered_by
+**Panel Registry** (shared catalog — physically defined here, consumed cross-doc)
+- panel_type_id, name (map, queue, kanban, unit_roster, detail, health — `health` contributed by Command Center Wallboard View), config_schema_ref, registered_by
 
 **Console Layout** (Settings & Preferences registration)
 - layout_id, tenant_id, owner_scope (a specific user, or a location-chain level for an admin default), name
@@ -97,7 +97,7 @@ Two more pieces, both smaller and more self-contained:
 - **Authentication & Authorization**: source of the optional step-up requirement a tenant can flag on EOC activation.
 - **Domain Events / Notifications Engine**: EOC activation publishes an automation-eligible event; actual notification/escalation behavior is Tenant Admin-configured, not hardcoded here.
 - **Settings & Preferences**: owns Console Layouts (personal and admin-locked).
-- **Command Center — Command Center Wallboard View (Module 3, future)**: a likely second consumer of this doc's Panel Registry/dock mechanism — if confirmed when that module is specified, promote the mechanism to Platform Core rather than rebuilding it there.
+- **Command Center — Command Center Wallboard View**: confirmed second consumer of this doc's panel_type catalog (retrofit — see #1) via its own admin-authored Display Profile, a deliberately separate arrangement mechanism from this doc's personal Console Layout.
 - **Command Center / Emergency Management (Modules 3 & 5, future)**: intended eventual owners of full EOC activation mechanics once an Incident's EOC Activation record exists — forward reference only, not built here.
 
 ## Permissions
@@ -135,6 +135,5 @@ Two more pieces, both smaller and more self-contained:
 
 - Exact panel-count/performance bounds (how many simultaneous panels before layout or data-freshness degrades) — a technical-spec-level concern.
 - Exact drag-to-column business-rule mapping per Activity type in the Kanban panel (e.g., what happens if a dragged transition isn't actually valid for that record's current state) — needs a defined fallback (reject with explanation vs. open the normal action flow pre-filled), not fully specified here.
-- Whether the Panel Registry/dock mechanism should promote to Platform Core once Command Center Wallboard View is specified and confirmed as a second consumer — flagged, not decided, per the platform's established promote-on-second-consumer pattern.
 - Default EOC step-up requirement (on by default vs. tenant opt-in) — pending a broader Emergency Management posture once that module exists.
 - Exact handoff-log content requirements beyond the fields specified (e.g., whether items/evidence transferred needs its own structured list rather than free-text notes) — deferred to Investigation Management's future evidence-tracking features if a real need surfaces.
