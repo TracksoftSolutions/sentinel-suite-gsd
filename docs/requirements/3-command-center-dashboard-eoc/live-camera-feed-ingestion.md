@@ -39,6 +39,9 @@ The real VMS device registry and protocol adaptor are explicitly Module 19's fut
 ### PTZ control
 8. Where a Camera's `vms_adaptor_ref` declares PTZ capability, a **Move Camera** action registers on the Command/Action Bus — a confirmation-gated pass-through invocation of the VMS's own PTZ API, given the real physical consequence of moving hardware other consoles rely on too, never a Sentinel-Suite-native protocol implementation (same boundary precedent as "remote gate controls" elsewhere in the platform). Where the adaptor doesn't declare PTZ, no such action exists at all — a Dispatcher deep-links to the VMS's own control UI instead.
 
+### Historical playback capability *(retrofit, by Historical Playback Console)*
+10a. `vms_adaptor_ref`'s capability declaration gains `historical_playback_supported` (bool, default false) alongside `embed_mode`/PTZ — a Camera whose adaptor declares it contributes a video-track marker to Historical Playback Console's replay sessions, deep-linking into the VMS's own recorded-footage viewer; an adaptor that only supports live embed/deep-link contributes no such marker. No platform-side video storage or streaming is introduced by this declaration.
+
 ### Auto-popup
 9. A triggering event — a Signal Disposition-promoted Activity, a Geofence trigger, or a Duration Watchdog alarm — resolves which Camera(s) to auto-surface using the platform's established explicit-beats-default resolution chain (the same precedence already used for Command/Action Bus parameters): an explicit tenant-configured **Camera Auto-Popup Mapping** (trigger type/value → specific Camera(s)) wins when one exists; otherwise every Camera Position sharing that event's Location (or an ancestor/zone) is suggested by default.
 10. A matched Camera's feed auto-surfaces on every subscribed console/wallboard via the existing Live Update Channel — no new push infrastructure.
@@ -51,6 +54,7 @@ The real VMS device registry and protocol adaptor are explicitly Module 19's fut
 **Camera** (Item extension; entity_id is the shared PK, FK → Item)
 - external_vms_camera_id, vms_adaptor_ref, embed_mode (embed, deep_link — resolved from adaptor, admin-overridable)
 - ptz_capable (bool, resolved from adaptor)
+- historical_playback_supported (bool, resolved from adaptor — retrofit, consumed by Historical Playback Console)
 
 **Camera Mount Association** (EntityAssociation — entity_id_a = Camera Position, entity_id_b = Camera; association_id is the shared PK)
 - mounted_at, removed_at (nullable — null means current mount)
@@ -76,6 +80,7 @@ The real VMS device registry and protocol adaptor are explicitly Module 19's fut
 - **Command/Action Bus**: Move Camera (PTZ pass-through) registers as a confirmation-gated action.
 - **Real-Time Delivery & Server-Side Timers**: the Live Update Channel delivers auto-popup surfacing to every subscribed console.
 - **Module 19 — VMS Camera Stream Ingestion (not yet specified)**: forward reference — the eventual real device registry/protocol adaptor; this doc's Camera VMS-reference fields are an explicit interim stand-in, flagged for reconciliation once that module is specified, same posture as DAR's Shift Window pending Post Schedule Builder.
+- **Historical Playback Console** *(retrofit — consumer)*: consumes `historical_playback_supported` to decide which Cameras contribute a video-track marker to a replay session; the platform never stores or streams footage on that doc's behalf either.
 
 ## Permissions
 

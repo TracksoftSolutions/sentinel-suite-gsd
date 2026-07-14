@@ -69,7 +69,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] EOC Logistics Hub
 - [x] Alarm Panel Monitors & Panic Alerts
 - [x] Environmental & Weather Map Overlays
-- [ ] Historical Playback Console
+- [x] Historical Playback Console
 
 ## 4. Access Control
 - [ ] Pre-Registration Portal
