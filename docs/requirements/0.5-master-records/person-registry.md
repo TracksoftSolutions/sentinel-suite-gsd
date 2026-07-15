@@ -77,6 +77,7 @@ This doc establishes each extension type's *core* identifying fields and lifecyc
 
 **Employee** (TPT level: entity_id shared PK, FK → Person.entity_id)
 - entity_id (PK, FK → Person), employee_identifier, employment_status, primary_site_ref
+- default_backup_host_ref (nullable, FK → Person/Employee — retrofit, Access Control's Host Arrival Notifications: a standing backup contacted if this Employee doesn't confirm a visitor's arrival in time)
 
 **Visitor** (TPT level)
 - entity_id (PK, FK → Person), default_visit_purpose (nullable), default_host_ref (nullable) — no per-visit state; see #11

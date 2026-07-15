@@ -76,6 +76,7 @@ This doc also introduces the **PIAM Adaptor Registration** — the base of the n
 - external_piam_ref (nullable — HID SAFE's own record identifier, once synced)
 - initiation_channel gains `kiosk_walk_in` *(retrofit — Visitor Kiosk App, #5d)*
 - qr_pass_token (generated on reaching `approved`, emailed to the visitor — retrofit, #5e)
+- explicit_backup_host_ref (nullable, FK → Person/Employee — retrofit, Host Arrival Notifications: overrides the host's standing default backup for this specific invitation)
 
 **Watchlist Match Alert** (feature-local, deliberately not a BOLO Flag)
 - alert_id, pre_registration_ref, source (sentinel_native, hid_safe), match_details
