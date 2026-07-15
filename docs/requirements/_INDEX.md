@@ -95,7 +95,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 
 ## 6. Emergency Planning
 - [x] Pre-Incident Plans (Preplans)
-- [ ] Incident Action Checklists
+- [x] Incident Action Checklists
 - [ ] Continuity of Operations Plans (COOP)
 - [ ] Muster Check-in App
 - [ ] Evacuation Roster Reconciliation
