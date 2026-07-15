@@ -40,9 +40,12 @@ Structurally, **Access Credential** registers as an Item extension (full identit
 ### Deprovisioning (immediate, ungated)
 7. A monitored Employee/Contractor/Visitor status transition to `terminated`/`inactive` (Person Registry) fires a **Domain Event** that immediately revokes every active CredentialAssignment that Person holds — zero approval delay, the platform's second deliberate exception to the confirmation-gate default (after SOS Alert's zero-hesitation trigger), because delaying a revocation is the harm, not executing one. The Credential transitions to `revocation_pending_confirmation` — a distinct, honest state — and only reaches `revoked` once the responsible adaptor confirms the physical/logical access was actually cut; a native-only credential (nothing external to confirm) goes straight to `revoked`. Manual revocation (a lost badge, a policy violation) follows the identical immediate, ungated path via an explicit Revoke action.
 
+### Badge template
+8. A **Badge Template** (Site/Tenant Admin-configurable, local to this doc) declares which fields render where on a printed badge (photo, name, credential type, expiration, custom logo/color scheme) — closing MODULES.md's "Badge Print Layout Tool." Visitor Kiosk App's own visitor badge is *retrofitted* to render through this same mechanism (a `visitor` Badge Template, distinct from a general employee/contractor template) rather than the fixed layout that doc originally assumed — one configurable rendering mechanism, not two.
+
 ### Recertification
-8. A tenant-configurable recurring cadence (per credential type or role, another consumer of Background Job Processing's recurring-job registry) prompts the current holder's Supervisor to re-affirm a CredentialAssignment is still needed. Confirming updates `last_recertified_at`/`next_recertification_due`; recertification is deliberately **not** modeled as a governance record layered over a batch (unlike DAR's Shift Review) since it's a single, recurring per-assignment prompt, not a retrospective review of many records at once.
-9. A **Recertification Lapse Policy** (Settings & Preferences Definition, tenant-configurable) sets `lapse_action`: `escalate_only` (a new Duration Watchdog instance feeds Critical Event Escalation Policy, the credential stays active — the standard no-compliance-blocking-operations posture) or `auto_suspend` (the Credential transitions to `suspended` once the deadline passes with no confirmation, a deliberate, tenant-opt-in exception given real access-control liability at higher-security tenants) — both configurable, neither is the platform-fixed default.
+9. A tenant-configurable recurring cadence (per credential type or role, another consumer of Background Job Processing's recurring-job registry) prompts the current holder's Supervisor to re-affirm a CredentialAssignment is still needed. Confirming updates `last_recertified_at`/`next_recertification_due`; recertification is deliberately **not** modeled as a governance record layered over a batch (unlike DAR's Shift Review) since it's a single, recurring per-assignment prompt, not a retrospective review of many records at once.
+10. A **Recertification Lapse Policy** (Settings & Preferences Definition, tenant-configurable) sets `lapse_action`: `escalate_only` (a new Duration Watchdog instance feeds Critical Event Escalation Policy, the credential stays active — the standard no-compliance-blocking-operations posture) or `auto_suspend` (the Credential transitions to `suspended` once the deadline passes with no confirmation, a deliberate, tenant-opt-in exception given real access-control liability at higher-security tenants) — both configurable, neither is the platform-fixed default.
 
 ## Data Model / Fields
 
@@ -67,6 +70,9 @@ Structurally, **Access Credential** registers as an Item extension (full identit
 
 **Recertification Lapse Policy** (Settings & Preferences Definition)
 - tenant_id/site_id, lapse_action (escalate_only, auto_suspend), recertification_cadence
+
+**Badge Template** (Site/Tenant Admin-configurable, local)
+- template_id, tenant_id, applies_to (visitor, employee, contractor, general), field_layout{} (which fields render where), logo_ref (nullable), color_scheme (nullable)
 
 **PIAM Adaptor Registration** *(retrofit — Pre-Registration Portal)*
 - sync_capabilities{} gains `credential_sync` (bool)
@@ -118,6 +124,7 @@ Structurally, **Access Credential** registers as an Item extension (full identit
 - [ ] A revocation against a write-capable adaptor shows `revocation_pending_confirmation` until the adaptor confirms, only then `revoked`; a native-only revocation goes straight to `revoked`.
 - [ ] Under `auto_suspend`, a lapsed recertification transitions the Credential to `suspended` automatically; under `escalate_only`, the same lapse only raises an escalation and the Credential stays active.
 - [ ] A Credential's `clearance_profile_ref` is confirmed nullable and unused by any FR in this doc — no zone/door/access-level logic exists here.
+- [ ] Changing an `employee`-scoped Badge Template's field layout is reflected the next time any employee/contractor badge prints; Visitor Kiosk App's badge continues rendering through its own `visitor`-scoped template, confirming one shared mechanism serves both without cross-contamination.
 - [ ] Attempting to directly edit an externally-sourced Credential's status through Sentinel Suite (rather than the adaptor) is rejected or clearly flagged as inconsistent with `credential_authority = external`.
 
 ## Open Questions
