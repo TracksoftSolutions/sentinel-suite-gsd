@@ -35,10 +35,14 @@ This doc also introduces the **PIAM Adaptor Registration** — the base of the n
 4. A Pre-Registration carries a window (`valid_from`/`valid_until`) rather than a single timestamp — a single-day visit sets both to the same date; a recurring/multi-day window (e.g., a week-long contractor engagement) authorizes any number of Visits within it, each created independently at its own check-in by Visitor Kiosk App.
 
 ### Initiation
-5. Three initiation channels, all tenant-enabled independently (a Settings & Preferences channel catalog, matching the platform's established multi-channel-catalog pattern from self-service password reset):
+5. Four initiation channels, all tenant-enabled independently (a Settings & Preferences channel catalog, matching the platform's established multi-channel-catalog pattern from self-service password reset):
    - **5a. Host self-service** — any Employee with the permission creates a pre-registration for their own expected visitor.
    - **5b. Front Desk/Security on-behalf** — a Guard creates it for a host who requested it another way (phone, in person), reusing the platform's established on-behalf-of posture.
    - **5c. Visitor self-service link** — a host-issued, single-use link lets the visitor supply their own details (name, company, photo) ahead of arrival; the submission still requires host confirmation before it's treated as a real pre-registration (a raw external submission is never auto-trusted as complete).
+   - **5d. Kiosk walk-in** *(retrofit — Visitor Kiosk App)* — a visitor with no existing Pre-Registration self-registers at a walk-in-enabled kiosk; runs through this doc's screening/approval mechanism identically to every other channel, with an optional stricter walk-in-specific required-approver override (`walk_in_required_approvers` on Pre-Registration Approval Policy).
+
+### QR pass
+5e. Reaching `approved` generates a **QR pass token** and emails it to the visitor — the token stays valid for the record's entire window but is consumed as one check-in per calendar day (Visitor Kiosk App owns the scan/consumption mechanics; this doc only owns issuance).
 
 ### Watchlist screening
 6. Screening runs automatically at submission — never deferred to arrival. It checks the resolved visitor Person against Entity Registry Core's existing BOLO Flag mechanism, unmodified.
@@ -70,6 +74,8 @@ This doc also introduces the **PIAM Adaptor Registration** — the base of the n
 - host_approved_by/at (nullable), security_approved_by/at (nullable)
 - external_screening_unavailable (bool, set only per #15's fallback path)
 - external_piam_ref (nullable — HID SAFE's own record identifier, once synced)
+- initiation_channel gains `kiosk_walk_in` *(retrofit — Visitor Kiosk App, #5d)*
+- qr_pass_token (generated on reaching `approved`, emailed to the visitor — retrofit, #5e)
 
 **Watchlist Match Alert** (feature-local, deliberately not a BOLO Flag)
 - alert_id, pre_registration_ref, source (sentinel_native, hid_safe), match_details
@@ -78,6 +84,7 @@ This doc also introduces the **PIAM Adaptor Registration** — the base of the n
 
 **Pre-Registration Approval Policy** (Settings & Preferences Definition)
 - tenant_id/site_id, required_approvers (none, host, security, both)
+- walk_in_required_approvers (nullable — falls back to required_approvers; retrofit, #5d)
 
 **Pre-Arrival Requirement Definition** (Settings & Preferences Definition)
 - requirement_id, type (nda_signature, id_upload, photo_capture, custom), required (bool), document_template_ref (nullable)
@@ -102,7 +109,7 @@ This doc also introduces the **PIAM Adaptor Registration** — the base of the n
 - **Document Registry**: an NDA e-signature (or other document-producing pre-arrival requirement) becomes a real Document, authored by the visitor.
 - **Settings & Preferences**: owns Pre-Registration Approval Policy, Pre-Arrival Requirement Definitions, and the initiation-channel catalog (#5).
 - **Notifications Engine**: submission triggers an approval-request notification to the required approver(s); approval/rejection notifies the initiator. This is distinct from — and does not replace — **Host Arrival Notifications** (next doc), which fires on actual check-in, not submission.
-- **Visitor Kiosk App** (next doc, forward reference only): consumes an `approved` Pre-Registration at check-in to create the Visit Activity this doc deliberately does not build.
+- **Visitor Kiosk App** *(retrofit — built after this doc)*: consumes an `approved` Pre-Registration at check-in to create the Visit Activity this doc deliberately does not build; contributes the `kiosk_walk_in` initiation channel and consumes the QR pass token this doc issues.
 - **Tenant Management (Client Engagement)**: a visitor pre-registering for a Contractor-staffed Client site follows the existing rule unmodified — the record's `tenant_id` is the Client's, regardless of which Contractor employee acted as host.
 - **PIAM Adaptor (HID SAFE)**: this doc's first concrete consumer of the new PIAM Adaptor Registration — pushes finalized/approved records out (#14), optionally supplies authoritative watchlist results in (#7).
 - **Command/Action Bus**: Approve/Reject/Cancel Pre-Registration, and Dismiss/Escalate Watchlist Match Alert, all register as actions; approving is blocked at the platform level while a Watchlist Match Alert is open (#9), not just a UI-level discouragement.

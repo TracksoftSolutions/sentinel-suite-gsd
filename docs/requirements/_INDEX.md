@@ -73,7 +73,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 
 ## 4. Access Control
 - [x] Pre-Registration Portal
-- [ ] Visitor Kiosk App
+- [x] Visitor Kiosk App
 - [ ] Host Arrival Notifications
 - [ ] Access Credential Management
 - [ ] Clearance Profiles
