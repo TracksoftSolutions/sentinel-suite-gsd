@@ -42,12 +42,22 @@ Two more timed alerts, both structurally identical to Status & State Monitors' T
 8. A tenant may define more than one Critical Event Escalation Policy (different watched-event sets, delays, or targets, e.g. by call priority) — not limited to one global policy.
 9. "Unresolved" is evaluated per source using that source's own already-established status, not redefined here: a Duration-Watchdog-sourced trigger is unresolved as long as the watched entity remains at the watched field/value; a missed-Safety-Check-in-sourced trigger is unresolved until superseded by a later confirmed check-in or the underlying Dispatch clears.
 
+### Approaching-Deadline Reminder (promoted mechanism — retrofit, Mutual Aid Agreements Tracker)
+10. **Approaching-Deadline Reminder** is a new sibling mechanism alongside Duration Watchdog — *before* a configured date rather than *after* a threshold — promoted here from Improvement Plan (IP) Tracking's locally-built Deadline Reminder Policy once a second real consumer ([Mutual Aid Agreements Tracker](../5-emergency-management/mutual-aid-agreements-tracker.md)) needed the identical shape, the platform's established "promote on second consumer" discipline. A registration is `(record_type, watched_date_field)` — e.g. `(improvement_action, target_completion_date)`, `(mutual_aid_agreement, effective_end)` — carrying a tenant/category-configurable `lead_time_offsets_days[]`.
+11. Each configured offset fires **at most once** per watched record instance, tracked via a `reminders_sent[]` list on that instance — the exact debounce behavior IP Tracking's original mechanism already specified, unchanged by the promotion. Delivered through the existing Notifications Engine; never blocks any operational action.
+12. **Deliberately not merged with Duration Watchdog** — a before-a-deadline check and an after-a-threshold check are structurally opposite comparisons; forcing both into one abstraction would have required every existing Duration Watchdog consumer (Pending Call Alarm, Enroute Timer, Key Custody's overdue key, SITREP's overdue check) to absorb a negative-offset concept none of them need. Two sibling mechanisms, run on the same Real-Time Delivery Timer Service infrastructure, kept structurally independent.
+
 ## Data Model / Fields
 
 **Duration Watchdog** (Status & State Monitors' generalized mechanism — this doc registers two more instances, no separate table)
 - `(call, status, queued)` — Pending Call Alarm
 - `(dispatch, phase, en_route)` — Enroute Timer
 - *(retrofit — Access Control's Key Custody & Auditing)* the watched-record kind generalizes beyond `activity_type` alone to also cover a registered EntityAssociation kind (its first non-Activity consumer, watching `(custody_association, status, active)` for an overdue key); the threshold itself gains an optional dynamic `resolution_mode` (a resolved target timestamp — e.g., the holder's current DAR Shift Window end — with a flat-duration fallback) alongside the original fixed-duration shape every earlier instance in this doc uses.
+
+**Approaching-Deadline Reminder Registration** (new — retrofit, promoted from IP Tracking)
+- registration_id, record_type, watched_date_field, tenant_id, category (nullable)
+- lead_time_offsets_days[], cc_supervisor (bool, where applicable to the consumer)
+- *(per-instance)* reminders_sent[] — tracked on the watched record itself, e.g. Improvement Action or Mutual Aid Agreement
 
 **Critical Event Escalation Policy** (Settings & Preferences registration)
 - policy_id, tenant_id, name

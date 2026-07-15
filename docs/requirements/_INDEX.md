@@ -84,14 +84,14 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Remote Gate & Barrier Controls
 
 ## 5. Emergency Management
-- [ ] ICS Forms Engine (FEMA-aligned)
-- [ ] Resource Logistics Catalog
-- [ ] After-Action Reports (AAR)
-- [ ] Improvement Plan (IP) Tracking
-- [ ] Exercise & Drill Planner (HSEEP-aligned)
-- [ ] Drill Compliance Logging
-- [ ] Mutual Aid Agreements Tracker
-- [ ] EOC Activation Checklists
+- [x] ICS Forms Engine (FEMA-aligned)
+- [x] Resource Logistics Catalog
+- [x] After-Action Reports (AAR)
+- [x] Improvement Plan (IP) Tracking
+- [x] Exercise & Drill Planner (HSEEP-aligned)
+- [x] Drill Compliance Logging
+- [x] Mutual Aid Agreements Tracker
+- [x] EOC Activation Checklists
 
 ## 6. Emergency Planning
 - [ ] Pre-Incident Plans (Preplans)

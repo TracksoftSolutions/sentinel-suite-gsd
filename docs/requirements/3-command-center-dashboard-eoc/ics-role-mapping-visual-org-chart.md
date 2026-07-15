@@ -55,6 +55,7 @@ Under `mandatory_limited`, enforcement lives at the point an officer is actually
 ### Visual Org Chart
 14. The org chart renders the Position hierarchy (reporting lines via `parent_position_ref`) with each Position's current holder, or explicitly vacant, for whichever anchor (Incident or EOC Activation) it's pinned to. A new **`org_chart`** panel type registers into the shared Panel Registry (the catalog Multi-Incident Console and Command Center Wallboard View already promoted) — selectable in a personal Console Layout, a Wallboard Display Profile zone, or this doc's own dedicated view, with zero new panel infrastructure.
 15. A vacant Position renders visibly as vacant, never silently omitted — an EOC Coordinator or Supervisor staffing a chart needs to see the gap, not infer it.
+15a. **Retrofit — [ICS Forms Engine](../5-emergency-management/ics-forms-engine.md):** this same live org-chart data is also the render source for the formal **ICS-207** FEMA form — generating an ICS-207 Form Instance queries current ICS Role Assignments for the anchor exactly as this panel already does and Document-snapshots the result, with zero new fields or changes to ICS Role Assignment itself. The live `org_chart` panel described above is unaffected; this only adds the ability to formally publish a point-in-time copy of the same data.
 
 ## Data Model / Fields
 
