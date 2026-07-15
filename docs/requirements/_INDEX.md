@@ -69,19 +69,19 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] EOC Logistics Hub
 - [x] Alarm Panel Monitors & Panic Alerts
 - [x] Environmental & Weather Map Overlays
-- [ ] Historical Playback Console
+- [x] Historical Playback Console
 
 ## 4. Access Control
-- [ ] Pre-Registration Portal
-- [ ] Visitor Kiosk App
-- [ ] Host Arrival Notifications
-- [ ] Access Credential Management
-- [ ] Clearance Profiles
-- [ ] Key Ring Registry
-- [ ] Key Custody & Auditing
-- [ ] Lock Core & Cylinder Tracking
-- [ ] BOLO & Trespass Alerts
-- [ ] Remote Gate & Barrier Controls
+- [x] Pre-Registration Portal
+- [x] Visitor Kiosk App
+- [x] Host Arrival Notifications
+- [x] Access Credential Management
+- [x] Clearance Profiles
+- [x] Key Ring Registry
+- [x] Key Custody & Auditing
+- [x] Lock Core & Cylinder Tracking
+- [x] BOLO & Trespass Alerts
+- [x] Remote Gate & Barrier Controls
 
 ## 5. Emergency Management
 - [ ] ICS Forms Engine (FEMA-aligned)

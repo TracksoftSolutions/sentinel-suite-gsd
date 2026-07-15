@@ -166,6 +166,7 @@ Base types and field naming are modeled to align with **NIEM Core** (`nc:EntityT
 - expires_at, status (active, expired, cleared)
 - cleared_by (nullable), cleared_at (nullable), creation_step_up_verified (bool), clearance_step_up_verified (bool)
 - supporting_document_ref (nullable, FK → Document)
+- bolo_context (nullable — e.g. `trespass_notice`; retrofit, Access Control's BOLO & Trespass Alerts, per this doc's own established allowance that consuming entity types add only their own context field)
 
 **EntityAssociation** (TPT root)
 - association_id (PK), tenant_id

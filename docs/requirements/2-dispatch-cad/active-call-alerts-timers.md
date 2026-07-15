@@ -47,6 +47,7 @@ Two more timed alerts, both structurally identical to Status & State Monitors' T
 **Duration Watchdog** (Status & State Monitors' generalized mechanism — this doc registers two more instances, no separate table)
 - `(call, status, queued)` — Pending Call Alarm
 - `(dispatch, phase, en_route)` — Enroute Timer
+- *(retrofit — Access Control's Key Custody & Auditing)* the watched-record kind generalizes beyond `activity_type` alone to also cover a registered EntityAssociation kind (its first non-Activity consumer, watching `(custody_association, status, active)` for an overdue key); the threshold itself gains an optional dynamic `resolution_mode` (a resolved target timestamp — e.g., the holder's current DAR Shift Window end — with a flat-duration fallback) alongside the original fixed-duration shape every earlier instance in this doc uses.
 
 **Critical Event Escalation Policy** (Settings & Preferences registration)
 - policy_id, tenant_id, name
