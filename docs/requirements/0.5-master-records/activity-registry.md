@@ -37,7 +37,7 @@ This doc establishes only the base Activity mechanics and this shared machinery.
 ## Functional Requirements
 
 ### Base Activity fields (`nc:ActivityType`-aligned)
-1. **Type**: a base-level `activity_type` (call, incident, citation, accident, alarm, inspection, dispatch, drill — extensible).
+1. **Type**: a base-level `activity_type` (call, incident, citation, accident, alarm, inspection, dispatch, exercise, compliance_drill — extensible). *(Retrofit — [exercise-drill-planner.md](../5-emergency-management/exercise-drill-planner.md) and [drill-compliance-logging.md](../5-emergency-management/drill-compliance-logging.md): the original illustrative `drill` example split into two distinct, unrelated types once both docs were specified — `exercise` for a designed/evaluated HSEEP exercise, `compliance_drill` for a routine regulatory fire/evacuation/shelter drill.)*
 2. **Identification**: numbering follows Offline Data Sync's established pattern exactly — a client-generated UUID at creation, with the server assigning the official sequential display number once synced.
 3. **Status**: a generic activity lifecycle — `open` → `in_progress` → `concluded` | `cancelled`, with `concluded` reopenable to `in_progress`. Extension types layer their own richer status nuance on top.
 4. **Date/time**: `started_at`, `concluded_at` (nullable until concluded).

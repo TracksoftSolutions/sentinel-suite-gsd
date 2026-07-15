@@ -43,7 +43,8 @@ Live-simulation training data is a genuinely new, well-bounded cross-cutting con
 3. **Evaluation Criterion** (child of Exercise Design): `objective_ref`, `criterion_text`, `scoring_scale` (e.g., met/partially_met/not_met, or numeric), and an optional `target_threshold` — the value below which a score is considered a finding worth a corrective action (FR #9).
 
 ### Exercise (execution layer, Activity extension)
-4. **Exercise** registers as its own Activity extension (`entity_id` shared PK, FK → Activity, `activity_type = drill` — Activity Registry's own base type list already anticipated this value) — `exercise_design_ref` (pinned version), `scheduled_start`/`scheduled_end`, `actual_start`/`actual_end`, `status` (`scheduled` → `in_progress` → `concluded`/`cancelled`), and `fidelity_mode` (resolved from the Design's default, with an explicit per-Exercise override — the platform's standard explicit-beats-default chain — and pinned once the Exercise starts).
+4. **Exercise** registers as its own Activity extension (`entity_id` shared PK, FK → Activity, `activity_type = exercise` — see FR #4a) — `exercise_design_ref` (pinned version), `scheduled_start`/`scheduled_end`, `actual_start`/`actual_end`, `status` (`scheduled` → `in_progress` → `concluded`/`cancelled`), and `fidelity_mode` (resolved from the Design's default, with an explicit per-Exercise override — the platform's standard explicit-beats-default chain — and pinned once the Exercise starts).
+4a. **Naming correction (retrofit — [Drill Compliance Logging](drill-compliance-logging.md)):** this Activity's `activity_type` reads `exercise`, not the `drill` value originally borrowed from Activity Registry's own illustrative base-type list — Drill Compliance Logging's own regulatory-drill record claimed `compliance_drill` instead, and the two are structurally unrelated records that happened to share a colloquial name. `exercise` also matches AAR's `anchor_type = exercise` value already in use, making the naming internally consistent.
 5. **This Exercise IS the `exercise` anchor type After-Action Reports reserved, now reachable.** *(Retrofit — see [after-action-reports.md](after-action-reports.md).)* A `concluded` Exercise is eligible for the same Generate AAR Draft action as a deactivated EOC Activation or concluded Incident — Timeline Reconstruction for an Exercise anchor includes Inject Delivery events and Evaluation Scores alongside (for `live_simulation` exercises) the ordinary activity-axis tree of real records created during it.
 
 ### Inject delivery and scoring
@@ -75,7 +76,7 @@ Live-simulation training data is a genuinely new, well-bounded cross-cutting con
 - criterion_id, design_ref, objective_ref, criterion_text
 - scoring_scale, target_threshold (nullable)
 
-**Exercise** (Activity extension; entity_id is the shared PK, FK → Activity; activity_type = drill)
+**Exercise** (Activity extension; entity_id is the shared PK, FK → Activity; activity_type = exercise)
 - exercise_design_ref (pinned version)
 - scheduled_start, scheduled_end, actual_start (nullable), actual_end (nullable)
 - status (scheduled, in_progress, concluded, cancelled)

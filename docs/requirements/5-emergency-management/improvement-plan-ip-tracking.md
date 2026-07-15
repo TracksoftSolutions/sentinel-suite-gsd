@@ -28,7 +28,7 @@ Evidence stays exactly as AAR built it — optional, never a completion gate, pe
 ## Functional Requirements
 
 ### Widened origin (retrofit)
-1. **Improvement Action** *(retrofit — [after-action-reports.md](after-action-reports.md))* gains `source_type` (`aar_report`, `ad_hoc`, `drill` [reserved]) and `source_ref` (nullable — the AAR Report's entity_id when `source_type = aar_report`, null for `ad_hoc`), replacing the prior direct `aar_report_ref` field. Every other field and the entire status lifecycle (`open` → `in_progress` → `completed`/`cancelled`) is unchanged. **Retrofit — now reachable**: [Exercise & Drill Planner](exercise-drill-planner.md)'s below-target Evaluation Score auto-suggests a draft Improvement Action with `source_type = drill`/`source_ref` = the originating Exercise, requiring explicit Lead Evaluator/Exercise Director confirmation before it's real — the first populated use of this reserved value, distinct from and independent of that same Exercise's own eventual `aar_report`-sourced items.
+1. **Improvement Action** *(retrofit — [after-action-reports.md](after-action-reports.md))* gains `source_type` (`aar_report`, `ad_hoc`, `drill` [reserved]) and `source_ref` (nullable — the AAR Report's entity_id when `source_type = aar_report`, null for `ad_hoc`), replacing the prior direct `aar_report_ref` field. Every other field and the entire status lifecycle (`open` → `in_progress` → `completed`/`cancelled`) is unchanged. **Retrofit — now reachable**: [Exercise & Drill Planner](exercise-drill-planner.md)'s below-target Evaluation Score auto-suggests a draft Improvement Action with `source_type = drill`/`source_ref` = the originating Exercise, requiring explicit Lead Evaluator/Exercise Director confirmation before it's real — the first populated use of this reserved value, distinct from and independent of that same Exercise's own eventual `aar_report`-sourced items. **Retrofit — [Drill Compliance Logging](drill-compliance-logging.md)**: `source_type` gains a fourth value, `compliance_drill` — a failed Drill Component Check auto-suggests a draft Improvement Action the same way, `source_ref` pointing at the originating Compliance Drill Log, gated on the identical explicit-confirmation discipline.
 2. **Ad hoc creation** registers as a new Command/Action Bus action, available any time, requiring no AAR or other anchor — `source_type = ad_hoc`. Carries the same mandatory fields as an AAR-originated action (recommendation, category, `proposed_owner_ref`, `target_completion_date`) plus an optional `origin_note` (free text — what prompted it) and optional `related_location_ref`, since an ad hoc observation often has a place but no formal record to anchor to.
 
 ### Action Item Registry
@@ -45,7 +45,7 @@ Evidence stays exactly as AAR built it — optional, never a completion gate, pe
 ## Data Model / Fields
 
 **Improvement Action** *(retrofit — see [after-action-reports.md](after-action-reports.md))*
-- source_type (aar_report, ad_hoc, drill [reserved]), source_ref (nullable)
+- source_type (aar_report, ad_hoc, drill, compliance_drill), source_ref (nullable)
 - *(all other fields — recommendation, category, proposed_owner_ref, target_completion_date, actual_completion_date, status, evidence_document_refs[] — unchanged)*
 - reminders_sent[] (new — which Deadline Reminder Policy offsets have already fired for this instance)
 
@@ -67,7 +67,8 @@ Evidence stays exactly as AAR built it — optional, never a completion gate, pe
 - **Command Center Wallboard View / Multi-Incident Console**: `action_item_registry` is a seventh cross-doc Panel Registry contributor (after `health`, `org_chart`, `camera`, `alarm_monitor`, `resource_catalog`).
 - **Settings & Preferences**: owns the Deadline Reminder Policy registration.
 - **Command/Action Bus**: Create Ad Hoc Improvement Action, Configure Deadline Reminder Policy, and the registry's own filter/view actions all register.
-- **Exercise & Drill Planner (Module 5, not yet specified)**: forward reference only — `source_type = drill` is reserved in the field but not reachable until that module exists.
+- **Exercise & Drill Planner** *(retrofitted — resolved)*: `source_type = drill` is populated by a confirmed, below-target-score-triggered Improvement Action, `source_ref` pointing at the originating Exercise.
+- **Drill Compliance Logging** *(retrofitted — resolved)*: `source_type = compliance_drill` is populated by a confirmed, failed-component-triggered Improvement Action, `source_ref` pointing at the originating Compliance Drill Log.
 
 ## Permissions
 
@@ -100,4 +101,4 @@ Evidence stays exactly as AAR built it — optional, never a completion gate, pe
 - Exact default lead-time offset presets and whether tenants need more than one preset per category — a content/config design task, not committed here.
 - Whether an ad hoc Improvement Action should carry a richer originating-observation structure beyond a short free-text `origin_note` — not committed.
 - Whether the registry needs bulk reassignment/export tooling for a Safety Director managing a large open list — a UX/technical-spec concern, not committed here.
-- Exact reconciliation once Exercise & Drill Planner exists and `source_type = drill` becomes reachable — forward reference only.
+- ~~Exact reconciliation once Exercise & Drill Planner exists and `source_type = drill` becomes reachable~~ — resolved; see the Integrations retrofit notes above.

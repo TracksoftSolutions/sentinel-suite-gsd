@@ -89,7 +89,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] After-Action Reports (AAR)
 - [x] Improvement Plan (IP) Tracking
 - [x] Exercise & Drill Planner (HSEEP-aligned)
-- [ ] Drill Compliance Logging
+- [x] Drill Compliance Logging
 - [ ] Mutual Aid Agreements Tracker
 - [ ] EOC Activation Checklists
 
