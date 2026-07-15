@@ -41,6 +41,7 @@ This doc scopes strictly to **intake and queue state** — receiving, triaging, 
 ### Call (Activity extension)
 1. **Call** registers as an Activity extension, fulfilling Activity Registry's already-anticipated `call` activity_type: inherits base identity, offline-safe numbering, standard participant/attachment/location associations, and display-label requirements.
 2. `call_type` references a tenant-configurable Call Type Definition (e.g., Alarm, Welfare Check, Suspicious Activity, Noise Complaint, Info Request, Maintenance Concern — extensible per tenant).
+2a. **Call Type Definition gains an optional `parent_call_type_ref`** (self-referential, nullable) *(retrofit, by Pre-Incident Plans)* — lets a tenant express a broader type generalizing a narrower one (e.g., "Fire" is the parent of "Grease Fire"), the same self-hierarchy shape already used elsewhere (`HierarchyAssociation`), applied here as a plain field since Call Type Definition is a lightweight Settings & Preferences registration, not a full Entity Registry Core citizen. Consumed by Pre-Incident Plans' most-specific-match resolution; has no effect on Call intake/triage/routing otherwise.
 3. `priority` references a tenant-configurable Call Priority Definition (e.g., P1-Emergency, P2-Urgent, P3-Routine); each Call Type Definition may declare a default priority, auto-applied at intake but always dispatcher-overridable.
 4. `intake_method` records how the call arrived: `phone`, `radio`, `walk_up`, `self_service`, `automated_sensor` (forward reference only — actual auto-generation from alarms/IoT is deferred to Module 19's future Automated Dispatch Generation), `external_ingest` (forward reference only — 911/PSAP or CAD-to-CAD ingest is deferred to Module 19's Integration Gateway, not built here).
 5. **Caller**: `caller_name`, `caller_contact` (free text, capturing an unregistered/anonymous caller), with an optional `caller_party_ref` linking to a known/registered Party — never mandatory, same pattern as Courtesy Patrol's Requestor.
@@ -78,6 +79,7 @@ This doc scopes strictly to **intake and queue state** — receiving, triaging, 
 - self_service_eligible (bool — whether this type is offered on the occupant-facing portal/app)
 - default_requires_safety_checkin (bool, default false — retrofit, see [status-state-monitors.md](status-state-monitors.md); Dispatcher-overridable per specific Call/Dispatch)
 - default_silent_delivery, default_radio_bypass (bool, default false — retrofit, see [silent-mobile-dispatching.md](silent-mobile-dispatching.md); Dispatcher-overridable per specific Dispatch)
+- parent_call_type_ref (nullable, self-FK → Call Type Definition — retrofit, see [pre-incident-plans-preplans.md](../6-emergency-planning/pre-incident-plans-preplans.md))
 
 **Call Priority Definition** (Settings & Preferences registration)
 - priority_id, tenant_id, name, enabled, sort_order (for threshold comparisons, e.g., "P1 or higher")

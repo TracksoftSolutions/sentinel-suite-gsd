@@ -41,6 +41,7 @@ A single **Supervisor Review** governs the whole Incident regardless of report s
 ### Incident (Activity extension)
 1. **Incident** registers as an Activity extension, fulfilling Activity Registry's already-anticipated `incident` activity_type: inherits base identity, offline-safe numbering, standard dedup/merge (directly powering Dispatch/CAD's future Incident Merging feature), participant/attachment/location associations, and display-label requirements.
 2. `category` references a tenant-configurable Category Definition (e.g., Theft, Assault, Trespass, Medical, Fire, Property Damage, Suspicious Activity — same tenant-configurable-taxonomy pattern established throughout Module 1).
+2a. **Incident Category Definition gains an optional `parent_category_ref`** (self-referential, nullable) *(retrofit, by Pre-Incident Plans)* — lets a tenant express a broader category generalizing a narrower one (e.g., "Fire" is the parent of "Grease Fire"), the same lightweight self-hierarchy shape added to Call Type Definition. Consumed by Pre-Incident Plans' most-specific-match resolution; has no effect on Incident categorization/severity/escalation otherwise.
 3. `severity` references a tenant-configurable Severity Definition (e.g., Low, Medium, High, Critical).
 4. Participants use Activity Registry's standard `ActivityParticipantAssociation` with an Incident-specific role vocabulary: witness, victim, suspect, reporting_officer, responding_unit, involved_vehicle, seized_weapon. The Guard/Investigator who creates the Incident is automatically tagged `reporting_officer`. *(Retrofit, by ICS Role Mapping & Visual Org Chart)* At a tenant whose ICS Adoption Policy is `mandatory_limited`, this default and the `responding_unit` role are both superseded for officer/unit participants: the creator is automatically given an ICS Role Assignment for Incident Commander instead of a plain `reporting_officer` tag, and associating any additional officer/unit requires an explicit ICS Position selection rather than the plain `responding_unit` default. Non-officer roles (witness, victim, suspect, involved_vehicle, seized_weapon) are unaffected either way.
 5. `escalated_from_ref` (nullable, direct field, fixed at creation) records the upstream record (a Patrol Finding, DAR Entry, Checkpoint Scan, Courtesy Patrol, or Citation) an Incident was escalated from, when created via the platform's established launch-point mechanism.
@@ -74,6 +75,7 @@ A single **Supervisor Review** governs the whole Incident regardless of report s
 
 **Incident Category Definition** / **Incident Severity Definition** (Settings & Preferences registrations)
 - category_id / severity_id, tenant_id, name, enabled, sort_order (severity only, for escalation-threshold comparison)
+- parent_category_ref (nullable, self-FK → Incident Category Definition — retrofit, see [pre-incident-plans-preplans.md](../6-emergency-planning/pre-incident-plans-preplans.md); category only, no equivalent on Severity)
 
 **Incident Update** (Activity extension, TPT level)
 - entity_id (PK, FK → Activity)

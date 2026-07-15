@@ -86,6 +86,7 @@ Four elicited decisions:
 - **Command/Action Bus**: Start/Complete Checklist Run, Check/Skip Item, Send Staff Call-up Broadcast, and Acknowledge Call-up all register as actions.
 - **Structured Logging & Audit Trails**: every checklist item action and broadcast send/acknowledgment is audit-tier.
 - **Module 8 (Personnel, not yet specified)**: forward reference only — EOC Call-up Roster is an interim stand-in for real on-call/scheduling data, the same deferred-integration posture used throughout the platform's history (DAR's Shift Window, EOC Logistics Hub's earlier stand-ins).
+- **Pre-Incident Plans** *(retrofit)*: introduces a structurally similar but deliberately separate Preplan Notification List (ordered, per-plan escalation contacts vs. this doc's simultaneous, EOC-wide broadcast roster) — kept as two mechanisms given the different delivery semantics, but either can **Import Entries** from the other (a one-time copy of `person_ref`/`ics_position_ref` rows, not a live shared list) to avoid re-entering an overlapping contact set.
 
 ## Permissions
 
