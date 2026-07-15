@@ -86,7 +86,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 ## 5. Emergency Management
 - [x] ICS Forms Engine (FEMA-aligned)
 - [x] Resource Logistics Catalog
-- [ ] After-Action Reports (AAR)
+- [x] After-Action Reports (AAR)
 - [ ] Improvement Plan (IP) Tracking
 - [ ] Exercise & Drill Planner (HSEEP-aligned)
 - [ ] Drill Compliance Logging
