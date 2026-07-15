@@ -76,7 +76,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Visitor Kiosk App
 - [x] Host Arrival Notifications
 - [x] Access Credential Management
-- [ ] Clearance Profiles
+- [x] Clearance Profiles
 - [ ] Key Ring Registry
 - [ ] Key Custody & Auditing
 - [ ] Lock Core & Cylinder Tracking

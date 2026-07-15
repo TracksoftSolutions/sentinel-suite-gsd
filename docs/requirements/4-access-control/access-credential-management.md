@@ -27,7 +27,7 @@ Structurally, **Access Credential** registers as an Item extension (full identit
 
 ### Access Credential as an Item extension
 1. **Access Credential** registers as an Item extension — full identity/dedup/audit treatment, the same as Vehicle/Camera/Alarm Panel — carrying `credential_type` (physical_badge, mobile_credential, pin_code, biometric_ref, other; type-agnostic, since the platform never encodes the underlying hardware/media itself) and `source_system` (`sentinel_native` or the specific PIAM/PACS adaptor that's authoritative for it).
-2. **CredentialAssignment** registers as a new EntityAssociation kind (Person ↔ Credential, single-current-value like `CustodyAssociation`'s shape) rather than reusing plain custody directly — it carries fields custody doesn't: a nullable forward-reference `clearance_profile_ref` (populated once Clearance Profiles exists), and recertification tracking (`last_recertified_at`, `next_recertification_due`).
+2. **CredentialAssignment** registers as a new EntityAssociation kind (Person ↔ Credential, single-current-value like `CustodyAssociation`'s shape) rather than reusing plain custody directly — it carries fields custody doesn't: recertification tracking (`last_recertified_at`, `next_recertification_due`). *(Retrofit — Clearance Profiles: what a person can access is decoupled from which Credential they carry — a person's Clearance Profile Assignments are their own independent, many-to-many relationship, not a field on CredentialAssignment. The `clearance_profile_ref` originally sketched here as a bare forward pointer is removed in favor of that doc's real mechanism.)*
 
 ### Multi-vendor ingestion (primary mode)
 3. A tenant may configure **any number of PIAM/PACS Adaptor connections**, each declaring `credential_sync` capability — CCure, Safelok, HID SAFE, and others are all peer adaptor implementations behind the same interface, never a single hardcoded vendor. A site running two different vendor systems across two buildings is a normal, supported case: each ingested Credential records which `source_system` it actually came from.
@@ -57,7 +57,6 @@ Structurally, **Access Credential** registers as an Item extension (full identit
 
 **CredentialAssignment** (new EntityAssociation kind — entity_id_a = Person, entity_id_b = Credential; association_id is the shared PK)
 - assigned_at, removed_at (nullable)
-- clearance_profile_ref (nullable — forward reference, populated once Clearance Profiles exists)
 - last_recertified_at (nullable), next_recertification_due (nullable)
 
 **Provisioning Request** (native-fallback path only)
@@ -75,7 +74,7 @@ Structurally, **Access Credential** registers as an Item extension (full identit
 - template_id, tenant_id, applies_to (visitor, employee, contractor, general), field_layout{} (which fields render where), logo_ref (nullable), color_scheme (nullable)
 
 **PIAM Adaptor Registration** *(retrofit — Pre-Registration Portal)*
-- sync_capabilities{} gains `credential_sync` (bool)
+- sync_capabilities{} gains `credential_sync` (bool); `clearance_sync` reserved for Clearance Profiles to declare
 - credential_authority (sentinel_native, external) — per-tenant, mirroring `watchlist_authority`'s shape
 
 ## States & Transitions
@@ -94,7 +93,7 @@ Structurally, **Access Credential** registers as an Item extension (full identit
 - **Background Job Processing**: recertification's recurring cadence is another consumer of the existing recurring-job registry.
 - **Active Call Alerts & Timers (Duration Watchdog) / Critical Event Escalation Policy**: a lapsed recertification under `escalate_only` reuses both, unmodified.
 - **Command Center Wallboard View (Health Signal Registration)**: an ingestion adaptor's staleness/failure surfaces here, matching the platform's graceful-degradation posture rather than a silent gap.
-- **Clearance Profiles** (next doc, forward reference only): CredentialAssignment's `clearance_profile_ref` is the seam; this doc never models zones/doors/access levels itself.
+- **Clearance Profiles** *(retrofit — built after this doc)*: owns what a person can actually access as its own independent, many-to-many Person↔Profile relationship — this doc never models zones/doors/access levels itself, and no longer carries a `clearance_profile_ref` field at all.
 - **Settings & Preferences**: owns Credential Approval Policy, Recertification Lapse Policy.
 - **Structured Logging & Audit Trails**: every provisioning approval/rejection, revocation, suspension, and recertification outcome is audit-tier.
 
@@ -123,7 +122,7 @@ Structurally, **Access Credential** registers as an Item extension (full identit
 - [ ] An Employee's status transition to `terminated` immediately revokes every active CredentialAssignment they hold, with zero approval-gate delay, regardless of any Credential Approval Policy configured for provisioning.
 - [ ] A revocation against a write-capable adaptor shows `revocation_pending_confirmation` until the adaptor confirms, only then `revoked`; a native-only revocation goes straight to `revoked`.
 - [ ] Under `auto_suspend`, a lapsed recertification transitions the Credential to `suspended` automatically; under `escalate_only`, the same lapse only raises an escalation and the Credential stays active.
-- [ ] A Credential's `clearance_profile_ref` is confirmed nullable and unused by any FR in this doc — no zone/door/access-level logic exists here.
+- [ ] CredentialAssignment carries no `clearance_profile_ref` or any other zone/door/access-level field — confirmed entirely access-content-agnostic.
 - [ ] Changing an `employee`-scoped Badge Template's field layout is reflected the next time any employee/contractor badge prints; Visitor Kiosk App's badge continues rendering through its own `visitor`-scoped template, confirming one shared mechanism serves both without cross-contamination.
 - [ ] Attempting to directly edit an externally-sourced Credential's status through Sentinel Suite (rather than the adaptor) is rejected or clearly flagged as inconsistent with `credential_authority = external`.
 
