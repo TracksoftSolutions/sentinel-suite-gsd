@@ -77,7 +77,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Host Arrival Notifications
 - [x] Access Credential Management
 - [x] Clearance Profiles
-- [ ] Key Ring Registry
+- [x] Key Ring Registry
 - [ ] Key Custody & Auditing
 - [ ] Lock Core & Cylinder Tracking
 - [ ] BOLO & Trespass Alerts
