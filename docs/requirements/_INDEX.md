@@ -90,7 +90,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Improvement Plan (IP) Tracking
 - [x] Exercise & Drill Planner (HSEEP-aligned)
 - [x] Drill Compliance Logging
-- [ ] Mutual Aid Agreements Tracker
+- [x] Mutual Aid Agreements Tracker
 - [ ] EOC Activation Checklists
 
 ## 6. Emergency Planning
