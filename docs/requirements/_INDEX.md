@@ -78,7 +78,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Access Credential Management
 - [x] Clearance Profiles
 - [x] Key Ring Registry
-- [ ] Key Custody & Auditing
+- [x] Key Custody & Auditing
 - [ ] Lock Core & Cylinder Tracking
 - [ ] BOLO & Trespass Alerts
 - [ ] Remote Gate & Barrier Controls
