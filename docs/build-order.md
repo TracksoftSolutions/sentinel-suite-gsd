@@ -2,7 +2,9 @@
 
 **Status:** Living plan (not a feature/requirements doc)
 **Audience:** Anyone scaffolding or sequencing the actual .NET solution, including AI-assisted implementation sessions
-**Relationship to other docs:** `docs/requirements/_DECISIONS.md` and `docs/requirements/_INDEX.md` record *what the platform is* and in what order it was specified; `docs/architecture-guidance.md` records *how code should be shaped* (inheritance/interfaces/composition); **this doc records which .NET projects exist, how they're grouped into ABP modules, and in what order they get built.** It defers to both — it never overrides a decision made there, and it only proposes structure for features that are already spec'd. Where a module below isn't spec'd yet (Modules 6, 8, 10–25 mostly), its entry here is a placeholder name, not a commitment.
+**Relationship to other docs:** `docs/requirements/_DECISIONS.md` and `docs/requirements/_INDEX.md` record *what the platform is* and in what order it was specified; `docs/architecture-guidance.md` records *how code should be shaped* (inheritance/interfaces/composition); **this doc records which .NET projects exist, how they're grouped into modules, and in what order they get built.** It defers to both — it never overrides a decision made there, and it only proposes structure for features that are already spec'd. Where a module below isn't spec'd yet (Modules 6, 8, 10–25 mostly), its entry here is a placeholder name, not a commitment.
+
+**Correction on 2026-07-15:** an earlier draft of this doc wired everything up as literal `Volo.Abp.*` NuGet package references. That was wrong. Per `_DECISIONS.md`'s corrected wording: the platform is **based on ABP's architecture as a design reference — clean architecture/DDD layering, module conventions, base-entity/auditing/multi-tenancy shape — with zero runtime dependency on the actual ABP Framework package set.** Everything ABP would have shipped as an official module (Identity, Tenant Management, Feature Management, Setting Management, Background Jobs, Blob Storing, Audit Logging, Permission Management) is built from scratch here, patterned after ABP's design. Ordinary focused .NET/OSS libraries underneath our own abstractions (ASP.NET Core Identity, OpenIddict, Hangfire/Quartz, an object-storage SDK, EF Core itself) are fine and expected — the line is specifically "no dependency on the ABP application framework," not "reinvent cryptography."
 
 This doc is written incrementally, same discipline as `_INDEX.md`/`_DECISIONS.md`: update it whenever a build-order or project-boundary decision is made, don't let it drift from what's actually been scaffolded.
 
@@ -10,9 +12,9 @@ This doc is written incrementally, same discipline as `_INDEX.md`/`_DECISIONS.md
 
 ## Guiding principles
 
-1. **One solution, ABP modular monolith — not microservices.** Solo developer, no hard deadlines, "modular architecture enabling future team growth" is the pdd.md risk mitigation, not "ship 30 independently-deployable services." One `SentinelSuite.sln`, one deployable API host for the life of the MVP and probably well beyond. Splitting a module into its own deployable later is a *deployment* decision (containerize it separately), not a reason to over-fragment the source tree now.
-2. **Module granularity = one ABP module per real bounded context, not one per MODULES.md sub-feature.** DAR, Shift Passdowns, Guard Tour, Patrol Management, Courtesy Patrol, Tickets/Citations, Incident Reporting, and AI-Assisted Incident Writing are eight *features* but one *module* (`SecurityOperations`) — they share aggregates (Activity Registry extensions), share a database schema, and were never designed to be independently deployable. This mirrors ABP's own convention (its Identity module covers users, roles, *and* claims — not three modules) and keeps project count proportionate to ~25 bounded contexts rather than ~222 features.
-3. **Reuse ABP's official modules; extend, never fork.** Where `_DECISIONS.md` already says a platform feature is "loosely based on" or a genuine gap-fill for an ABP module (Tenant Management, Feature Management, Background Jobs, Blob Storing, Setting Management, Identity/Account, Audit Logging, Permission Management), the plan is: reference the official `Volo.Abp.*` package, configure/extend via its own extension points, and only stand up a bespoke module when the spec's divergence is big enough to earn its own project set (the same earn-your-existence test `architecture-guidance.md` applies to classes).
+1. **One solution, one custom modular monolith — not microservices.** Solo developer, no hard deadlines, "modular architecture enabling future team growth" is the pdd.md risk mitigation, not "ship 30 independently-deployable services." One `SentinelSuite.sln`, one deployable API host for the life of the MVP and probably well beyond. Splitting a module into its own deployable later is a *deployment* decision (containerize it separately), not a reason to over-fragment the source tree now.
+2. **Module granularity = one module per real bounded context, not one per MODULES.md sub-feature.** DAR, Shift Passdowns, Guard Tour, Patrol Management, Courtesy Patrol, Tickets/Citations, Incident Reporting, and AI-Assisted Incident Writing are eight *features* but one *module* (`SecurityOperations`) — they share aggregates (Activity Registry extensions), share a database schema, and were never designed to be independently deployable. This keeps project count proportionate to ~25 bounded contexts rather than ~222 features.
+3. **Pattern-match ABP's architecture; build every module ourselves.** No `Volo.Abp.*` package reference anywhere in the solution. Where `_DECISIONS.md` describes a concern as "loosely based on ABP" (Tenant Management, Feature Management, Background Jobs, Blob Storing, Setting Management, Identity/Account, Audit Logging, Permission Management), the plan is: build our own implementation with the same conceptual shape ABP's equivalent module has, using ordinary underlying .NET/OSS libraries where that's the sane engineering choice (ASP.NET Core Identity for password hashing, OpenIddict for OIDC, Hangfire/Quartz for job scheduling, a plain object-storage SDK), wrapped behind our own interfaces so the platform never has a hard dependency on any single one of those either (same adaptor discipline the GIS/AI provider decisions already established).
 4. **Build order follows the same rule elicitation did, plus MVP priority.** Foundation before Master Records before feature modules, because that's the real dependency direction (every feature module's Activity/Party/Item/Location extensions sit on top of Master Records' TPT spine, which itself sits on top of several Platform Core mechanisms — Settings, Command/Action Bus, Tenant-Defined Types). Within that constraint, **MVP-in-scope modules (`docs/mvp.md`) are built before spec'd-but-deferred modules (3, 4, 5), which are built before not-yet-elicited modules (6, 8, 10–25).** Spec complete ≠ build-now, same way spec complete ≠ MVP-committed in `mvp.md`.
 5. **Don't scaffold a module's projects before its requirements doc exists.** A project skeleton for Module 13 (Investigation Management) with no domain content is dead weight and will be wrong once elicitation actually happens. Projects get created when a module's turn in the build order arrives, not upfront for all 25.
 
@@ -20,45 +22,53 @@ This doc is written incrementally, same discipline as `_INDEX.md`/`_DECISIONS.md
 
 ## Standard per-module project template
 
-Every custom (non-ABP-official) module follows this project set, ABP's own layering:
+Every module (everything below Tier 0) follows this project set:
 
 | Project | Contains |
 | --- | --- |
 | `SentinelSuite.<Module>.Domain.Shared` | Enums, constants, error codes, localization resources shared by every layer |
 | `SentinelSuite.<Module>.Domain` | Aggregate roots/entities (TPT extensions where applicable), domain services, repository interfaces, domain events raised |
 | `SentinelSuite.<Module>.Application.Contracts` | DTOs, application service interfaces, permission definitions, `AiContext`/Command-Bus-action declarations where the module registers any |
-| `SentinelSuite.<Module>.Application` | Application service implementations, AutoMapper profiles, authorization checks (RBAC baseline; ABAC overlay hooks call into the shared Auth module) |
-| `SentinelSuite.<Module>.EntityFrameworkCore` | EF Core entity configurations (`IEntityTypeConfiguration<T>`), migrations *(module migrations only if the module owns its own DbContext — see note below)*, repository implementations |
+| `SentinelSuite.<Module>.Application` | Application service implementations, mapping profiles, authorization checks (RBAC baseline; ABAC overlay hooks call into the shared Auth module) |
+| `SentinelSuite.<Module>.EntityFrameworkCore` | EF Core entity configurations (`IEntityTypeConfiguration<T>`), repository implementations *(migrations live once, at the composed DbContext level — see note below, not per module)* |
 | `SentinelSuite.<Module>.HttpApi` | REST controllers |
 | `SentinelSuite.<Module>.HttpApi.Client` | *(Only when another module needs to call this one over HTTP rather than in-process — rare in a monolith; skip by default, add when a real cross-boundary HTTP need appears, e.g. a future split-out service)* |
 | `SentinelSuite.<Module>.Tests` | One test project per module, added when the module is built, not upfront |
 
-**One shared DbContext, not one per module.** Despite the module-per-bounded-context split above, this is a single physical database per tenant-isolation-tier (full DB isolation vs. logical, per `_DECISIONS.md`'s tenant isolation decision) — so `EntityFrameworkCore` projects register their entity configurations into one composed `SentinelSuiteDbContext` (ABP's standard "modules contribute configurations to a shared context" pattern for a monolith), rather than each module owning an independent DbContext/migration history. This avoids the multi-DbContext cross-module-FK pain that would otherwise fight the TPT Entity/EntityAssociation architecture directly.
+**One shared DbContext, not one per module.** Despite the module-per-bounded-context split above, this is a single physical database per tenant-isolation-tier (full DB isolation vs. logical, per `_DECISIONS.md`'s tenant isolation decision) — so `EntityFrameworkCore` projects register their entity configurations into one composed `SentinelSuiteDbContext`, rather than each module owning an independent DbContext/migration history. This avoids the multi-DbContext cross-module-FK pain that would otherwise fight the TPT Entity/EntityAssociation architecture directly, and it's the one place a monolith should behave like a monolith even though the surrounding code is modularized.
 
-**GraphQL is host-level, not per-module.** Per `_DECISIONS.md` ("GraphQL for the internal web/mobile frontend; versioned REST for external integrations... both sit on the same underlying business logic/permission layer"), GraphQL types/resolvers (HotChocolate) live in the Host project and delegate to the same Application-layer services the REST controllers call — no parallel `.GraphQL` project per module. Revisit only if the resolver surface grows large enough to earn its own project.
+**GraphQL is host-level, not per-module.** Per `_DECISIONS.md` ("GraphQL for the internal web/mobile frontend; versioned REST for external integrations... both sit on the same underlying business logic/permission layer"), GraphQL types/resolvers (HotChocolate, a plain library dependency — not part of "the ABP framework") live in the Host project and delegate to the same Application-layer services the REST controllers call — no parallel `.GraphQL` project per module.
 
 ---
 
 ## Module map
 
-### Tier 0 — ABP official modules (NuGet, not built by us)
+### Tier 0 — `SentinelSuite.Framework`
 
-`Volo.Abp.Identity`, `Volo.Abp.Account`, `Volo.Abp.PermissionManagement`, `Volo.Abp.TenantManagement`, `Volo.Abp.FeatureManagement`, `Volo.Abp.SettingManagement`, `Volo.Abp.BackgroundJobs`, `Volo.Abp.BlobStoring` (+ its filesystem/cloud provider packages), `Volo.Abp.AuditLogging`. Referenced directly; configured via each module's own `Module` class and extension points. No custom project unless Tier 1 below says otherwise for that concern.
+The only project with zero product features — pure scaffolding, patterned after (never dependent on) ABP's `Volo.Abp.Domain`/DDD conventions, built by us:
 
-### Tier 1 — `SentinelSuite.PlatformFoundation`
+- Base entity/aggregate abstractions (`Entity<TKey>`, `AggregateRoot<TKey>`), the auditing property shape (`CreationAudited`/`Audited`/`FullAudited`), soft-delete (`ISoftDelete`) — the identity spine's *mechanical* base, one level below Master Records' *domain-taxonomic* base (`Entity`/`Party`/... — see `architecture-guidance.md`)
+- Multi-tenant data filtering (tenant-id shadow property + global query filter, honoring the per-Company-tenant isolation-tier decision)
+- A lightweight module/DI bootstrapping convention: each product module exposes a `Module` class that registers its services and contributes its EF Core entity configurations to the composed host — our own equivalent of ABP's `IAbpModule`, not the interface itself
+- `IRepository<T>` abstraction + a generic EF Core implementation
+- Unit-of-work abstraction
+- The base contract for domain-event raising/dispatch that Tier 2's `CommandSystem` module builds its full Event/Command/Query Bus on top of
 
-One module holding every customization that's real but doesn't yet earn its own project, per the earn-your-existence test. Split any of these out later the moment it grows its own aggregate cluster:
+### Tier 1 — Core platform systems (each a from-scratch build of an ABP-shaped concern)
 
-- **Client Engagement** (Tenant Management extension — the contractor↔client dual-tenancy mechanism; the biggest piece in this module, promote to its own `SentinelSuite.ClientEngagements` module the moment Module 11/15 (Subcontractor/Contract Management) get elicited and start consuming it directly)
-- Feature Management's quota-kind flags (boolean + quota, on top of ABP's boolean-only model)
-- Blob Storing's tenant-scoped content-hash dedup + malware scan-then-quarantine hooks
-- Background Jobs' platform-enforced idempotency (registered dedup keys) + isolation-tier-aware placement
-- Audit Logging's hash-chain / tamper-evidence extension
-- Authentication & Authorization's ABAC overlay on top of ABP's RBAC (`PermissionManagement`), MFA/AAL method catalog, self-service password reset channel catalog
+Full project template each. These are genuinely substantial builds now that there's no framework package to lean on — sequence them first because Tier 2/3/4 all assume they exist:
 
-### Tier 2 — Platform Core custom modules (fully bespoke, no ABP equivalent)
+| Order | Module | Scope | Underlying library it may wrap (not a framework dependency) |
+| --- | --- | --- | --- |
+| 1 | `SentinelSuite.IdentityAccount` | Users, roles, credentials, MFA/AAL method catalog, external IdP federation (SAML/OIDC), local login, self-service password reset channel catalog | ASP.NET Core Identity for credential storage/hashing; OpenIddict for OIDC/SAML federation |
+| 2 | `SentinelSuite.PermissionManagement` | Permission definition tree, role/user grants — the RBAC baseline the ABAC overlay narrows | — |
+| 3 | `SentinelSuite.TenantManagement` | Tenant provisioning, isolation tier, Edition/entitlements, lifecycle, **Client Engagements** (contractor↔client dual-tenancy) | — |
+| 4 | `SentinelSuite.FeatureManagement` | Boolean + quota-kind feature flags resolved per tenant/edition | — |
+| 5 | `SentinelSuite.BackgroundJobs` | Durable job/scheduled-task registry, platform-enforced idempotency via registered dedup keys, retry/dead-letter, isolation-tier-aware placement | Hangfire or Quartz.NET, behind our own scheduling interface |
+| 6 | `SentinelSuite.BlobStorage` | Adaptor-pattern file storage, tenant-scoped content-hash dedup, malware scan-then-quarantine, orphan cleanup | A plain object-storage SDK per adaptor (filesystem, S3-compatible, Azure Blob) |
+| 7 | `SentinelSuite.AuditLogging` | Structured/immutable audit trail, hash-chain tamper-evidence | — |
 
-Each gets the full project template. Suggested internal build order (left to right = build first):
+### Tier 2 — Platform Core custom modules (no ABP-shaped precedent at all; fully bespoke either way)
 
 | Order | Module | Feature(s) it owns | Why this position |
 | --- | --- | --- | --- |
@@ -76,7 +86,7 @@ Each gets the full project template. Suggested internal build order (left to rig
 
 ### Tier 3 — `SentinelSuite.MasterRecords`
 
-One module: Entity Registry Core, Party Registry, Person Registry, Organization Registry, Item Registry, Vehicle/Conveyance Registry, Location Registry, Activity Registry, Document Registry, Entity Relationships & History. This is the TPT identity spine (`Entity`/`EntityAssociation` roots, per `architecture-guidance.md`) — every feature module below extends it. Build immediately after Tier 2's foundation modules exist, before any feature module.
+One module: Entity Registry Core, Party Registry, Person Registry, Organization Registry, Item Registry, Vehicle/Conveyance Registry, Location Registry, Activity Registry, Document Registry, Entity Relationships & History. This is the TPT identity spine (`Entity`/`EntityAssociation` roots, per `architecture-guidance.md`) — every feature module below extends it. Build immediately after Tier 1/2's foundation modules exist, before any feature module.
 
 ### Tier 4 — Feature modules (one per MODULES.md numbered category)
 
@@ -114,20 +124,20 @@ Known cross-module coupling worth remembering for build order (from `_DECISIONS.
 
 ## Host / composition layer
 
-- **`SentinelSuite.HttpApi.Host`** — the one deployable API host (ASP.NET Core). References every module's `.HttpApi` and `.Application` project. Serves versioned REST for external integrations/webhooks and a GraphQL endpoint (HotChocolate) for the internal React/Next.js web frontend and React Native mobile app — both frontends are separate repos/solutions, out of scope for this doc. Kiosk Devices, Display Devices, and the future Client Portal are additional bounded, unauthenticated-but-scoped surfaces on this same host (distinct auth policies/token types), not separate hosts, unless a real scaling or air-gapped-deployment reason forces a split later.
-- **`SentinelSuite.DbMigrator`** — console app; applies the composed `SentinelSuiteDbContext` migrations and runs seed data contributors across all modules. Run on every deploy, including the DOE self-hosted Docker path.
-- **Background job execution** — runs in-process within `HttpApi.Host` for MVP. A dedicated `SentinelSuite.BackgroundWorker.Host` is a real future option once `Background Jobs`' isolation-tier-aware placement (Tier 1) needs on-prem tenants' jobs to never touch shared compute — don't build it before that's an actual deployment, per principle 5.
-- **`SentinelSuite.Web` (none, for now)** — no server-rendered MVC/Blazor UI host; the frontend is API-first React/Next.js per `pdd.md`'s tech stack, consuming `HttpApi.Host` only.
+- **`SentinelSuite.HttpApi.Host`** — the one deployable API host (ASP.NET Core, plain — not an ABP host). References every module's `.HttpApi` and `.Application` project. Serves versioned REST for external integrations/webhooks and a GraphQL endpoint (HotChocolate) for the internal React/Next.js web frontend and React Native mobile app — both frontends are separate repos/solutions, out of scope for this doc. Kiosk Devices, Display Devices, and the future Client Portal are additional bounded, unauthenticated-but-scoped surfaces on this same host (distinct auth policies/token types), not separate hosts, unless a real scaling or air-gapped-deployment reason forces a split later.
+- **`SentinelSuite.DbMigrator`** — console app; applies the composed `SentinelSuiteDbContext` EF Core migrations and runs seed data contributors across all modules. Run on every deploy, including the DOE self-hosted Docker path.
+- **Background job execution** — runs in-process within `HttpApi.Host` for MVP. A dedicated `SentinelSuite.BackgroundWorker.Host` is a real future option once `BackgroundJobs`' isolation-tier-aware placement needs on-prem tenants' jobs to never touch shared compute — don't build it before that's an actual deployment, per principle 5.
+- **No server-rendered MVC/Blazor UI host.** The frontend is API-first React/Next.js per `pdd.md`'s tech stack, consuming `HttpApi.Host` only.
 
 ---
 
 ## Build order (phased)
 
 ### Phase 0 — Walking skeleton
-Empty `SentinelSuite.sln`, `HttpApi.Host` + `DbMigrator` wired to ABP framework + Tier 0 official modules with default behavior, CI pipeline, auth (IdP federation + local accounts) working end-to-end with no product features yet.
+`SentinelSuite.Framework` (Tier 0) built as real code — base entity/aggregate/audit/multi-tenant/module abstractions, not "wire up framework defaults." Empty `HttpApi.Host` + `DbMigrator` referencing it, CI pipeline, auth (IdP federation + local accounts, via `IdentityAccount`) working end-to-end with no product features yet.
 
-### Phase 1 — Platform foundation
-Tier 1 (`PlatformFoundation`) customizations over Tier 0, then Tier 2 modules in the order listed in the Tier 2 table above.
+### Phase 1 — Core platform systems
+Tier 1 modules, in the order listed in the Tier 1 table (`IdentityAccount` → `PermissionManagement` → `TenantManagement` → `FeatureManagement` → `BackgroundJobs` → `BlobStorage` → `AuditLogging`), then Tier 2 modules in the order listed in the Tier 2 table.
 
 ### Phase 2 — Master Records
 `SentinelSuite.MasterRecords` — the TPT spine. Nothing in Phase 3 can start in earnest before this exists, even partially (Party/Person/Item/Location/Activity/Document can land incrementally, but the `Entity`/`EntityAssociation` roots must land first).
@@ -150,7 +160,7 @@ Everything else, in MODULES.md numeric order per the standing instruction that "
 
 ## Open questions
 
-1. **Tier 1 grouping.** `PlatformFoundation` bundles five unrelated ABP-extension concerns into one module for now, purely to avoid five near-empty project skeletons. Confirm this is acceptable versus giving each its own thin module from the start.
+1. **Tier 1 library choices.** ASP.NET Core Identity + OpenIddict for `IdentityAccount`, Hangfire or Quartz.NET for `BackgroundJobs` are proposed defaults, not yet a `_DECISIONS.md`-level commitment — confirm before Phase 1 scaffolding starts.
 2. **`CommandSystem` bundling.** Five spec'd features (bus, Domain Events, Command/Action Bus, Command Palette, CLI-Style Input) are proposed as one module. They were split into five *requirements docs* deliberately, but that doesn't necessarily mean five *projects* — confirm the one-module read is right before it's scaffolded.
-3. **GraphQL library.** HotChocolate is assumed (the standard .NET GraphQL server); not yet an explicit `_DECISIONS.md` entry. Worth a real decision line once `ApiMessaging`/Host GraphQL wiring is actually built.
+3. **GraphQL library.** HotChocolate is assumed (the standard .NET GraphQL server, an ordinary library dependency, not a framework choice); not yet an explicit `_DECISIONS.md` entry. Worth a real decision line once `ApiMessaging`/Host GraphQL wiring is actually built.
 4. **Repo layout.** This doc assumes the backend (.NET) and the two frontends (React/Next.js web, React Native mobile) live in separate repos/solutions. Confirm before Phase 0 scaffolding, since it affects CI and versioning setup.
