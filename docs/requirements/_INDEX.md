@@ -91,7 +91,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Exercise & Drill Planner (HSEEP-aligned)
 - [x] Drill Compliance Logging
 - [x] Mutual Aid Agreements Tracker
-- [ ] EOC Activation Checklists
+- [x] EOC Activation Checklists
 
 ## 6. Emergency Planning
 - [ ] Pre-Incident Plans (Preplans)
