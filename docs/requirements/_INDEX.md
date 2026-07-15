@@ -84,7 +84,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Remote Gate & Barrier Controls
 
 ## 5. Emergency Management
-- [ ] ICS Forms Engine (FEMA-aligned)
+- [x] ICS Forms Engine (FEMA-aligned)
 - [ ] Resource Logistics Catalog
 - [ ] After-Action Reports (AAR)
 - [ ] Improvement Plan (IP) Tracking

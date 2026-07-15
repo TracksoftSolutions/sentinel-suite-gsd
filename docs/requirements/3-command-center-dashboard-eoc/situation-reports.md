@@ -6,6 +6,8 @@ Situation Reports mirror ICS Role Mapping's two-tier split, one report type per 
 
 Both reuse the platform's established report architecture end to end: an **AI Draft** working record (mutable, never auto-published — the same discipline AI-Assisted Incident Report Writing established for narrative content) is what a compiler reviews and explicitly **publishes** into an immutable Document via Document Registry's hash/version model, exactly like DAR/Incident Report's snapshot pattern. SITREP's recurring generation is a third consumer of Background Job Processing's recurring-job registry; its overdue alerting is a new Duration Watchdog instance, no new alerting mechanism; its narrative drafting is a new AI Context, the third consumer of AI/LLM Services' "AI proposes, human confirms" discipline.
 
+**Superseded (retrofit): [ICS Forms Engine](../5-emergency-management/ics-forms-engine.md) generalizes this doc's entire mechanism.** SITREP and Incident Status Report are now the **ICS-209 (full)** and **ICS-209-lite** Form Definitions consumed by that engine's generic Form Instance (Draft→Publish, cadence, authorship-mode, auto-population, overdue-watchdog) machinery — this doc's field content, Resources Committed auto-population, and `sitrep_narrative` AI Context all carry over unmodified as that Form Definition's own schema and resolver wiring. Everything below remains an accurate description of ICS-209/ICS-209-lite's own field shape and behavior; only the underlying cadence/lifecycle engine it now runs on has moved.
+
 ## Actors & Roles
 
 - **Incident Commander / Planning Section (Situation Unit)** — typically the SITREP compiler in `single_compiler` mode; always the final publisher regardless of authorship mode.
