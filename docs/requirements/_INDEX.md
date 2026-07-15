@@ -75,7 +75,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Pre-Registration Portal
 - [x] Visitor Kiosk App
 - [x] Host Arrival Notifications
-- [ ] Access Credential Management
+- [x] Access Credential Management
 - [ ] Clearance Profiles
 - [ ] Key Ring Registry
 - [ ] Key Custody & Auditing

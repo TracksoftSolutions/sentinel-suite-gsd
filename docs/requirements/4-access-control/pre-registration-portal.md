@@ -91,9 +91,10 @@ This doc also introduces the **PIAM Adaptor Registration** — the base of the n
 - requirement_id, type (nda_signature, id_upload, photo_capture, custom), required (bool), document_template_ref (nullable)
 
 **PIAM Adaptor Registration** (new — base of Module 4's adaptor family)
-- adaptor_id, tenant_id, adaptor_type (hid_safe, none), enabled (bool)
-- sync_capabilities{} (visitor_sync: bool — this doc; credential_sync/watchlist_sync — reserved for Access Credential Management/BOLO & Trespass Alerts to declare)
+- adaptor_id, tenant_id, adaptor_type (an open set — hid_safe, ccure, safelok, none, and others as adaptors are built; a tenant may register more than one, e.g. different vendors at different sites — see Access Credential Management's retrofit), enabled (bool)
+- sync_capabilities{} (visitor_sync: bool — this doc; credential_sync — added by Access Credential Management; watchlist_sync — reserved for BOLO & Trespass Alerts to declare)
 - watchlist_authority (sentinel_native, external)
+- credential_authority (sentinel_native, external) — added by Access Credential Management
 - connection_config (adaptor-specific, opaque — technical-spec)
 
 ## States & Transitions
