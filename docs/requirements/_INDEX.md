@@ -81,7 +81,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Key Custody & Auditing
 - [x] Lock Core & Cylinder Tracking
 - [x] BOLO & Trespass Alerts
-- [ ] Remote Gate & Barrier Controls
+- [x] Remote Gate & Barrier Controls
 
 ## 5. Emergency Management
 - [ ] ICS Forms Engine (FEMA-aligned)
