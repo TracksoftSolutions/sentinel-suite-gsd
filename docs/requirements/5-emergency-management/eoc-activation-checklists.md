@@ -32,10 +32,12 @@ Four elicited decisions:
 ### Checklist Template (plan layer)
 1. A tenant-authored **Checklist Template** carries `category` (`activation`, `system_verification`), `name`, an ordered `items[]` (each: `sequence_number`, `instruction_text`, `requires_note` — whether a note is expected, never enforced), and `trigger_on_activation` (bool, independent of category — a System Checklist can also auto-run on activation if a tenant wants immediate backup-power verification, or stay purely periodic/manual). Edits version rather than mutate in place, the same discipline as Route/Tour Definition.
 1a. **`category` gains a third value, `incident_response`, and Checklist Template gains `full_procedure_ref` (nullable, forward-reference) and `is_platform_starter_content` (bool)** *(retrofit, by Incident Action Checklists)* — full mechanics owned by that doc; this doc's `items[]`/versioning shape is otherwise unchanged and unaware of the new category beyond accepting it as a value.
+1b. **`category` gains a fourth value, `coop_response`** *(retrofit, by Continuity of Operations Plans)* — full mechanics owned by that doc; a `coop_response`-category template's `trigger_on_activation` fires on COOP Activation (see 2b), not on this doc's own EOC Activation.
 
 ### Checklist Run (execution layer, Activity extension)
 2. **Checklist Run** registers as its own Activity extension (`entity_id` shared PK, FK → Activity) — `template_ref` (pinned version), `category`, `eoc_activation_ref` (nullable — a System Checklist can run standalone, independent of any activation), `status` (`in_progress` → `completed`).
 2a. **`eoc_activation_ref` widens to `anchor_type` (`eoc_activation`, `call`, `incident`) + `anchor_ref`** (nullable — standalone still allowed) *(retrofit, by Incident Action Checklists)* — this doc's own EOC-Activation-anchored usage is just `anchor_type = eoc_activation`, unaffected in behavior.
+2b. **`anchor_type` gains a fourth value, `coop_activation`** *(retrofit, by Continuity of Operations Plans)* — a COOP Activation is its own Activity extension, deliberately independent of this doc's EOC Activation; full mechanics owned by that doc.
 3. **A Checklist Run auto-creates for every `trigger_on_activation` Checklist Template the moment EOC Activation fires** — a Domain Events rule (EOC Activation created → auto-create Checklist Run per matching template), the standard trigger/effect split already used everywhere else (e.g., Signal Disposition's `incident_dispatch` tier), no new automation mechanism. A Checklist Run not tied to any activation is started manually (Command/Action Bus action).
 4. **Checklist Item Check** (child of Checklist Run) records one interaction per template item: `status` (`checked`, `skipped`), `checked_by`, `checked_at`, optional `note`. **Skipping is always allowed, with no forced justification** — the same graceful-degradation instinct Guard Tour's verification methods already established: track the gap, don't block the work. A correction to an already-acted-on item is a new Checklist Item Check row for the same `item_ref` (the latest is what displays; full history is retained) — the same "correction is a new row, not an edit" discipline Exercise & Drill Planner's Inject Delivery/Evaluation Score already established.
 4a. **Checklist Item Check gains `assigned_to_ref` (nullable, FK → Person), `assigned_by`, `assigned_at`** *(retrofit, by Incident Action Checklists)* — this doc's own EOC/System checklists don't use per-item assignment and are unaffected; assignment never gates who may check/skip an item (see that doc's FR #7).
@@ -50,7 +52,7 @@ Four elicited decisions:
 ## Data Model / Fields
 
 **Checklist Template** (tenant-authored, versioned plan; not an Activity)
-- template_id, tenant_id, category (activation, system_verification, incident_response — retrofit), name, version, status (active, archived)
+- template_id, tenant_id, category (activation, system_verification, incident_response, coop_response — retrofit), name, version, status (active, archived)
 - trigger_on_activation (bool)
 - items[] (item_id, sequence_number, instruction_text, requires_note)
 - full_procedure_ref (nullable, forward-reference — retrofit, see [incident-action-checklists.md](../6-emergency-planning/incident-action-checklists.md))
@@ -58,7 +60,7 @@ Four elicited decisions:
 
 **Checklist Run** (Activity extension; entity_id is the shared PK, FK → Activity)
 - template_ref (pinned version), category
-- anchor_type (eoc_activation, call, incident), anchor_ref (nullable — retrofit, widened from `eoc_activation_ref`, see [incident-action-checklists.md](../6-emergency-planning/incident-action-checklists.md))
+- anchor_type (eoc_activation, call, incident, coop_activation), anchor_ref (nullable — retrofit, widened from `eoc_activation_ref`, see [incident-action-checklists.md](../6-emergency-planning/incident-action-checklists.md) and [continuity-of-operations-plans-coop.md](../6-emergency-planning/continuity-of-operations-plans-coop.md))
 - status (in_progress, completed), started_at, completed_at (nullable)
 
 **Checklist Item Check** (child of Checklist Run)
@@ -94,6 +96,7 @@ Four elicited decisions:
 - **Module 8 (Personnel, not yet specified)**: forward reference only — EOC Call-up Roster is an interim stand-in for real on-call/scheduling data, the same deferred-integration posture used throughout the platform's history (DAR's Shift Window, EOC Logistics Hub's earlier stand-ins).
 - **Pre-Incident Plans** *(retrofit)*: introduces a structurally similar but deliberately separate Preplan Notification List (ordered, per-plan escalation contacts vs. this doc's simultaneous, EOC-wide broadcast roster) — kept as two mechanisms given the different delivery semantics, but either can **Import Entries** from the other (a one-time copy of `person_ref`/`ics_position_ref` rows, not a live shared list) to avoid re-entering an overlapping contact set.
 - **Incident Action Checklists** *(retrofit)*: widens this doc's Checklist Template/Run/Item Check mechanism with a third category (`incident_response`), a Call/Incident-capable anchor (alongside this doc's own EOC-Activation anchor), per-item field-personnel assignment, and a starter catalog — all additive; this doc's own Activation/System Checklist behavior is unchanged.
+- **Continuity of Operations Plans** *(retrofit)*: widens `category` with a fourth value (`coop_response`) and `anchor_type` with a fourth value (`coop_activation`), so a COOP Activation — its own Activity extension, deliberately independent of this doc's EOC Activation — can trigger and anchor Checklist Runs through the same mechanism; this doc's own EOC Activation/System Checklist behavior is unaffected.
 
 ## Permissions
 
