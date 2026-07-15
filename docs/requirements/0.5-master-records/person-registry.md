@@ -159,7 +159,7 @@ This doc establishes each extension type's *core* identifying fields and lifecyc
 
 ## Open Questions
 
-- Exact tenant-configurable default maximum expiration for BOLO/Trespass flags where no statutory requirement applies — to be set via Settings & Preferences during technical spec.
+- ~~Exact tenant-configurable default maximum expiration for BOLO/Trespass flags where no statutory requirement applies~~ — **closed** by Access Control's BOLO & Trespass Alerts (Trespass Notice Default Expiration Policy).
 - Richer Employee/Visitor/Contractor/Occupant fields are explicitly deferred to Personnel, Access Control, Subcontractor Management, and Facility & Zone Management's own future docs — this doc intentionally specifies only the core/shared skeleton.
 - Structured vs. free-text modeling for medical alerts and language fluencies (e.g., a controlled vocabulary vs. open text) — to be decided during technical spec, balancing structured-data value against real-world data entry practicality.
 - Exact event source/mechanism that signals "active emergency" to trigger sensitive-field visibility broadening — to be finalized when Emergency Planning's Muster Check-in App is specified.

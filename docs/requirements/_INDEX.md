@@ -80,7 +80,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Key Ring Registry
 - [x] Key Custody & Auditing
 - [x] Lock Core & Cylinder Tracking
-- [ ] BOLO & Trespass Alerts
+- [x] BOLO & Trespass Alerts
 - [ ] Remote Gate & Barrier Controls
 
 ## 5. Emergency Management
