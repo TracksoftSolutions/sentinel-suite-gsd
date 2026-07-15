@@ -70,6 +70,9 @@ This doc establishes only the base Activity mechanics and this shared machinery.
 17. **Storm collapse: one real event = one record — but collapse never destroys signal detail.** Repeated identical signals (same source, same signal type) within a rolling collapse window merge into **one** promoted Activity carrying `first_signal_at`, `last_signal_at`, and a live-updating `occurrence_count` — never N near-identical Activity rows. The full raw per-signal sequence, with its complete upstream metadata, remains queryable in telemetry (when disposition ≥ `telemetry`) — pattern analysis runs over telemetry, never over the collapsed operational record; the collapse window is tenant-configurable per signal type. This is write-time collapse at the promotion boundary, in the same family as Checkpoint Scan's debounce — not Entity Registry Core's identity dedup, which promoted signal Activities opt out of anyway (`is_mergeable = false`, #13).
 18. **Manual promotion is always available**: a Dispatcher/Supervisor watching a `display_only` or `telemetry` feed can promote any signal into an Activity (or launch an Incident from it via the standard launch-point mechanism, context pre-filled) — automation levels set the default path, never a ceiling on human judgment.
 
+### Training data (retrofit — Exercise & Drill Planner)
+19. **`training_exercise_ref`** (nullable, FK → the future `Exercise` Activity extension) is a new base-level field, plus a derived `is_training` boolean (true whenever it's set) *(retrofit — see [exercise-drill-planner.md](../5-emergency-management/exercise-drill-planner.md))*. A `live_simulation`-mode Exercise's participants create ordinary Activity-extension records exactly as in real operations, each stamped with this reference at creation — set once, never retroactively applied or removed. Every live-consuming view (Active Incident Queue, UOP Map, Multi-Incident Console, Command Center Wallboard View) defaults to excluding `is_training = true` records, with an explicit Exercise/Training View toggle and mandatory, non-suppressible visual treatment as the only way to see them — the platform's established registration-and-consumer-filters discipline (Signal Disposition, Queue Role opt-in), applied to a new axis: real vs. training, not just live vs. historical.
+
 ## Data Model / Fields
 
 **Activity** (TPT level: entity_id is the shared PK, FK → Entity.entity_id — structured per `nc:ActivityType`)
@@ -78,6 +81,7 @@ This doc establishes only the base Activity mechanics and this shared machinery.
 - status (open, in_progress, concluded, cancelled)
 - started_at, concluded_at (nullable)
 - description
+- training_exercise_ref (nullable, FK → Exercise), is_training (derived — true when training_exercise_ref is set)
 
 *(Participants, attachments, and location are association rows, not fields here.)*
 
