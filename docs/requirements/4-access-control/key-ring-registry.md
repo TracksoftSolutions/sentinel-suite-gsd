@@ -60,6 +60,7 @@ This doc owns the **key side** of key↔lock: master-keying hierarchy (reusing t
 **Locksmith Work Order** (feature-local, lightweight)
 - order_id, key_ref (nullable), key_ring_ref (nullable), status (requested, scheduled, completed)
 - requested_at, requested_by, completed_at (nullable), notes
+- *(retrofit — Lock Core & Cylinder Tracking)* `applies_to` generalizes to also accept a `lock_position_ref`/`lock_core_ref` target (mutually exclusive with key_ref/key_ring_ref); a Lock/Core-targeting order additionally requires `witnessed_by` and `security_verified_by`/`security_verified_at` before reaching `completed` — a Key/Key Ring-targeting order (this doc's own scope) is unaffected by either field.
 
 ## States & Transitions
 

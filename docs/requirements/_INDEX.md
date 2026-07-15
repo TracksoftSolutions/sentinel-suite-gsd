@@ -79,7 +79,7 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Clearance Profiles
 - [x] Key Ring Registry
 - [x] Key Custody & Auditing
-- [ ] Lock Core & Cylinder Tracking
+- [x] Lock Core & Cylinder Tracking
 - [ ] BOLO & Trespass Alerts
 - [ ] Remote Gate & Barrier Controls
 
