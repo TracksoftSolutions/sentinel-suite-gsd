@@ -84,6 +84,7 @@ public static class GuardAgainstStringExtensions
         [CallerArgumentExpression(nameof(input))] string? parameterName = null)
     {
         Guard.Against.Null(input, parameterName);
+        Guard.Against.NullOrWhiteSpace(regexPattern, nameof(regexPattern));
 
         if (!Regex.IsMatch(input, regexPattern))
         {
