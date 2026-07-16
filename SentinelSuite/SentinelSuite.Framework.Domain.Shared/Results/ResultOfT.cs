@@ -1,3 +1,5 @@
+using SentinelSuite.Framework.Domain.Shared.Guards;
+
 namespace SentinelSuite.Framework.Domain.Shared.Results;
 
 /// <summary>
@@ -32,6 +34,18 @@ namespace SentinelSuite.Framework.Domain.Shared.Results;
 /// backing field, so a failed <see cref="Result{T}"/> can never silently
 /// present an uninitialized value as if it were a legitimately-produced
 /// result (RESEARCH.md Pitfall 3).
+/// </para>
+/// <para>
+/// <b>One-directional conversion note (D-14):</b> a reverse conversion from
+/// <see cref="Result{T}"/> back to a bare <typeparamref name="T"/> is
+/// intentionally not provided. Ardalis.Result's actual <c>Result&lt;T&gt;</c>
+/// ships that reverse conversion (an implicit operator unwrapping
+/// <c>Result&lt;T&gt;</c> straight into <typeparamref name="T"/>), which
+/// would let a failed <see cref="Result{T}"/> silently present a default or
+/// uninitialized value as if it had been successfully produced, bypassing
+/// the <see cref="Value"/> getter's fail-fast check entirely (RESEARCH.md
+/// Pattern 3's gotcha). Only the <typeparamref name="T"/> →
+/// <see cref="Result{T}"/> direction is implemented below.
 /// </para>
 /// </remarks>
 public sealed class Result<T>
@@ -125,4 +139,44 @@ public sealed class Result<T>
 
     /// <summary>Creates a failed <see cref="Result{T}"/> with <see cref="ResultStatus.Unavailable"/>.</summary>
     public static Result<T> Unavailable(params Results.Error[] errors) => new(ResultStatus.Unavailable, default, errors);
+
+    /// <summary>
+    /// Creates a failed <see cref="Result{T}"/> with
+    /// <see cref="ResultStatus.CriticalError"/>, carrying the original
+    /// caught <paramref name="exception"/> (D-11), mirroring plan 02-01's
+    /// <see cref="Result.CriticalError(Exception, Results.Error?)"/> exactly.
+    /// </summary>
+    /// <param name="exception">
+    /// The caught exception being converted to a <see cref="Result{T}"/>.
+    /// Must not be <see langword="null"/> — a null exception is itself a
+    /// programmer error (D-05), not something to silently accept.
+    /// </param>
+    /// <param name="error">
+    /// An optional explicit <see cref="Results.Error"/> to use instead of
+    /// deriving one from <paramref name="exception"/>. When omitted, an
+    /// <see cref="Results.Error"/> is derived using a fixed
+    /// <c>"CriticalError"</c> code and <paramref name="exception"/>'s own
+    /// <see cref="System.Exception.Message"/> when that is non-null and
+    /// non-empty, or the same fixed fallback literal used by
+    /// <see cref="Result.CriticalError(Exception, Results.Error?)"/>
+    /// otherwise — never passing a potentially-empty string straight into
+    /// <see cref="Results.Error"/>'s constructor (T-2-02, RESEARCH.md Pitfall 5).
+    /// </param>
+    public static Result<T> CriticalError(Exception exception, Results.Error? error = null)
+    {
+        Guard.Against.Null(exception);
+
+        var resolvedError = error ?? new Results.Error(
+            "CriticalError",
+            string.IsNullOrEmpty(exception.Message) ? "An unexpected error occurred." : exception.Message);
+
+        return new Result<T>(ResultStatus.CriticalError, default, [resolvedError], exception);
+    }
+
+    /// <summary>
+    /// One-directional implicit conversion from a bare <typeparamref name="T"/>
+    /// value into a successful <see cref="Result{T}"/> (D-14). No reverse
+    /// conversion is provided — see this class's remarks for why.
+    /// </summary>
+    public static implicit operator Result<T>(T value) => Success(value);
 }

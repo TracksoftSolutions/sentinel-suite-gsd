@@ -167,4 +167,57 @@ public class ResultStatusFactoryTests
         Assert.True(result.IsFailure);
         Assert.Equal(ResultStatus.Unavailable, result.Status);
     }
+
+    private sealed class EmptyMessageException : Exception
+    {
+        public override string Message => string.Empty;
+    }
+
+    [Fact]
+    public void ResultOfT_CriticalError_WhenCalledWithException_ProducesFailedResultWithCriticalErrorStatus()
+    {
+        var exception = new InvalidOperationException("boom");
+
+        var result = Result<int>.CriticalError(exception);
+
+        Assert.Equal(ResultStatus.CriticalError, result.Status);
+        Assert.True(result.IsFailure);
+    }
+
+    [Fact]
+    public void ResultOfT_CriticalError_WhenCalledWithException_ExceptionIsReferenceEqualToOriginal()
+    {
+        var exception = new InvalidOperationException("boom");
+
+        var result = Result<int>.CriticalError(exception);
+
+        Assert.Same(exception, result.Exception);
+    }
+
+    [Fact]
+    public void ResultOfT_CriticalError_WhenExceptionMessageIsEmpty_ErrorMessageFallsBackToFixedNonEmptyString()
+    {
+        var exception = new EmptyMessageException();
+
+        var result = Result<int>.CriticalError(exception);
+
+        Assert.False(string.IsNullOrEmpty(result.Error!.Message));
+    }
+
+    [Fact]
+    public void ResultOfT_CriticalError_WhenCalledWithException_ErrorsContainsExactlyOneEntry()
+    {
+        var exception = new InvalidOperationException("boom");
+
+        var result = Result<int>.CriticalError(exception);
+
+        Assert.Single(result.Errors);
+        Assert.Same(result.Error, result.Errors[0]);
+    }
+
+    [Fact]
+    public void ResultOfT_CriticalError_WhenExceptionIsNull_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => Result<int>.CriticalError(null!));
+    }
 }

@@ -102,4 +102,22 @@ public class ResultOfTValueAccessTests
 
         Assert.Equal(new[] { error1, error2 }, result.Errors);
     }
+
+    [Fact]
+    public void ImplicitConversion_WhenAssigningBareValue_ProducesSuccessfulResultWithThatValue()
+    {
+        Result<int> result = 42;
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(42, result.Value);
+    }
+
+    [Fact]
+    public void CriticalError_WhenAccessingValue_ThrowsInvalidOperationException()
+    {
+        var result = Result<int>.CriticalError(new InvalidOperationException("boom"));
+
+        Assert.True(result.IsFailure);
+        Assert.Throws<InvalidOperationException>(() => result.Value);
+    }
 }
