@@ -92,7 +92,23 @@ Plans:
   3. `FromValue`/`FromName` lookups succeed for valid inputs, verified by a unit test.
   4. `FromValue`/`FromName` lookups fail predictably (a specific, catchable exception) for invalid inputs, verified by a unit test.
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 03-01-PLAN.md — SmartEnum core type: ISmartEnum, SmartEnumNotFoundException, SmartEnum&lt;TEnum,TValue&gt; (discovery, lookup, comparison, equality, operators), SmartEnum&lt;TEnum&gt; int-backed wrapper
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 03-02-PLAN.md — Discovery, equality & representation tests (SmartEnumEqualityTests, SmartEnumListTests, SmartEnumToStringTests, SmartEnumDiscoveryFailureTests)
+- [ ] 03-03-PLAN.md — Lookup API tests (SmartEnumFromValueFromNameTests, SmartEnumNotFoundTests, SmartEnumFromValueDefaultTests)
+- [ ] 03-04-PLAN.md — Comparison, operators & generic-value form tests (SmartEnumComparableTests, SmartEnumOperatorTests, SmartEnumGenericValueTests)
+
+**Cross-cutting constraints:**
+
+- D-05/D-06: `SmartEnumNotFoundException` is introduced ahead of Phase 4's `DomainException` (a deliberate, discussed precedent deviation) — Phase 4 may need to reconcile/rebase this exception type once `DomainException` lands.
+- D-08 (amended)/D-10 (amended): `TValue` constrained to `IEquatable<TValue>, IComparable<TValue>`; full six-operator comparison set (`==`,`!=`,`<`,`<=`,`>`,`>=`) implemented, broadened from CONTEXT.md's original narrower wording per research-review amendments.
 
 ### Phase 4: Domain.Shared: DomainException
 
@@ -330,7 +346,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|----------------|--------|-----------|
 | 1. Domain.Shared: GuardClauses | 6/6 | Complete    | 2026-07-16 |
 | 2. Domain.Shared: Result / Result<T> | 0/TBD | Not started | - |
-| 3. Domain.Shared: SmartEnum<T> | 0/TBD | Not started | - |
+| 3. Domain.Shared: SmartEnum<T> | 0/4 | Not started | - |
 | 4. Domain.Shared: DomainException | 0/TBD | Not started | - |
 | 5. Clean Architecture Solution Layout | 0/TBD | Not started | - |
 | 6. Cross-Cutting Contracts: Auditing | 0/TBD | Not started | - |
