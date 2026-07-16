@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SentinelSuite.Framework.Domain.Shared/SentinelSuite.Framework.Domain.Shared.csproj" />
+  <Project Path="SentinelSuite.Framework.Domain/SentinelSuite.Framework.Domain.csproj" />
+</Solution>
