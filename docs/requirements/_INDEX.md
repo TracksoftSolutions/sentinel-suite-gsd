@@ -94,10 +94,10 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] EOC Activation Checklists
 
 ## 6. Emergency Planning
-- [ ] Pre-Incident Plans (Preplans)
-- [ ] Incident Action Checklists
-- [ ] Continuity of Operations Plans (COOP)
-- [ ] Muster Check-in App
+- [x] Pre-Incident Plans (Preplans)
+- [x] Incident Action Checklists
+- [x] Continuity of Operations Plans (COOP)
+- [x] Muster Check-in App
 - [ ] Evacuation Roster Reconciliation
 - [ ] Hazard Identification & Risk Assessment (HIRA)
 - [ ] Mitigation Task Tracker

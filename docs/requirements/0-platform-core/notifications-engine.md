@@ -38,7 +38,7 @@ Explicitly out of scope: Module 17 (Mass Notification & Crisis Communications), 
 7. Escalation chains and ack timeout windows are configurable per notification category, with sane platform defaults.
 
 ### Channels & routing
-8. Supported delivery channels: in-app notification center, mobile push, desktop push, SMS, email.
+8. Supported delivery channels: in-app notification center, mobile push, desktop push, SMS, email, **voice call** *(retrofit, by Pre-Incident Plans — a real outbound-call adaptor, e.g. IVR/telephony, distinct from SMS: text-based channels are explicitly insufficient for a genuine phone-call escalation requirement)*. Voice call is the platform's first Notifications Engine channel requiring a dedicated provider adaptor (per the platform-wide provider-adaptor discipline) rather than a standard push/SMS/email gateway; a tenant with no voice-call adaptor configured simply doesn't have the channel available — consuming features must degrade gracefully (e.g., fall back to a manually-worked list) rather than claim a call was placed when it wasn't.
 9. Each notification category ships with a platform-default channel set. Tenant Admins can adjust defaults for their tenant; users can further customize channel preference for Normal/Low (and, where permitted, High) categories.
 10. Critical-tier categories carry a **tenant-enforced minimum channel set** that individual users cannot disable.
 11. Mobile push is delivered via the standard OS push service (APNs/FCM), independent of the app's foreground/background state or the Offline Data Sync queue — it arrives even if the app itself was recently offline, distinct from that feature's own data-queuing mechanics.
@@ -105,6 +105,7 @@ Explicitly out of scope: Module 17 (Mass Notification & Crisis Communications), 
 - **Settings & Preferences**: Network Profiles may influence whether/how push payload size is constrained on low-bandwidth links; the Tenant Notification Policy and User Notification Preference in this doc's data model are registered as Setting Definitions against that feature's shared hierarchical config engine (the admin-pinned non-mutable category pattern is the same mechanism generalized as "locking" there) rather than implemented as standalone override mechanisms.
 - **Every consuming module** (Security Operations, Dispatch/CAD, Personnel, Access Control, etc.): each defines its own notification categories (e.g., missed checkpoint, new dispatch call, certification expiring, host arrival) that plug into this shared engine rather than building their own delivery mechanism.
 - **Module 17 — Mass Notification & Crisis Communications**: separate system for external/occupant broadcasts; may share channel gateway infrastructure but not this feature's category/ack/escalation model.
+- **Pre-Incident Plans**: consumer of the new voice-call channel (#8 retrofit) for its Emergency Notification List's optional automated-escalation mode; also a second, structurally similar consumer of this doc's existing escalation_chain concept, applied to a Preplan-scoped ordered list rather than a role/category-based chain.
 
 ## Permissions
 
@@ -145,3 +146,4 @@ Explicitly out of scope: Module 17 (Mass Notification & Crisis Communications), 
 - Default escalation chain depth and timeout values per category — to be set during technical spec, likely varying by tenant risk tolerance.
 - Whether SMS/email channel usage for Critical alerts has cost/rate implications that need tenant-level budgeting or alerting — deferred to technical spec.
 - Multi-language template support timeline — deferred to the platform's future internationalization roadmap per the PDD.
+- The voice-call channel's actual adaptor (IVR script, telephony provider selection, per-tenant availability/enablement) — this doc only establishes that the channel exists and is adaptor-gated; the adaptor itself is a technical-spec-level undertaking, not committed here.
