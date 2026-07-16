@@ -30,12 +30,13 @@ A hand-rolled type-safe enumeration base exists in `SentinelSuite.Framework.Doma
 
 ### Comparison & enumeration surface
 - **D-07:** SmartEnum implements **`IComparable<SmartEnum<TEnum>>`**, sorting by underlying `Value`. Matches Ardalis.SmartEnum exactly and continues the "build broader now" pattern — lets any derived enum be sorted/ordered out of the box (e.g. status pipelines, severity levels).
-- **D-08:** The generic-value form's `TValue` is **constrained to `IComparable<TValue>`** — so both the int-backed and generic-value-backed forms (D-01) are sortable by their underlying value, giving one consistent contract across both forms rather than only the int-backed form being comparable.
+- **D-08 (amended during research review):** The generic-value form's `TValue` is **constrained to `IEquatable<TValue>, IComparable<TValue>`** — originally locked as `IComparable<TValue>`-only, then broadened after RESEARCH.md (Pitfall 1) found the Ardalis.SmartEnum reference's `Equals` implementation depends on `IEquatable<TValue>` (`Value.Equals(other.Value)`); constraining to `IComparable`-only would force `Equals` to fall back to `CompareTo(...) == 0`, a subtle semantic edge case for any `TValue` where equality and comparison could disagree. Broadening matches the proven reference shape and does not meaningfully restrict realistic value types (int/string/Guid already implement both). Both int-backed and generic-value-backed forms (D-01) remain sortable *and* correctly equatable by their underlying value.
 - **D-09:** A **static `List` property** (or `GetAll()`-equivalent) is exposed on every derived SmartEnum type, enumerating all its defined instances. Matches Ardalis.SmartEnum; near-zero-cost addition since the reflection scan (D-02) already collects this data.
 
 ### Equality & representation
-- **D-10:** SmartEnum overloads **`==` and `!=`** operators, in addition to `Equals`/`GetHashCode`. Matches Ardalis.SmartEnum exactly — lets call sites write `status == MyEnum.Active` naturally.
+- **D-10 (amended during research review):** SmartEnum overloads **`==`, `!=`, `<`, `<=`, `>`, `>=`** — the full comparison/equality operator set, not just `==`/`!=`. Originally locked to `==`/`!=` only; broadened after RESEARCH.md (Open Question 2) noted `<`/`<=`/`>`/`>=` are each a one-line `CompareTo(...)`-based addition once `IComparable<T>` (D-07) is already in scope, and the reference implements all six. Consistent with this phase's repeated "build broader now" pattern.
 - **D-11:** SmartEnum overrides **`ToString()`** to return the instance's `Name`. Matches Ardalis.SmartEnum; makes logging, string interpolation, and debugger display show the enum's label instead of the fully-qualified type name.
+- **D-14 (added during research review):** `FromValue` ships a **three-argument overload**, `FromValue(TValue value, TEnum defaultValue)`, returning the caller-supplied default instead of throwing on a miss — a third lookup mode beyond D-04's original throw/Try pair. Matches the Ardalis.SmartEnum reference exactly (RESEARCH.md Open Question 3); user explicitly chose to include it despite research's lean toward omitting it as out-of-scope for D-04's literal two-mode framing.
 
 ### Type shape
 - **D-12:** The self-referencing generic constraint (`TEnum : SmartEnum<TEnum>`) is **compiler-enforced**, matching Ardalis.SmartEnum and preventing mismatched generic usage at derived-type declaration.
@@ -43,7 +44,7 @@ A hand-rolled type-safe enumeration base exists in `SentinelSuite.Framework.Doma
 
 ### Claude's Discretion
 - Exact namespace — apply the established `Domain.Shared.{Concept}` sub-namespace convention (Phase 1 set `...Guards`, Phase 2 set `...Results`); this phase is expected to set `...SmartEnum` or `...Enumerations`. Confirm during planning.
-- Internal reflection-caching implementation details (e.g., `ConcurrentDictionary<Type, ...>` vs `Lazy<T>` per type) — not discussed, left to planning.
+- Internal reflection-caching implementation details — **resolved by RESEARCH.md Pattern 2, not actually open**: four `static readonly Lazy<T>` fields declared directly on the generic base (not a `Type`-keyed `ConcurrentDictionary`), since C# generic static fields are already per-closed-generic-type. Follow RESEARCH.md's exact shape.
 - File/class organization within the SmartEnum sub-namespace (how many files, how the int-backed vs generic-value forms are split) — not discussed, left to planning, matching Phase 1/2's per-concern file split precedent.
 - Exact wording/shape of `SmartEnumNotFoundException`'s message and properties — not discussed beyond D-06, left to planning.
 
