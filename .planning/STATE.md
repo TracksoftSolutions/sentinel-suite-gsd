@@ -6,14 +6,14 @@ current_phase: 02
 current_phase_name: domain-shared-result-result-t
 status: executing
 stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-07-16T20:51:32.436Z"
+last_updated: "2026-07-16T21:01:13.917Z"
 last_activity: 2026-07-16
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 20
   completed_phases: 1
   total_plans: 16
-  completed_plans: 8
+  completed_plans: 9
   percent: 5
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-15)
 ## Current Position
 
 Phase: 02 (domain-shared-result-result-t) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-07-16 — Phase 02 execution started
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P6 | 6min | 2 tasks | 4 files |
 | Phase 02 P01 | 15min | 3 tasks | 7 files |
 | Phase 02 P02 | 12min | 2 tasks | 3 files |
+| Phase 02 P3 | 18min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,9 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 02 Plan 02: Result<T>.Failure(...) reuses plan 02-01's exact CS0102 naming resolution for the Error identifier collision, no new decision needed
 - [Phase ?]: Phase 02 Plan 02: Result<T>.Value getter fail-fast checks IsFailure before returning the backing field, diverging deliberately from Ardalis.Result's unguarded auto-property (D-06)
 - [Phase ?]: Phase 02 Plan 02: Only the T -> Result<T> implicit conversion was implemented; the reverse conversion is deliberately excluded per D-14, enforced by an automated negative-grep verify step
+- [Phase 02]: Phase 02 Plan 03: Map/Bind generic variants propagate only .Errors on short-circuit per the documented fidelity note; non-generic Bind returns the original failed Result instance unchanged, fully preserving Status/Exception
+- [Phase 02]: Phase 02 Plan 03: Bind confirmed as sole name for D-12's Bind/Then combinator; no Then alias added
+- [Phase 02]: Phase 02 Plan 03: throw-only lambdas require explicit delegate-type casts to disambiguate Map/Bind's overloaded Left/Right/Both-async call sites (CS0121)
 
 ### Pending Todos
 
@@ -113,6 +117,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-16T20:51:32.421Z
+Last session: 2026-07-16T21:00:26.548Z
 Stopped at: Completed 02-02-PLAN.md
 Resume file: None
