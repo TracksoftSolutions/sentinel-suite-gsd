@@ -43,16 +43,38 @@ Every module (everything below Tier 0) follows this project set:
 
 ## Module map
 
-### Tier 0 — `SentinelSuite.Framework`
+### Tier 0 — the Framework kernel (multiple projects, not one)
 
-The only project with zero product features — pure scaffolding, patterned after (never dependent on) ABP's `Volo.Abp.Domain`/DDD conventions, built by us:
+Zero product features anywhere in this tier — pure scaffolding, patterned after (never dependent on) the ABP repo's own kernel packages. **This is not a single `SentinelSuite.Framework` project** — that was wrong in an earlier draft of this doc. A shared kernel has to obey the same Dependency Rule as everything built on top of it: source dependencies only point inward, so an outer/infrastructure concern (EF Core, ASP.NET Core) must be *physically incapable* of being referenced from Domain, not just conventionally discouraged. ABP enforces exactly this by shipping its own kernel as separate packages rather than one `Volo.Abp.Core` blob — confirmed against the real repo (`framework/src`): `Volo.Abp.Ddd.Domain.Shared`, `Volo.Abp.Ddd.Domain`, `Volo.Abp.Ddd.Application.Contracts`, `Volo.Abp.Ddd.Application`, `Volo.Abp.Auditing.Contracts` vs. `Volo.Abp.Auditing`, `Volo.Abp.EntityFrameworkCore`, `Volo.Abp.AspNetCore.Mvc` are all distinct packages precisely so a domain project can't accidentally end up depending on EF Core. Our kernel mirrors that split:
 
-- Base entity/aggregate abstractions (`Entity<TKey>`, `AggregateRoot<TKey>`), the auditing property shape (`CreationAudited`/`Audited`/`FullAudited`), soft-delete (`ISoftDelete`) — the identity spine's *mechanical* base, one level below Master Records' *domain-taxonomic* base (`Entity`/`Party`/... — see `architecture-guidance.md`)
-- Multi-tenant data filtering (tenant-id shadow property + global query filter, honoring the per-Company-tenant isolation-tier decision)
-- A lightweight module/DI bootstrapping convention: each product module exposes a `Module` class that registers its services and contributes its EF Core entity configurations to the composed host — our own equivalent of ABP's `IAbpModule`, not the interface itself
-- `IRepository<T>` abstraction + a generic EF Core implementation
-- Unit-of-work abstraction
-- The base contract for domain-event raising/dispatch that Tier 2's `CommandSystem` module builds its full Event/Command/Query Bus on top of
+| Project | Depends on | Contains |
+| --- | --- | --- |
+| `SentinelSuite.Framework.Domain.Shared` | *(nothing but BCL)* | Pure interfaces/marker types with zero logic: `ISoftDelete`, `IMultiTenant`, `IHasCreationTime`/`IAudited`/`IFullAudited` (auditing *contracts*, not the hash-chain implementation), domain-level exception base types. The innermost possible ring — every other Framework project, and every product module's `Domain` project, can reference this freely with nothing dragged in behind it. |
+| `SentinelSuite.Framework.Domain` | `.Domain.Shared` | `Entity<TKey>`, `AggregateRoot<TKey>`, `IRepository<T>`/`IRepository<T,TKey>` (interfaces only), `IUnitOfWork` (interface only), domain service base class, business-rule/validation base types. **No EF Core reference at all.** This is the project Master Records' `Entity`/`EntityAssociation` TPT roots (`architecture-guidance.md`) extend, and the one every product module's own `.Domain` project depends on. |
+| `SentinelSuite.Framework.Application.Contracts` | `.Domain.Shared` | `IApplicationService` marker interface, base DTOs (`EntityDto<TKey>`, `PagedResultDto<T>`, `ListResultDto<T>`), standard paging/sorting input DTOs. Deliberately does **not** depend on `.Domain` — an application-contracts layer should only need shared primitives, never concrete domain types, so a client-facing contract package never leaks a domain entity shape. |
+| `SentinelSuite.Framework.Application` | `.Domain`, `.Application.Contracts` | `ApplicationService` base class, the object-mapping convention (a thin wrapper we own over whatever mapping library sits underneath — Mapperly/AutoMapper — same adaptor discipline as everywhere else), a validation pipeline base. |
+| `SentinelSuite.Framework.EntityFrameworkCore` | `.Domain` | The one project in this tier allowed to reference the EF Core package. Generic repository implementation, the multi-tenant global query filter wiring, the EF-Core-backed `IUnitOfWork` implementation, and the base conventions each product module's own `.EntityFrameworkCore` project composes into the one shared `SentinelSuiteDbContext`. Nothing in `.Domain` or `.Application` ever references this project — only the Host's composition root and each module's own EFCore project do. |
+| `SentinelSuite.Framework.AspNetCore` | `.Application.Contracts` | Host-layer conventions: standard API response envelope, exception-handling middleware, correlation-id middleware, auto-controller/routing conventions. Referenced by `HttpApi.Host` and each module's `.HttpApi` project — never by `Domain`/`Application`. |
+| `SentinelSuite.Framework.Modularity` | *(nothing but BCL/DI abstractions)* | The module-registration/bootstrap convention — our own thin stand-in for ABP's `IAbpModule`: a base class/interface each product module's own `Module` class implements to register its services and contribute its EF Core entity configurations to the composed host. Genuinely orthogonal to Domain/Application/Infrastructure (it's about *wiring*, not modeling), so it stays its own project rather than living inside `.Domain`. |
+
+The dependency graph this produces, arrows meaning "depends on":
+
+```
+Domain.Shared  <───────────────┐
+     ▲                          │
+     │                          │
+   Domain  <── EntityFrameworkCore
+     ▲
+     │
+Application.Contracts  <── AspNetCore
+     ▲
+     │
+ Application
+
+Modularity  (standalone — no inward deps, referenced by every module + Host)
+```
+
+Domain-event raising/dispatch's *base contract* lives in `.Domain` (an aggregate can raise an event); the full Event/Command/Query Bus that actually routes and delivers those events is Tier 2's `CommandSystem` module, built on top of this, not part of the kernel itself.
 
 ### Tier 1 — Core platform systems (each a from-scratch build of an ABP-shaped concern)
 
@@ -134,7 +156,7 @@ Known cross-module coupling worth remembering for build order (from `_DECISIONS.
 ## Build order (phased)
 
 ### Phase 0 — Walking skeleton
-`SentinelSuite.Framework` (Tier 0) built as real code — base entity/aggregate/audit/multi-tenant/module abstractions, not "wire up framework defaults." Empty `HttpApi.Host` + `DbMigrator` referencing it, CI pipeline, auth (IdP federation + local accounts, via `IdentityAccount`) working end-to-end with no product features yet.
+The seven Tier 0 kernel projects, built as real code in dependency order — `Domain.Shared` → `Domain` + `Application.Contracts` (parallel, both only need `Domain.Shared`) → `Application` + `EntityFrameworkCore` + `AspNetCore` (parallel, each needs one of the two prior) → `Modularity` (standalone, any time). Empty `HttpApi.Host` + `DbMigrator` referencing the kernel, CI pipeline, auth (IdP federation + local accounts, via `IdentityAccount`) working end-to-end with no other product features yet.
 
 ### Phase 1 — Core platform systems
 Tier 1 modules, in the order listed in the Tier 1 table (`IdentityAccount` → `PermissionManagement` → `TenantManagement` → `FeatureManagement` → `BackgroundJobs` → `BlobStorage` → `AuditLogging`), then Tier 2 modules in the order listed in the Tier 2 table.
