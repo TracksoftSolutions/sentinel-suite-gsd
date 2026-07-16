@@ -1,6 +1,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 
+using SentinelSuite.Framework.Domain.Shared.Guards;
+
 namespace SentinelSuite.Framework.Domain.Shared.Results;
 
 /// <summary>
@@ -55,10 +57,14 @@ public static class ResultMapExtensions
     /// propagating its <see cref="Result{T}.Errors"/> into the returned
     /// <see cref="Result{T}"/> (see this class's short-circuit fidelity note).
     /// </summary>
-    public static Result<TOut> Map<TIn, TOut>(this Result<TIn> result, Func<TIn, TOut> mapper) =>
-        result.IsFailure
+    public static Result<TOut> Map<TIn, TOut>(this Result<TIn> result, Func<TIn, TOut> mapper)
+    {
+        Guard.Against.Null(mapper);
+
+        return result.IsFailure
             ? Result<TOut>.Failure(result.Errors.ToArray())
             : Result<TOut>.Success(mapper(result.Value));
+    }
 
     /// <summary>
     /// Left-async generic variant: awaits <paramref name="resultTask"/>, then
@@ -77,6 +83,8 @@ public static class ResultMapExtensions
     /// </summary>
     public static async Task<Result<TOut>> Map<TIn, TOut>(this Result<TIn> result, Func<TIn, Task<TOut>> mapper)
     {
+        Guard.Against.Null(mapper);
+
         if (result.IsFailure)
         {
             return Result<TOut>.Failure(result.Errors.ToArray());
@@ -101,10 +109,14 @@ public static class ResultMapExtensions
     /// <see cref="Result"/> source; short-circuits without invoking
     /// <paramref name="valueFactory"/> on failure.
     /// </summary>
-    public static Result<TOut> Map<TOut>(this Result result, Func<TOut> valueFactory) =>
-        result.IsFailure
+    public static Result<TOut> Map<TOut>(this Result result, Func<TOut> valueFactory)
+    {
+        Guard.Against.Null(valueFactory);
+
+        return result.IsFailure
             ? Result<TOut>.Failure(result.Errors.ToArray())
             : Result<TOut>.Success(valueFactory());
+    }
 
     /// <summary>
     /// Left-async non-generic variant: awaits <paramref name="resultTask"/>,
@@ -123,6 +135,8 @@ public static class ResultMapExtensions
     /// </summary>
     public static async Task<Result<TOut>> Map<TOut>(this Result result, Func<Task<TOut>> valueFactory)
     {
+        Guard.Against.Null(valueFactory);
+
         if (result.IsFailure)
         {
             return Result<TOut>.Failure(result.Errors.ToArray());

@@ -1,6 +1,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 
+using SentinelSuite.Framework.Domain.Shared.Guards;
+
 namespace SentinelSuite.Framework.Domain.Shared.Results;
 
 /// <summary>
@@ -50,10 +52,14 @@ public static class ResultBindExtensions
     /// <paramref name="result"/>, propagating its
     /// <see cref="Result{T}.Errors"/> into the returned <see cref="Result{T}"/>.
     /// </summary>
-    public static Result<TOut> Bind<TIn, TOut>(this Result<TIn> result, Func<TIn, Result<TOut>> func) =>
-        result.IsFailure
+    public static Result<TOut> Bind<TIn, TOut>(this Result<TIn> result, Func<TIn, Result<TOut>> func)
+    {
+        Guard.Against.Null(func);
+
+        return result.IsFailure
             ? Result<TOut>.Failure(result.Errors.ToArray())
             : func(result.Value);
+    }
 
     /// <summary>
     /// Left-async generic variant: awaits <paramref name="resultTask"/>, then
@@ -72,6 +78,8 @@ public static class ResultBindExtensions
     /// </summary>
     public static async Task<Result<TOut>> Bind<TIn, TOut>(this Result<TIn> result, Func<TIn, Task<Result<TOut>>> func)
     {
+        Guard.Against.Null(func);
+
         if (result.IsFailure)
         {
             return Result<TOut>.Failure(result.Errors.ToArray());
@@ -99,10 +107,14 @@ public static class ResultBindExtensions
     /// <see cref="Result.Status"/> and <see cref="Result.Exception"/> exactly,
     /// unlike the generic variant.
     /// </summary>
-    public static Result Bind(this Result result, Func<Result> func) =>
-        result.IsFailure
+    public static Result Bind(this Result result, Func<Result> func)
+    {
+        Guard.Against.Null(func);
+
+        return result.IsFailure
             ? result
             : func();
+    }
 
     /// <summary>
     /// Left-async non-generic variant: awaits <paramref name="resultTask"/>,
@@ -122,6 +134,8 @@ public static class ResultBindExtensions
     /// </summary>
     public static async Task<Result> Bind(this Result result, Func<Task<Result>> func)
     {
+        Guard.Against.Null(func);
+
         if (result.IsFailure)
         {
             return result;

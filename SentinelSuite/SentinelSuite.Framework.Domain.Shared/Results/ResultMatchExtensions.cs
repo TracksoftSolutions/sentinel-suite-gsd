@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using SentinelSuite.Framework.Domain.Shared.Guards;
+
 namespace SentinelSuite.Framework.Domain.Shared.Results;
 
 /// <summary>
@@ -49,8 +51,13 @@ public static class ResultMatchExtensions
     /// otherwise invokes <paramref name="onFailure"/> with the complete
     /// <see cref="Result{T}.Errors"/> list.
     /// </summary>
-    public static TOut Match<T, TOut>(this Result<T> result, Func<T, TOut> onSuccess, Func<IReadOnlyList<Error>, TOut> onFailure) =>
-        result.IsSuccess ? onSuccess(result.Value) : onFailure(result.Errors);
+    public static TOut Match<T, TOut>(this Result<T> result, Func<T, TOut> onSuccess, Func<IReadOnlyList<Error>, TOut> onFailure)
+    {
+        Guard.Against.Null(onSuccess);
+        Guard.Against.Null(onFailure);
+
+        return result.IsSuccess ? onSuccess(result.Value) : onFailure(result.Errors);
+    }
 
     /// <summary>
     /// Left-async generic variant: awaits <paramref name="resultTask"/>, then
@@ -67,10 +74,15 @@ public static class ResultMatchExtensions
     /// <paramref name="onSuccess"/>/<paramref name="onFailure"/> depending on
     /// <paramref name="result"/>'s outcome — never both.
     /// </summary>
-    public static async Task<TOut> Match<T, TOut>(this Result<T> result, Func<T, Task<TOut>> onSuccess, Func<IReadOnlyList<Error>, Task<TOut>> onFailure) =>
-        result.IsSuccess
+    public static async Task<TOut> Match<T, TOut>(this Result<T> result, Func<T, Task<TOut>> onSuccess, Func<IReadOnlyList<Error>, Task<TOut>> onFailure)
+    {
+        Guard.Against.Null(onSuccess);
+        Guard.Against.Null(onFailure);
+
+        return result.IsSuccess
             ? await onSuccess(result.Value).ConfigureAwait(false)
             : await onFailure(result.Errors).ConfigureAwait(false);
+    }
 
     /// <summary>
     /// Both-async generic variant: awaits <paramref name="resultTask"/>, then
@@ -89,8 +101,13 @@ public static class ResultMatchExtensions
     /// otherwise invokes <paramref name="onFailure"/> with the complete
     /// <see cref="Result.Errors"/> list.
     /// </summary>
-    public static TOut Match<TOut>(this Result result, Func<TOut> onSuccess, Func<IReadOnlyList<Error>, TOut> onFailure) =>
-        result.IsSuccess ? onSuccess() : onFailure(result.Errors);
+    public static TOut Match<TOut>(this Result result, Func<TOut> onSuccess, Func<IReadOnlyList<Error>, TOut> onFailure)
+    {
+        Guard.Against.Null(onSuccess);
+        Guard.Against.Null(onFailure);
+
+        return result.IsSuccess ? onSuccess() : onFailure(result.Errors);
+    }
 
     /// <summary>
     /// Left-async non-generic variant: awaits <paramref name="resultTask"/>,
@@ -107,10 +124,15 @@ public static class ResultMatchExtensions
     /// <paramref name="onSuccess"/>/<paramref name="onFailure"/> depending on
     /// <paramref name="result"/>'s outcome — never both.
     /// </summary>
-    public static async Task<TOut> Match<TOut>(this Result result, Func<Task<TOut>> onSuccess, Func<IReadOnlyList<Error>, Task<TOut>> onFailure) =>
-        result.IsSuccess
+    public static async Task<TOut> Match<TOut>(this Result result, Func<Task<TOut>> onSuccess, Func<IReadOnlyList<Error>, Task<TOut>> onFailure)
+    {
+        Guard.Against.Null(onSuccess);
+        Guard.Against.Null(onFailure);
+
+        return result.IsSuccess
             ? await onSuccess().ConfigureAwait(false)
             : await onFailure(result.Errors).ConfigureAwait(false);
+    }
 
     /// <summary>
     /// Both-async non-generic variant: awaits <paramref name="resultTask"/>,
