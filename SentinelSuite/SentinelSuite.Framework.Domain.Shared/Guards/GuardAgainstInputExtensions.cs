@@ -27,9 +27,10 @@ public static class GuardAgainstInputExtensions
     {
         if (!predicate(input))
         {
+            var safeParamName = Guard.SafeParamName(parameterName);
             throw new ArgumentException(
-                $"Required input {parameterName} did not satisfy the required condition.",
-                parameterName);
+                $"Required input {safeParamName} did not satisfy the required condition.",
+                safeParamName);
         }
 
         return input;

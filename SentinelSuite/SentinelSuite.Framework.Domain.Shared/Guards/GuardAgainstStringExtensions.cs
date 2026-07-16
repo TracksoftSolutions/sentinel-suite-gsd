@@ -35,7 +35,8 @@ public static class GuardAgainstStringExtensions
 
         if (input.Length < minLength)
         {
-            throw new ArgumentException($"Input {parameterName} is too short.", parameterName);
+            var safeParamName = Guard.SafeParamName(parameterName);
+            throw new ArgumentException($"Input {safeParamName} is too short.", safeParamName);
         }
 
         return input;
@@ -57,7 +58,8 @@ public static class GuardAgainstStringExtensions
 
         if (input.Length > maxLength)
         {
-            throw new ArgumentException($"Input {parameterName} is too long.", parameterName);
+            var safeParamName = Guard.SafeParamName(parameterName);
+            throw new ArgumentException($"Input {safeParamName} is too long.", safeParamName);
         }
 
         return input;
@@ -85,7 +87,8 @@ public static class GuardAgainstStringExtensions
 
         if (!Regex.IsMatch(input, regexPattern))
         {
-            throw new ArgumentException($"Input {parameterName} was not in the required format.", parameterName);
+            var safeParamName = Guard.SafeParamName(parameterName);
+            throw new ArgumentException($"Input {safeParamName} was not in the required format.", safeParamName);
         }
 
         return input;

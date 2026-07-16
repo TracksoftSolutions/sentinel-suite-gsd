@@ -27,8 +27,9 @@ public static class GuardAgainstNumericExtensions
     {
         if (input.CompareTo(default) < 0)
         {
+            var safeParamName = Guard.SafeParamName(parameterName);
             throw new ArgumentException(
-                $"Required input {parameterName} cannot be negative.", parameterName);
+                $"Required input {safeParamName} cannot be negative.", safeParamName);
         }
 
         return input;
@@ -50,8 +51,9 @@ public static class GuardAgainstNumericExtensions
     {
         if (input.CompareTo(default) <= 0)
         {
+            var safeParamName = Guard.SafeParamName(parameterName);
             throw new ArgumentException(
-                $"Required input {parameterName} cannot be negative or zero.", parameterName);
+                $"Required input {safeParamName} cannot be negative or zero.", safeParamName);
         }
 
         return input;
@@ -73,8 +75,9 @@ public static class GuardAgainstNumericExtensions
     {
         if (input.CompareTo(default) == 0)
         {
+            var safeParamName = Guard.SafeParamName(parameterName);
             throw new ArgumentException(
-                $"Required input {parameterName} cannot be zero.", parameterName);
+                $"Required input {safeParamName} cannot be zero.", safeParamName);
         }
 
         return input;
@@ -100,8 +103,9 @@ public static class GuardAgainstNumericExtensions
     {
         if (input.Equals(default(T)))
         {
+            var safeParamName = Guard.SafeParamName(parameterName);
             throw new ArgumentException(
-                $"Required input {parameterName} cannot be the default value.", parameterName);
+                $"Required input {safeParamName} cannot be the default value.", safeParamName);
         }
 
         return input;

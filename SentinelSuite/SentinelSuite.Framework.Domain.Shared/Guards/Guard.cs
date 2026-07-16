@@ -37,4 +37,29 @@ public sealed class Guard : IGuardClause
     /// to. Lazily constructed once and reused for every call site.
     /// </summary>
     public static IGuardClause Against { get; } = new Guard();
+
+    /// <summary>
+    /// Returns <paramref name="candidate"/> unchanged if it is a syntactically
+    /// simple C# identifier (letters, digits, and underscores; not starting
+    /// with a digit) — otherwise returns <see langword="null"/>.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="System.Runtime.CompilerServices.CallerArgumentExpressionAttribute"/>
+    /// captures the raw *source text* of the argument expression, not a
+    /// guaranteed identifier. When a call site passes a literal or inline
+    /// expression instead of a named local/parameter, that source text — which
+    /// may itself be the sensitive rejected value — would otherwise be echoed
+    /// back inside the thrown exception's message/<c>ParamName</c>. Every
+    /// guard in this kernel routes its captured parameter name through this
+    /// method before using it in an exception, so this single check defends
+    /// the whole family (Information-Disclosure mitigation, this phase's
+    /// threat model T-1-02) without depending on 26 modules' worth of call
+    /// sites to police it by convention.
+    /// </remarks>
+    internal static string? SafeParamName(string? candidate) =>
+        candidate is { Length: > 0 }
+        && (char.IsLetter(candidate[0]) || candidate[0] == '_')
+        && candidate.All(static c => char.IsLetterOrDigit(c) || c == '_')
+            ? candidate
+            : null;
 }

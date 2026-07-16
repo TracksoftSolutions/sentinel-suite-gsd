@@ -33,7 +33,7 @@ public static class GuardAgainstNullExtensions
     {
         if (input is null)
         {
-            throw new ArgumentNullException(parameterName);
+            throw new ArgumentNullException(Guard.SafeParamName(parameterName));
         }
 
         return input;
@@ -51,7 +51,7 @@ public static class GuardAgainstNullExtensions
     {
         if (input is null)
         {
-            throw new ArgumentNullException(parameterName);
+            throw new ArgumentNullException(Guard.SafeParamName(parameterName));
         }
 
         return input.Value;
@@ -77,7 +77,7 @@ public static class GuardAgainstNullExtensions
 
         if (string.IsNullOrWhiteSpace(input))
         {
-            throw new ArgumentException("Required input was empty or whitespace.", parameterName);
+            throw new ArgumentException("Required input was empty or whitespace.", Guard.SafeParamName(parameterName));
         }
 
         return input;
@@ -98,7 +98,7 @@ public static class GuardAgainstNullExtensions
 
         if (input.Length == 0)
         {
-            throw new ArgumentException("Required input was empty.", parameterName);
+            throw new ArgumentException("Required input was empty.", Guard.SafeParamName(parameterName));
         }
 
         return input;
@@ -119,7 +119,7 @@ public static class GuardAgainstNullExtensions
 
         if (!input.Any())
         {
-            throw new ArgumentException("Required input was empty.", parameterName);
+            throw new ArgumentException("Required input was empty.", Guard.SafeParamName(parameterName));
         }
 
         return input;

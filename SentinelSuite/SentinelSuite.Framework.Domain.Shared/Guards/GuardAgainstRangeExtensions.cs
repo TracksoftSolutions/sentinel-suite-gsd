@@ -51,9 +51,10 @@ public static class GuardAgainstRangeExtensions
 
         if (input.CompareTo(rangeFrom) < 0 || input.CompareTo(rangeTo) > 0)
         {
+            var safeParamName = Guard.SafeParamName(parameterName);
             throw new ArgumentOutOfRangeException(
-                parameterName,
-                $"Input {parameterName} was out of range.");
+                safeParamName,
+                $"Input {safeParamName} was out of range.");
         }
 
         return input;
