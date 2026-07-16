@@ -205,6 +205,11 @@ public sealed class Result
     {
         Guard.Against.Null(results);
 
+        if (results.Any(r => r is null))
+        {
+            throw new ArgumentException("Required input must not contain a null Result.", nameof(results));
+        }
+
         var failed = results.Where(result => result.IsFailure).ToArray();
 
         if (failed.Length == 0)
@@ -246,6 +251,11 @@ public sealed class Result
     public static Result Combine<T>(params Result<T>[] results)
     {
         Guard.Against.Null(results);
+
+        if (results.Any(r => r is null))
+        {
+            throw new ArgumentException("Required input must not contain a null Result.", nameof(results));
+        }
 
         var failed = results.Where(result => result.IsFailure).ToArray();
 
