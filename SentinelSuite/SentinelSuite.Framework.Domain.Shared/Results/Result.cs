@@ -102,25 +102,43 @@ public sealed class Result
     /// with the <see cref="Error"/> instance property; see this class's
     /// remarks for the full rationale.
     /// </summary>
-    public static Result Failure(params Results.Error[] errors) => new(ResultStatus.Error, errors);
+    public static Result Failure(params Results.Error[] errors) => new(ResultStatus.Error, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result"/> with <see cref="ResultStatus.Invalid"/>.</summary>
-    public static Result Invalid(params Results.Error[] errors) => new(ResultStatus.Invalid, errors);
+    public static Result Invalid(params Results.Error[] errors) => new(ResultStatus.Invalid, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result"/> with <see cref="ResultStatus.NotFound"/>.</summary>
-    public static Result NotFound(params Results.Error[] errors) => new(ResultStatus.NotFound, errors);
+    public static Result NotFound(params Results.Error[] errors) => new(ResultStatus.NotFound, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result"/> with <see cref="ResultStatus.Conflict"/>.</summary>
-    public static Result Conflict(params Results.Error[] errors) => new(ResultStatus.Conflict, errors);
+    public static Result Conflict(params Results.Error[] errors) => new(ResultStatus.Conflict, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result"/> with <see cref="ResultStatus.Forbidden"/>.</summary>
-    public static Result Forbidden(params Results.Error[] errors) => new(ResultStatus.Forbidden, errors);
+    public static Result Forbidden(params Results.Error[] errors) => new(ResultStatus.Forbidden, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result"/> with <see cref="ResultStatus.Unauthorized"/>.</summary>
-    public static Result Unauthorized(params Results.Error[] errors) => new(ResultStatus.Unauthorized, errors);
+    public static Result Unauthorized(params Results.Error[] errors) => new(ResultStatus.Unauthorized, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result"/> with <see cref="ResultStatus.Unavailable"/>.</summary>
-    public static Result Unavailable(params Results.Error[] errors) => new(ResultStatus.Unavailable, errors);
+    public static Result Unavailable(params Results.Error[] errors) => new(ResultStatus.Unavailable, GuardErrors(errors));
+
+    /// <summary>
+    /// Guards a failure factory's <paramref name="errors"/> array against
+    /// being null, empty, or containing a null element, so every failed
+    /// <see cref="Result"/> is guaranteed to carry at least one non-null,
+    /// displayable <see cref="Results.Error"/> (D-03).
+    /// </summary>
+    private static Results.Error[] GuardErrors(Results.Error[] errors)
+    {
+        Guard.Against.NullOrEmpty(errors);
+
+        if (errors.Any(e => e is null))
+        {
+            throw new ArgumentException("Required input must not contain a null Error.", nameof(errors));
+        }
+
+        return errors;
+    }
 
     /// <summary>
     /// Creates a failed <see cref="Result"/> with

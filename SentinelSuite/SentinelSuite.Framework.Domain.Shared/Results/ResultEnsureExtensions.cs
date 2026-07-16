@@ -1,5 +1,7 @@
 using System.Threading.Tasks;
 
+using SentinelSuite.Framework.Domain.Shared.Guards;
+
 namespace SentinelSuite.Framework.Domain.Shared.Results;
 
 /// <summary>
@@ -47,6 +49,8 @@ public static class ResultEnsureExtensions
     /// </summary>
     public static Result<T> Ensure<T>(this Result<T> result, Func<T, bool> predicate, Error error)
     {
+        Guard.Against.Null(error);
+
         if (result.IsFailure)
         {
             return result;
@@ -73,6 +77,8 @@ public static class ResultEnsureExtensions
     /// </summary>
     public static async Task<Result<T>> Ensure<T>(this Result<T> result, Func<T, Task<bool>> predicate, Error error)
     {
+        Guard.Against.Null(error);
+
         if (result.IsFailure)
         {
             return result;
@@ -102,6 +108,8 @@ public static class ResultEnsureExtensions
     /// </summary>
     public static Result Ensure(this Result result, Func<bool> predicate, Error error)
     {
+        Guard.Against.Null(error);
+
         if (result.IsFailure)
         {
             return result;
@@ -128,6 +136,8 @@ public static class ResultEnsureExtensions
     /// </summary>
     public static async Task<Result> Ensure(this Result result, Func<Task<bool>> predicate, Error error)
     {
+        Guard.Against.Null(error);
+
         if (result.IsFailure)
         {
             return result;

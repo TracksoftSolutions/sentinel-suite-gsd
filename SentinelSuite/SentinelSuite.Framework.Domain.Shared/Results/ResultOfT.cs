@@ -120,25 +120,44 @@ public sealed class Result<T>
     /// with the <see cref="Error"/> instance property, mirroring plan
     /// 02-01's <see cref="Result.Failure(Results.Error[])"/> naming exactly (D-10).
     /// </summary>
-    public static Result<T> Failure(params Results.Error[] errors) => new(ResultStatus.Error, default, errors);
+    public static Result<T> Failure(params Results.Error[] errors) => new(ResultStatus.Error, default, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result{T}"/> with <see cref="ResultStatus.Invalid"/>.</summary>
-    public static Result<T> Invalid(params Results.Error[] errors) => new(ResultStatus.Invalid, default, errors);
+    public static Result<T> Invalid(params Results.Error[] errors) => new(ResultStatus.Invalid, default, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result{T}"/> with <see cref="ResultStatus.NotFound"/>.</summary>
-    public static Result<T> NotFound(params Results.Error[] errors) => new(ResultStatus.NotFound, default, errors);
+    public static Result<T> NotFound(params Results.Error[] errors) => new(ResultStatus.NotFound, default, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result{T}"/> with <see cref="ResultStatus.Conflict"/>.</summary>
-    public static Result<T> Conflict(params Results.Error[] errors) => new(ResultStatus.Conflict, default, errors);
+    public static Result<T> Conflict(params Results.Error[] errors) => new(ResultStatus.Conflict, default, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result{T}"/> with <see cref="ResultStatus.Forbidden"/>.</summary>
-    public static Result<T> Forbidden(params Results.Error[] errors) => new(ResultStatus.Forbidden, default, errors);
+    public static Result<T> Forbidden(params Results.Error[] errors) => new(ResultStatus.Forbidden, default, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result{T}"/> with <see cref="ResultStatus.Unauthorized"/>.</summary>
-    public static Result<T> Unauthorized(params Results.Error[] errors) => new(ResultStatus.Unauthorized, default, errors);
+    public static Result<T> Unauthorized(params Results.Error[] errors) => new(ResultStatus.Unauthorized, default, GuardErrors(errors));
 
     /// <summary>Creates a failed <see cref="Result{T}"/> with <see cref="ResultStatus.Unavailable"/>.</summary>
-    public static Result<T> Unavailable(params Results.Error[] errors) => new(ResultStatus.Unavailable, default, errors);
+    public static Result<T> Unavailable(params Results.Error[] errors) => new(ResultStatus.Unavailable, default, GuardErrors(errors));
+
+    /// <summary>
+    /// Guards a failure factory's <paramref name="errors"/> array against
+    /// being null, empty, or containing a null element, so every failed
+    /// <see cref="Result{T}"/> is guaranteed to carry at least one non-null,
+    /// displayable <see cref="Results.Error"/> (D-03), mirroring
+    /// <see cref="Result.Failure(Results.Error[])"/>'s sibling guard exactly.
+    /// </summary>
+    private static Results.Error[] GuardErrors(Results.Error[] errors)
+    {
+        Guard.Against.NullOrEmpty(errors);
+
+        if (errors.Any(e => e is null))
+        {
+            throw new ArgumentException("Required input must not contain a null Error.", nameof(errors));
+        }
+
+        return errors;
+    }
 
     /// <summary>
     /// Creates a failed <see cref="Result{T}"/> with
