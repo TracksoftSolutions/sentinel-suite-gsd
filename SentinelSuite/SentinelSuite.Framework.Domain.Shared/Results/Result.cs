@@ -1,3 +1,5 @@
+using System.Linq;
+
 using SentinelSuite.Framework.Domain.Shared.Guards;
 
 namespace SentinelSuite.Framework.Domain.Shared.Results;
@@ -151,5 +153,91 @@ public sealed class Result
             string.IsNullOrEmpty(exception.Message) ? "An unexpected error occurred." : exception.Message);
 
         return new Result(ResultStatus.CriticalError, [resolvedError], exception);
+    }
+
+    /// <summary>
+    /// All-or-nothing batch aggregator over N independent <see cref="Result"/>
+    /// inputs (D-15).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="Combine(Result[])"/> succeeds — returning <see cref="Success"/> —
+    /// only when every element of <paramref name="results"/> succeeds
+    /// (including the zero-length/empty-batch case, which trivially has no
+    /// failures). On any failure it returns one failed <see cref="Result"/>
+    /// whose <see cref="Errors"/> is the flattened, ordered union of
+    /// <b>every</b> failed input's <see cref="Errors"/> — not just the first
+    /// failure encountered. This is deliberately distinct from
+    /// <c>Bind</c>'s short-circuit-on-first-failure chaining: <c>Bind</c>
+    /// composes one dependent chain, while <see cref="Combine(Result[])"/>
+    /// validates a batch of independent inputs and reports every problem at
+    /// once.
+    /// </para>
+    /// <para>
+    /// This method is declared directly on the sealed <see cref="Result"/>
+    /// class, rather than as a <c>this Result</c> extension method in a
+    /// separate file, specifically so call sites read as
+    /// <c>Result.Combine(...)</c> literally. A true C# extension method
+    /// cannot provide that call syntax for a <c>params</c>-array-of-the-
+    /// extended-type signature — extension methods require a single
+    /// instance receiver to extend, not a collection of the type itself.
+    /// </para>
+    /// </remarks>
+    public static Result Combine(params Result[] results)
+    {
+        Guard.Against.Null(results);
+
+        var failed = results.Where(result => result.IsFailure).ToArray();
+
+        if (failed.Length == 0)
+        {
+            return Success();
+        }
+
+        var errors = failed.SelectMany(result => result.Errors).ToArray();
+
+        return Failure(errors);
+    }
+
+    /// <summary>
+    /// All-or-nothing batch aggregator over N independent
+    /// <see cref="Result{T}"/> inputs (D-15), mirroring
+    /// <see cref="Combine(Result[])"/> exactly for the generic
+    /// <see cref="Result{T}"/> shape.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Always returns the non-generic <see cref="Result"/> type, never
+    /// <see cref="Result{T}"/> — even when every input succeeds. A
+    /// <see cref="Combine{T}(Result{T}[])"/> call has no single meaningful
+    /// combined value to expose: there is no way to select one
+    /// <typeparamref name="T"/> out of N independent successful
+    /// <see cref="Result{T}"/> inputs, so the return type deliberately
+    /// matches <see cref="Combine(Result[])"/>'s return type rather than
+    /// inventing a combined-value <see cref="Result{T}"/>.
+    /// </para>
+    /// <para>
+    /// Implemented as a separate overload — not via
+    /// CSharpFunctionalExtensions'/Ardalis.Result's self-referential
+    /// <c>Result : Result&lt;Result&gt;</c> inheritance trick — so that no
+    /// inheritance relationship is introduced between <see cref="Result"/>
+    /// and <see cref="Result{T}"/>, preserving D-16's requirement that both
+    /// types remain sealed (RESEARCH.md Pitfall 4).
+    /// </para>
+    /// </remarks>
+    public static Result Combine<T>(params Result<T>[] results)
+    {
+        Guard.Against.Null(results);
+
+        var failed = results.Where(result => result.IsFailure).ToArray();
+
+        if (failed.Length == 0)
+        {
+            return Success();
+        }
+
+        var errors = failed.SelectMany(result => result.Errors).ToArray();
+
+        return Failure(errors);
     }
 }
