@@ -47,7 +47,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Passing xUnit tests cover null-argument guard scenarios (both pass and throw paths).
   3. Passing xUnit tests cover empty/range/enum-membership guard scenarios (both pass and throw paths).
 
-**Plans**: 4/6 plans executed
+**Plans**: 5/6 plans executed
 
 Plans:
 **Wave 1**
@@ -59,7 +59,7 @@ Plans:
 
 - [x] 01-03-PLAN.md — GuardAgainstNull family (Null, NullOrEmpty, NullOrWhiteSpace)
 - [x] 01-04-PLAN.md — GuardAgainstRange family (OutOfRange, EnumOutOfRange)
-- [ ] 01-05-PLAN.md — GuardAgainstNumeric family (Negative, NegativeOrZero, Zero, Default)
+- [x] 01-05-PLAN.md — GuardAgainstNumeric family (Negative, NegativeOrZero, Zero, Default)
 - [ ] 01-06-PLAN.md — GuardAgainstInput + String round-out (InvalidInput, StringTooShort/TooLong, InvalidFormat)
 
 **Cross-cutting constraints:**
@@ -328,7 +328,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Domain.Shared: GuardClauses | 4/6 | In Progress|  |
+| 1. Domain.Shared: GuardClauses | 5/6 | In Progress|  |
 | 2. Domain.Shared: Result / Result<T> | 0/TBD | Not started | - |
 | 3. Domain.Shared: SmartEnum<T> | 0/TBD | Not started | - |
 | 4. Domain.Shared: DomainException | 0/TBD | Not started | - |
