@@ -168,4 +168,121 @@ public static class ResultOnSuccessOnFailureExtensions
         var result = await resultTask.ConfigureAwait(false);
         return await result.OnSuccess(action).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Sync non-generic variant: invokes <paramref name="action"/> exactly
+    /// once when <paramref name="result"/> is failed, never when it is
+    /// successful, and returns <paramref name="result"/> unchanged either
+    /// way. This is <c>OnSuccess</c>'s no-argument shape confirmed exactly as
+    /// documented in this class's remarks — <c>OnFailure</c> never receives a
+    /// value.
+    /// </summary>
+    public static Result OnFailure(this Result result, Action action)
+    {
+        Guard.Against.Null(action);
+
+        if (result.IsFailure)
+        {
+            action();
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Left-async non-generic variant: awaits <paramref name="resultTask"/>,
+    /// then applies the identical sync invocation behavior.
+    /// </summary>
+    public static async Task<Result> OnFailure(this Task<Result> resultTask, Action action)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        return result.OnFailure(action);
+    }
+
+    /// <summary>
+    /// Right-async non-generic variant: awaits <paramref name="action"/>
+    /// exactly once when <paramref name="result"/> is failed, never when it
+    /// is successful, and returns <paramref name="result"/> unchanged either
+    /// way.
+    /// </summary>
+    public static async Task<Result> OnFailure(this Result result, Func<Task> action)
+    {
+        Guard.Against.Null(action);
+
+        if (result.IsFailure)
+        {
+            await action().ConfigureAwait(false);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Both-async non-generic variant: awaits <paramref name="resultTask"/>,
+    /// then awaits the delegation to the Right-async overload's async
+    /// invocation behavior.
+    /// </summary>
+    public static async Task<Result> OnFailure(this Task<Result> resultTask, Func<Task> action)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        return await result.OnFailure(action).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Sync generic variant: invokes the no-argument <paramref name="action"/>
+    /// exactly once when <paramref name="result"/> is failed, never when it
+    /// is successful, and returns <paramref name="result"/> unchanged either
+    /// way. Never references <see cref="Result{T}.Value"/>, which throws on a
+    /// failed instance (D-06).
+    /// </summary>
+    public static Result<T> OnFailure<T>(this Result<T> result, Action action)
+    {
+        Guard.Against.Null(action);
+
+        if (result.IsFailure)
+        {
+            action();
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Left-async generic variant: awaits <paramref name="resultTask"/>, then
+    /// applies the identical sync invocation behavior.
+    /// </summary>
+    public static async Task<Result<T>> OnFailure<T>(this Task<Result<T>> resultTask, Action action)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        return result.OnFailure(action);
+    }
+
+    /// <summary>
+    /// Right-async generic variant: awaits the no-argument
+    /// <paramref name="action"/> exactly once when <paramref name="result"/>
+    /// is failed, never when it is successful, and returns
+    /// <paramref name="result"/> unchanged either way.
+    /// </summary>
+    public static async Task<Result<T>> OnFailure<T>(this Result<T> result, Func<Task> action)
+    {
+        Guard.Against.Null(action);
+
+        if (result.IsFailure)
+        {
+            await action().ConfigureAwait(false);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Both-async generic variant: awaits <paramref name="resultTask"/>, then
+    /// awaits the delegation to the Right-async overload's async invocation
+    /// behavior.
+    /// </summary>
+    public static async Task<Result<T>> OnFailure<T>(this Task<Result<T>> resultTask, Func<Task> action)
+    {
+        var result = await resultTask.ConfigureAwait(false);
+        return await result.OnFailure(action).ConfigureAwait(false);
+    }
 }
