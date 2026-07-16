@@ -67,6 +67,8 @@ public static class ResultBindExtensions
     /// </summary>
     public static async Task<Result<TOut>> Bind<TIn, TOut>(this Task<Result<TIn>> resultTask, Func<TIn, Result<TOut>> func)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.Bind(func);
     }
@@ -94,6 +96,8 @@ public static class ResultBindExtensions
     /// </summary>
     public static async Task<Result<TOut>> Bind<TIn, TOut>(this Task<Result<TIn>> resultTask, Func<TIn, Task<Result<TOut>>> func)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.Bind(func).ConfigureAwait(false);
     }
@@ -122,6 +126,8 @@ public static class ResultBindExtensions
     /// </summary>
     public static async Task<Result> Bind(this Task<Result> resultTask, Func<Result> func)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.Bind(func);
     }
@@ -151,6 +157,8 @@ public static class ResultBindExtensions
     /// </summary>
     public static async Task<Result> Bind(this Task<Result> resultTask, Func<Task<Result>> func)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.Bind(func).ConfigureAwait(false);
     }

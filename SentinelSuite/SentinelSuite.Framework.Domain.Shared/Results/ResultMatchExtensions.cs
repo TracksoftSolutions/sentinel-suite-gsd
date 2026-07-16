@@ -65,6 +65,8 @@ public static class ResultMatchExtensions
     /// </summary>
     public static async Task<TOut> Match<T, TOut>(this Task<Result<T>> resultTask, Func<T, TOut> onSuccess, Func<IReadOnlyList<Error>, TOut> onFailure)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.Match(onSuccess, onFailure);
     }
@@ -91,6 +93,8 @@ public static class ResultMatchExtensions
     /// </summary>
     public static async Task<TOut> Match<T, TOut>(this Task<Result<T>> resultTask, Func<T, Task<TOut>> onSuccess, Func<IReadOnlyList<Error>, Task<TOut>> onFailure)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.Match(onSuccess, onFailure).ConfigureAwait(false);
     }
@@ -115,6 +119,8 @@ public static class ResultMatchExtensions
     /// </summary>
     public static async Task<TOut> Match<TOut>(this Task<Result> resultTask, Func<TOut> onSuccess, Func<IReadOnlyList<Error>, TOut> onFailure)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.Match(onSuccess, onFailure);
     }
@@ -141,6 +147,8 @@ public static class ResultMatchExtensions
     /// </summary>
     public static async Task<TOut> Match<TOut>(this Task<Result> resultTask, Func<Task<TOut>> onSuccess, Func<IReadOnlyList<Error>, Task<TOut>> onFailure)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.Match(onSuccess, onFailure).ConfigureAwait(false);
     }

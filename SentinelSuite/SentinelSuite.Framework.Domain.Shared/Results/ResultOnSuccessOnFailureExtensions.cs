@@ -78,6 +78,8 @@ public static class ResultOnSuccessOnFailureExtensions
     /// </summary>
     public static async Task<Result> OnSuccess(this Task<Result> resultTask, Action action)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.OnSuccess(action);
     }
@@ -107,6 +109,8 @@ public static class ResultOnSuccessOnFailureExtensions
     /// </summary>
     public static async Task<Result> OnSuccess(this Task<Result> resultTask, Func<Task> action)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.OnSuccess(action).ConfigureAwait(false);
     }
@@ -136,6 +140,8 @@ public static class ResultOnSuccessOnFailureExtensions
     /// </summary>
     public static async Task<Result<T>> OnSuccess<T>(this Task<Result<T>> resultTask, Action<T> action)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.OnSuccess(action);
     }
@@ -165,6 +171,8 @@ public static class ResultOnSuccessOnFailureExtensions
     /// </summary>
     public static async Task<Result<T>> OnSuccess<T>(this Task<Result<T>> resultTask, Func<T, Task> action)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.OnSuccess(action).ConfigureAwait(false);
     }
@@ -195,6 +203,8 @@ public static class ResultOnSuccessOnFailureExtensions
     /// </summary>
     public static async Task<Result> OnFailure(this Task<Result> resultTask, Action action)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.OnFailure(action);
     }
@@ -224,6 +234,8 @@ public static class ResultOnSuccessOnFailureExtensions
     /// </summary>
     public static async Task<Result> OnFailure(this Task<Result> resultTask, Func<Task> action)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.OnFailure(action).ConfigureAwait(false);
     }
@@ -253,6 +265,8 @@ public static class ResultOnSuccessOnFailureExtensions
     /// </summary>
     public static async Task<Result<T>> OnFailure<T>(this Task<Result<T>> resultTask, Action action)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.OnFailure(action);
     }
@@ -282,6 +296,8 @@ public static class ResultOnSuccessOnFailureExtensions
     /// </summary>
     public static async Task<Result<T>> OnFailure<T>(this Task<Result<T>> resultTask, Func<Task> action)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.OnFailure(action).ConfigureAwait(false);
     }

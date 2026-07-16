@@ -66,6 +66,8 @@ public static class ResultEnsureExtensions
     /// </summary>
     public static async Task<Result<T>> Ensure<T>(this Task<Result<T>> resultTask, Func<T, bool> predicate, Error error)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.Ensure(predicate, error);
     }
@@ -96,6 +98,8 @@ public static class ResultEnsureExtensions
     /// </summary>
     public static async Task<Result<T>> Ensure<T>(this Task<Result<T>> resultTask, Func<T, Task<bool>> predicate, Error error)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.Ensure(predicate, error).ConfigureAwait(false);
     }
@@ -127,6 +131,8 @@ public static class ResultEnsureExtensions
     /// </summary>
     public static async Task<Result> Ensure(this Task<Result> resultTask, Func<bool> predicate, Error error)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.Ensure(predicate, error);
     }
@@ -158,6 +164,8 @@ public static class ResultEnsureExtensions
     /// </summary>
     public static async Task<Result> Ensure(this Task<Result> resultTask, Func<Task<bool>> predicate, Error error)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.Ensure(predicate, error).ConfigureAwait(false);
     }

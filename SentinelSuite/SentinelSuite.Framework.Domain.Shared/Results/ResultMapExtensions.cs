@@ -72,6 +72,8 @@ public static class ResultMapExtensions
     /// </summary>
     public static async Task<Result<TOut>> Map<TIn, TOut>(this Task<Result<TIn>> resultTask, Func<TIn, TOut> mapper)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.Map(mapper);
     }
@@ -99,6 +101,8 @@ public static class ResultMapExtensions
     /// </summary>
     public static async Task<Result<TOut>> Map<TIn, TOut>(this Task<Result<TIn>> resultTask, Func<TIn, Task<TOut>> mapper)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.Map(mapper).ConfigureAwait(false);
     }
@@ -124,6 +128,8 @@ public static class ResultMapExtensions
     /// </summary>
     public static async Task<Result<TOut>> Map<TOut>(this Task<Result> resultTask, Func<TOut> valueFactory)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return result.Map(valueFactory);
     }
@@ -152,6 +158,8 @@ public static class ResultMapExtensions
     /// </summary>
     public static async Task<Result<TOut>> Map<TOut>(this Task<Result> resultTask, Func<Task<TOut>> valueFactory)
     {
+        _ = Guard.Against.Null(resultTask);
+
         var result = await resultTask.ConfigureAwait(false);
         return await result.Map(valueFactory).ConfigureAwait(false);
     }
