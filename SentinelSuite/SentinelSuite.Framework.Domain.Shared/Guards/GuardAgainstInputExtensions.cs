@@ -25,6 +25,8 @@ public static class GuardAgainstInputExtensions
         Func<T, bool> predicate,
         [CallerArgumentExpression(nameof(input))] string? parameterName = null)
     {
+        Guard.Against.Null(predicate, nameof(predicate));
+
         if (!predicate(input))
         {
             var safeParamName = Guard.SafeParamName(parameterName);
