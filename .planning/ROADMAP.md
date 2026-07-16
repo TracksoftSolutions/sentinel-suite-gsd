@@ -43,7 +43,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. `GuardClauses` static helper class compiles in `Domain.Shared` with zero third-party NuGet package references.
   2. Passing xUnit tests cover null-argument guard scenarios (both pass and throw paths).
   3. Passing xUnit tests cover empty/range/enum-membership guard scenarios (both pass and throw paths).
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Test infrastructure scaffold (MTP-native xUnit v3 project, global.json, .slnx wiring)
+- [ ] 01-02-PLAN.md — Guard entry point & IGuardClause extensibility anchor
+- [ ] 01-03-PLAN.md — GuardAgainstNull family (Null, NullOrEmpty, NullOrWhiteSpace)
+- [ ] 01-04-PLAN.md — GuardAgainstRange family (OutOfRange, EnumOutOfRange)
+- [ ] 01-05-PLAN.md — GuardAgainstNumeric family (Negative, NegativeOrZero, Zero, Default)
+- [ ] 01-06-PLAN.md — GuardAgainstInput + String round-out (InvalidInput, StringTooShort/TooLong, InvalidFormat)
 
 ### Phase 2: Domain.Shared: Result / Result<T>
 **Goal**: A hand-rolled operation-result pattern exists in `Domain.Shared` for expected failure paths, giving the kernel a dependency-free alternative to throwing exceptions for anticipated failures.
