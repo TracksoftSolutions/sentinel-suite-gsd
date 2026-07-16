@@ -85,25 +85,35 @@ Explicitly excluded. Documented to prevent scope creep.
 
 ## Traceability
 
-Populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PRIM-01..04 | TBD | Pending |
-| LAYOUT-01 | TBD | Pending |
-| AUDIT-01..03 | TBD | Pending |
-| ENT-01..04 | TBD | Pending |
-| ASSOC-01..02 | TBD | Pending |
-| CAP-01..04 | TBD | Pending |
-| MOD-01 | TBD | Pending |
-| QUERY-01 | TBD | Pending |
-| TEST-01 | TBD | Pending |
+| PRIM-01 | Phase 1 | Pending |
+| PRIM-02 | Phase 2 | Pending |
+| PRIM-03 | Phase 3 | Pending |
+| PRIM-04 | Phase 4 | Pending |
+| LAYOUT-01 | Phase 5 | Pending |
+| AUDIT-01 | Phase 6 | Pending |
+| AUDIT-02 | Phase 7 | Pending |
+| AUDIT-03 | Phase 8 | Pending |
+| ENT-01 | Phase 9 | Pending |
+| ENT-02 | Phase 10 | Pending |
+| ENT-03 | Phase 10 | Pending |
+| ENT-04 | Phase 11 | Pending |
+| ASSOC-01 | Phase 12 | Pending |
+| ASSOC-02 | Phase 13 | Pending |
+| CAP-01 | Phase 14 | Pending |
+| CAP-02 | Phase 15 | Pending |
+| CAP-03 | Phase 16 | Pending |
+| CAP-04 | Phase 17 | Pending |
+| MOD-01 | Phase 18 | Pending |
+| QUERY-01 | Phase 19 | Pending |
+| TEST-01 | Phase 20 | Pending |
 
 **Coverage:**
-- v1 requirements: 20 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 20 ⚠️ (expected at this stage — resolved by `/gsd-plan-phase` / roadmap creation next)
+- v1 requirements: 21 total (corrected from the initial 20-count during roadmap creation — the enumerated PRIM/AUDIT/ENT/CAP/etc. lists above sum to 21, and REQUIREMENTS.md's opening count was off by one)
+- Mapped to phases: 21/21 ✓
+- Unmapped: 0 ✓ (100% coverage — see .planning/ROADMAP.md for phase details and success criteria)
 
 ---
 *Requirements defined: 2026-07-15*
-*Last updated: 2026-07-15 after initial definition*
+*Last updated: 2026-07-15 after roadmap revision (finer-grained phase split per user feedback — traceability re-populated, 21/21 requirements mapped across 20 phases; each Ardalis-branded pattern equivalent — GuardClauses, Result/Result<T>, SmartEnum<T>, Specification<T> — now lands in its own dedicated phase)*
