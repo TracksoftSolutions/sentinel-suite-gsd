@@ -46,7 +46,8 @@ public static class GuardAgainstRangeExtensions
         if (rangeFrom.CompareTo(rangeTo) > 0)
         {
             throw new ArgumentException(
-                $"{nameof(rangeFrom)} should be less than or equal to {nameof(rangeTo)}.");
+                $"{nameof(rangeFrom)} should be less than or equal to {nameof(rangeTo)}.",
+                nameof(rangeFrom));
         }
 
         if (input.CompareTo(rangeFrom) < 0 || input.CompareTo(rangeTo) > 0)
