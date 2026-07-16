@@ -97,4 +97,26 @@ public class ResultErrorTests
         Assert.NotEqual(first, second);
         Assert.False(first == second);
     }
+
+    [Fact]
+    public void Invalid_WhenCalledWithMultipleErrors_ErrorsContainsExactlyThoseInstancesInOrder()
+    {
+        var first = new Error("Validation.Required", "Field A is required");
+        var second = new Error("Validation.Required", "Field B is required");
+
+        var result = Result.Invalid(first, second);
+
+        Assert.Equal([first, second], result.Errors);
+    }
+
+    [Fact]
+    public void Error_WhenResultHasFailed_EqualsFirstEntryOfErrors()
+    {
+        var first = new Error("Validation.Required", "Field A is required");
+        var second = new Error("Validation.Required", "Field B is required");
+
+        var result = Result.Invalid(first, second);
+
+        Assert.Same(result.Errors[0], result.Error);
+    }
 }
