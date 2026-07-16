@@ -23,7 +23,9 @@ Every one of Sentinel Suite's 222 planned features depends on getting the Entity
 
 ### Active
 
-- [ ] `Entity` abstract base class: identity, tenant scoping, audit fields, soft-delete convention
+- [ ] `Entity` abstract base class: identity, tenant scoping, audit fields, soft-delete convention, optimistic concurrency stamp
+- [ ] Explicit aggregate-root distinction (separate from plain `Entity`) — resolves where domain events collect
+- [ ] Value Object base class: structural equality, immutability
 - [ ] `EntityAssociation` abstract base class: named-kind pattern, current-value-plus-history shape
 - [ ] Abstract TPT intermediate roots — `Party`, `Item`, `Location`, `Activity`, `Document` — never instantiated directly
 - [ ] Capability interface scaffold (e.g. `IMergeable`, `IDisplayLabeled`, `IOfflineCapturable`, `ICustodyTracked`) with the registry-is-authoritative discipline documented and enforceable
