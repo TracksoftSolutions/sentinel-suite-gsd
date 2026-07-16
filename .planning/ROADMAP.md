@@ -78,7 +78,7 @@ Plans:
   3. Passing unit tests verify error message/code propagation from a failure `Result`.
   4. A unit test confirms a failure `Result<T>` cannot expose a `Value` (throws or fails predictably on access).
 
-**Plans**: 3/6 plans executed
+**Plans**: 4/6 plans executed
 
 Plans:
 **Wave 1**
@@ -92,7 +92,7 @@ Plans:
 **Wave 3** *(blocked on Wave 2 completion)*
 
 - [x] 02-03-PLAN.md — Map + Bind combinators (sync/Left-async/Right-async/Both-async)
-- [ ] 02-04-PLAN.md — Ensure + Match combinators
+- [x] 02-04-PLAN.md — Ensure + Match combinators
 - [ ] 02-05-PLAN.md — OnSuccess + OnFailure combinators
 - [ ] 02-06-PLAN.md — Result.Combine aggregation
 
@@ -365,7 +365,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Domain.Shared: GuardClauses | 6/6 | Complete    | 2026-07-16 |
-| 2. Domain.Shared: Result / Result<T> | 3/6 | In Progress|  |
+| 2. Domain.Shared: Result / Result<T> | 4/6 | In Progress|  |
 | 3. Domain.Shared: SmartEnum<T> | 0/4 | Not started | - |
 | 4. Domain.Shared: DomainException | 0/TBD | Not started | - |
 | 5. Clean Architecture Solution Layout | 0/TBD | Not started | - |
