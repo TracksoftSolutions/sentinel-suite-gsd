@@ -64,4 +64,39 @@ public class GuardAgainstRangeTests
 
         Assert.IsNotType<ArgumentOutOfRangeException>(ex);
     }
+
+    private enum TestFixtureEnum
+    {
+        First = 0,
+        Second = 1,
+        Third = 2,
+    }
+
+    [Fact]
+    public void EnumOutOfRange_WhenDefinedMemberProvided_ReturnsSameValueUnchanged()
+    {
+        var input = TestFixtureEnum.Second;
+
+        var result = Guard.Against.EnumOutOfRange(input);
+
+        Assert.Equal(input, result);
+    }
+
+    [Fact]
+    public void EnumOutOfRange_WhenUndefinedValueProvided_ThrowsInvalidEnumArgumentException()
+    {
+        var input = (TestFixtureEnum)99;
+
+        Assert.Throws<System.ComponentModel.InvalidEnumArgumentException>(() => Guard.Against.EnumOutOfRange(input));
+    }
+
+    [Fact]
+    public void EnumOutOfRange_WhenUndefinedValueProvided_ThrowsWithCapturedParameterName()
+    {
+        var input = (TestFixtureEnum)99;
+
+        var ex = Assert.Throws<System.ComponentModel.InvalidEnumArgumentException>(() => Guard.Against.EnumOutOfRange(input));
+
+        Assert.Contains(nameof(input), ex.Message);
+    }
 }
