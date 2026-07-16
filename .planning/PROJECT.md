@@ -19,7 +19,7 @@ Every one of Sentinel Suite's 222 planned features depends on getting the Entity
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] GuardClauses (Ardalis-style, hand-rolled — no `Ardalis.GuardClauses` package) — Validated in Phase 1: Domain.Shared: GuardClauses
 
 ### Active
 
@@ -35,7 +35,6 @@ Every one of Sentinel Suite's 222 planned features depends on getting the Entity
 - [ ] Module system for organizing the framework into swappable pieces (ABP-inspired)
 - [ ] Specification pattern (Ardalis-style, hand-rolled — no `Ardalis.Specification` package)
 - [ ] Result pattern (Ardalis-style, hand-rolled — no `Ardalis.Result` package)
-- [ ] GuardClauses (Ardalis-style, hand-rolled — no `Ardalis.GuardClauses` package)
 - [ ] SmartEnum pattern (Ardalis-style, hand-rolled — no `Ardalis.SmartEnum` package)
 - [ ] Clean Architecture solution layout: Core/UseCases/Infrastructure/Web-equivalent project separation with dependency direction enforced (layout only in this milestone — only Domain has real content)
 - [ ] Unit test coverage (xUnit) for kernel invariants and capability interfaces, written as each piece lands
