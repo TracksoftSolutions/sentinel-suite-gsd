@@ -168,7 +168,7 @@ public sealed class Result<T>
 
         var resolvedError = error ?? new Results.Error(
             "CriticalError",
-            string.IsNullOrEmpty(exception.Message) ? "An unexpected error occurred." : exception.Message);
+            string.IsNullOrWhiteSpace(exception.Message) ? "An unexpected error occurred." : exception.Message);
 
         return new Result<T>(ResultStatus.CriticalError, default, [resolvedError], exception);
     }
