@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2: Domain.Shared: Result / Result<T>** - Hand-rolled operation-result pattern exists for expected failure paths
 - [ ] **Phase 3: Domain.Shared: SmartEnum<T>** - Hand-rolled type-safe enumeration base exists
 - [ ] **Phase 4: Domain.Shared: DomainException** - A dedicated domain-level exception type exists and becomes the throw type for guard-clause failures
-- [ ] **Phase 5: Clean Architecture Solution Layout** - Five-project solution skeleton exists with compiler-enforced dependency direction
+- [ ] **Phase 5: Clean Architecture Solution Layout** - ABP-parity framework north-star roadmap (all tooling excluded) plus minimal layout with compiler-enforced dependency direction
 - [ ] **Phase 6: Cross-Cutting Contracts: Auditing** - Creation/modification auditing contracts exist as a compiled, tested shape
 - [ ] **Phase 7: Cross-Cutting Contracts: Soft-Delete** - Soft-delete contract exists as a compiled, tested shape with cascade behavior documented
 - [ ] **Phase 8: Cross-Cutting Contracts: Multi-Tenancy** - Multi-tenancy contract exists as a compiled, tested shape (contract only, no resolution machinery)
@@ -145,15 +145,15 @@ Plans:
 
 ### Phase 5: Clean Architecture Solution Layout
 
-**Goal**: The five-project Clean Architecture solution skeleton exists with the dependency direction compiler-enforced from day one, so no future phase has to retrofit project structure.
+**Goal**: The primary deliverable is a committed ABP-parity framework north-star roadmap — a multi-milestone plan for hand-rolling a nearly-complete ABP-equivalent *runtime* framework (all ABP tooling excluded), with the current kernel phases anchored to it — plus the minimal physical layout that earns its place today: a root `Directory.Build.props` and compiler-enforced, proven dependency direction on the existing `Framework.Domain` → `Framework.Domain.Shared` pair. No new empty stub projects are created this milestone; app-layer projects are documented in the roadmap and created when a later milestone needs them. (Reframed from the original "five empty stub projects" per `05-CONTEXT.md`.)
 **Depends on**: Nothing (parallel with Phases 1-4)
 **Requirements**: LAYOUT-01
 **Success Criteria** (what must be TRUE):
 
-  1. Solution contains exactly five projects — `Domain.Shared`, `Domain`, `UseCases`, `Infrastructure`, `Web` — all targeting .NET 10 with nullable and implicit usings enabled.
-  2. The `ProjectReference` chain matches the intended dependency direction (`Domain` → `Domain.Shared`; `UseCases` → `Domain`; `Infrastructure` → `UseCases`; `Web` → `UseCases`/`Infrastructure`), and `dotnet build` succeeds for the whole solution.
-  3. A deliberately attempted reverse-direction reference (e.g., `Domain.Shared` → `Domain`) fails at build time, confirmed by a documented attempted-violation check.
-  4. `UseCases`, `Infrastructure`, and `Web` exist as empty stub projects (no domain logic) that build successfully as placeholders.
+  1. A committed ABP-parity framework roadmap exists covering ABP's runtime-framework surface with a per-capability include / defer / exclude decision, the `SentinelSuite.Framework.*` (kernel) vs `SentinelSuite.*` (application) naming split, and the layered project map; all ABP tooling (CLI, Suite/codegen, Studio, project/module templates) is explicitly excluded.
+  2. The existing projects build with the dependency direction compiler-enforced (`Framework.Domain` → `Framework.Domain.Shared`), and `dotnet build` succeeds for the solution.
+  3. A deliberately attempted reverse-direction reference (`Framework.Domain.Shared` → `Framework.Domain`) fails at build time, confirmed by a documented attempted-violation check.
+  4. A root `Directory.Build.props` governs shared MSBuild properties (`TargetFramework` net10.0, `Nullable` enable, `ImplicitUsings` enable) for all current and future projects, with test-only properties kept project-local.
 
 **Plans**: TBD
 
