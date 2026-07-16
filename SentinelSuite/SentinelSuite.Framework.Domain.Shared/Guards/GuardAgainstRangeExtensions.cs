@@ -71,7 +71,12 @@ public static class GuardAgainstRangeExtensions
     /// validity is determined by mask (any bitwise-OR combination of defined
     /// members is valid) rather than <see cref="Enum.IsDefined(Type, object)"/>,
     /// since the latter only recognizes exactly-named members and would
-    /// otherwise incorrectly reject legitimate flag combinations.
+    /// otherwise incorrectly reject legitimate flag combinations. Unlike the
+    /// built-in 3-argument <see cref="InvalidEnumArgumentException"/>
+    /// constructor (which always embeds the rejected numeric value in its
+    /// message), the message constructed here omits the value and includes
+    /// only <paramref name="parameterName"/> (sanitized), consistent with
+    /// every sibling guard's Information-Disclosure mitigation (T-1-02).
     /// </remarks>
     public static T EnumOutOfRange<T>(
         this IGuardClause guardClause,
@@ -85,7 +90,9 @@ public static class GuardAgainstRangeExtensions
 
         if (!isValid)
         {
-            throw new InvalidEnumArgumentException(parameterName, Convert.ToInt32(input), typeof(T));
+            var safeParamName = Guard.SafeParamName(parameterName);
+            throw new InvalidEnumArgumentException(
+                $"The value of argument '{safeParamName}' is invalid for Enum type '{typeof(T).Name}'.");
         }
 
         return input;
