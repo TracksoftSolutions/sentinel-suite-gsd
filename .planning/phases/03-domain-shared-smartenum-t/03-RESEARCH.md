@@ -455,22 +455,25 @@ public sealed class TenantIsolationTier : SmartEnum<TenantIsolationTier, string>
 | A2 | The C# CRTP self-referencing-generic-constraint limitation (Pitfall 4) and the `BeforeFieldInit`/`Lazy<T>` exception-caching mechanics (Pitfall 3) are grounded in WebSearch results cross-referencing named sources (Phil Haacked's 2012 blog post, `dotnet/csharplang` and `dotnet/roslyn` GitHub issue trackers, csharpindepth.com) rather than a single canonical spec document fetched directly this session | Common Pitfalls (Pitfall 3, Pitfall 4) | Low-Medium — these are well-established, multiply-corroborated facts about C# generics and the BCL `Lazy<T>` type (not contested or version-dependent), but the specific citations were not fetched verbatim the way the Ardalis.SmartEnum source was — treat the underlying claims as reliable, the specific phrasing/citation as MEDIUM confidence |
 | A3 | D-08's `IComparable<TValue>`-only constraint vs. the reference's `IEquatable<TValue>, IComparable<TValue>` constraint (Pitfall 1) is this research's identification of a gap, not something CONTEXT.md's discussion explicitly resolved — recommendation (b) in Pitfall 1 (broaden to match the reference) is this research's synthesis, not a locked decision | Summary, Pitfall 1, Open Questions | Medium — if planning silently picks option (a) instead without documenting the tradeoff, a future consumer relying on `Equals`/`==` behavior for a `TValue` where `Equals` and `CompareTo==0` disagree could get a surprising result; low practical risk given this kernel's realistic value types (int, string, Guid) but worth an explicit planning decision either way |
 
-## Open Questions
+## Open Questions (RESOLVED — see CONTEXT.md D-08/D-10/D-14)
 
-1. **Should `TValue` be constrained to `IComparable<TValue>` only (D-08 literal) or `IEquatable<TValue>, IComparable<TValue>` (matching the reference exactly)?**
+1. **RESOLVED — D-08 (amended).** Should `TValue` be constrained to `IComparable<TValue>` only (D-08 literal) or `IEquatable<TValue>, IComparable<TValue>` (matching the reference exactly)?
    - What we know: The reference implementation requires both; its `Equals` implementation depends on `IEquatable<TValue>`. D-08 as written in CONTEXT.md only mentions `IComparable<TValue>`.
    - What's unclear: Whether D-08's omission of `IEquatable<TValue>` was deliberate (a narrower, more permissive constraint) or an incomplete transcription of "sortable by value" intent that didn't separately consider equality.
-   - Recommendation: Broaden to `IEquatable<TValue>, IComparable<TValue>` (Pitfall 1, option b) — matches the proven reference shape, doesn't meaningfully restrict realistic value types for this kernel, and avoids a semantic edge case. Confirm explicitly during planning since this is a literal (if minor) deviation from a locked decision's exact wording.
+   - Recommendation: Broaden to `IEquatable<TValue>, IComparable<TValue>` (Pitfall 1, option b) — matches the proven reference shape, doesn't meaningfully restrict realistic value types for this kernel, and avoids a semantic edge case.
+   - **Resolution:** User confirmed broadening during plan-phase review (2026-07-16). CONTEXT.md D-08 amended accordingly; implemented in `03-01-PLAN.md` Task 1.
 
-2. **Should the full `<`, `<=`, `>`, `>=` operator set be added alongside the locked `==`/`!=` (D-10)?**
+2. **RESOLVED — D-10 (amended).** Should the full `<`, `<=`, `>`, `>=` operator set be added alongside the locked `==`/`!=` (D-10)?
    - What we know: The reference implements all six comparison/equality operators; D-10 only locks `==`/`!=`. `IComparable<T>` (D-07) is already required, so `<`/`<=`/`>`/`>=` are each a one-line `CompareTo(...) < 0`-style addition once `CompareTo` exists.
    - What's unclear: Whether CONTEXT.md's silence on `<`/`<=`/`>`/`>=` means "deliberately excluded" or "not discussed, default to matching the reference since IComparable is already in scope."
-   - Recommendation: Include them — near-zero marginal implementation cost given `IComparable<T>` (D-07) is already locked in scope, consistent with this phase's repeated "build broader now" pattern elsewhere (D-01, D-04, D-09), and directly useful for the status-pipeline/severity-level use cases D-07's own rationale cites. Confirm during planning; low-risk to include, low-risk to omit if the planner prefers a stricter reading of D-10's literal scope.
+   - Recommendation: Include them — near-zero marginal implementation cost given `IComparable<T>` (D-07) is already locked in scope, consistent with this phase's repeated "build broader now" pattern elsewhere (D-01, D-04, D-09).
+   - **Resolution:** User confirmed inclusion during plan-phase review (2026-07-16). CONTEXT.md D-10 amended accordingly; implemented in `03-01-PLAN.md` Task 1, tested in `03-04-PLAN.md`.
 
-3. **Should `FromValue(TValue value, TEnum defaultValue)` (a third lookup-failure mode beyond D-04's throw/Try pair) be included?**
+3. **RESOLVED — D-14 (added).** Should `FromValue(TValue value, TEnum defaultValue)` (a third lookup-failure mode beyond D-04's throw/Try pair) be included?
    - What we know: The reference ships it; CONTEXT.md's D-04 explicitly frames the lookup surface as a binary choice ("both throwing... and non-throwing Try-variants").
    - What's unclear: Whether a default-value overload is a useful third option or unnecessary surface-area beyond what was discussed.
-   - Recommendation: Omit for this phase — D-04's explicit two-mode framing reads as intentionally scoped, unlike D-01/D-07/D-09/D-10 where "build broader now" was the recurring theme; a default-value overload is easily added in a later phase if a concrete consumer need arises. Flag as descoped-not-forgotten if it comes up during implementation.
+   - Recommendation: Omit for this phase — D-04's explicit two-mode framing reads as intentionally scoped, unlike D-01/D-07/D-09/D-10 where "build broader now" was the recurring theme.
+   - **Resolution:** User chose to include it during plan-phase review (2026-07-16), overriding this research's omit recommendation. CONTEXT.md D-14 added accordingly; implemented in `03-01-PLAN.md` Task 2, tested in `03-03-PLAN.md`.
 
 ## Environment Availability
 
