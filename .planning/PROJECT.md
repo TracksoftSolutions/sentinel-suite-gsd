@@ -20,6 +20,7 @@ Every one of Sentinel Suite's 222 planned features depends on getting the Entity
 ### Validated
 
 - [x] GuardClauses (Ardalis-style, hand-rolled — no `Ardalis.GuardClauses` package) — Validated in Phase 1: Domain.Shared: GuardClauses
+- [x] Result pattern (Ardalis-style, hand-rolled — no `Ardalis.Result` package) — Validated in Phase 2: Domain.Shared: Result / Result<T>
 
 ### Active
 
@@ -34,7 +35,6 @@ Every one of Sentinel Suite's 222 planned features depends on getting the Entity
 - [ ] Auditing & soft-delete base contracts (creation/modification audit, soft-delete — ABP-style, hand-rolled)
 - [ ] Module system for organizing the framework into swappable pieces (ABP-inspired)
 - [ ] Specification pattern (Ardalis-style, hand-rolled — no `Ardalis.Specification` package)
-- [ ] Result pattern (Ardalis-style, hand-rolled — no `Ardalis.Result` package)
 - [ ] SmartEnum pattern (Ardalis-style, hand-rolled — no `Ardalis.SmartEnum` package)
 - [ ] Clean Architecture solution layout: Core/UseCases/Infrastructure/Web-equivalent project separation with dependency direction enforced (layout only in this milestone — only Domain has real content)
 - [ ] Unit test coverage (xUnit) for kernel invariants and capability interfaces, written as each piece lands
@@ -89,4 +89,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-15 after initialization*
+*Last updated: 2026-07-16 — Phase 2 (Result / Result<T>) complete*
