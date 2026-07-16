@@ -1,8 +1,8 @@
 ---
 phase: 1
 slug: domain-shared-guardclauses
-status: draft
-nyquist_compliant: false
+status: planned
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-07-15
 ---
@@ -63,11 +63,11 @@ created: 2026-07-15
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 10s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies (confirmed by gsd-plan-checker across all 6 plans / 12 tasks)
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify (plans are 1-2 tasks each, all with automated verify)
+- [x] Wave 0 covers all MISSING references (01-01 covers global.json, test project scaffold, and .slnx wiring)
+- [x] No watch-mode flags
+- [x] Feedback latency < 10s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-07-15 (plan-time sign-off via gsd-plan-checker; `wave_0_complete` flips to `true` once Wave 1's 01-01 plan executes)
