@@ -1,3 +1,5 @@
+using SentinelSuite.Framework.Domain.Shared.Guards;
+
 namespace SentinelSuite.Framework.Domain.Shared.Results;
 
 /// <summary>
@@ -117,4 +119,37 @@ public sealed class Result
 
     /// <summary>Creates a failed <see cref="Result"/> with <see cref="ResultStatus.Unavailable"/>.</summary>
     public static Result Unavailable(params Results.Error[] errors) => new(ResultStatus.Unavailable, errors);
+
+    /// <summary>
+    /// Creates a failed <see cref="Result"/> with
+    /// <see cref="ResultStatus.CriticalError"/>, carrying the original
+    /// caught <paramref name="exception"/> (D-11).
+    /// </summary>
+    /// <param name="exception">
+    /// The caught exception being converted to a <see cref="Result"/>. Must
+    /// not be <see langword="null"/> — a null exception is itself a
+    /// programmer error (D-05), not something to silently accept.
+    /// </param>
+    /// <param name="error">
+    /// An optional explicit <see cref="Results.Error"/> to use instead of
+    /// deriving one from <paramref name="exception"/>. When omitted, an
+    /// <see cref="Results.Error"/> is derived using a fixed
+    /// <c>"CriticalError"</c> code and <paramref name="exception"/>'s own
+    /// <see cref="System.Exception.Message"/> when that is non-null and
+    /// non-empty, or a fixed fallback literal otherwise — never passing a
+    /// potentially-empty string straight into <see cref="Results.Error"/>'s
+    /// constructor, which would otherwise throw and mask the real
+    /// <see cref="CriticalError(Exception, Results.Error?)"/> call site with
+    /// a confusing secondary exception (T-2-02).
+    /// </param>
+    public static Result CriticalError(Exception exception, Results.Error? error = null)
+    {
+        Guard.Against.Null(exception);
+
+        var resolvedError = error ?? new Results.Error(
+            "CriticalError",
+            string.IsNullOrEmpty(exception.Message) ? "An unexpected error occurred." : exception.Message);
+
+        return new Result(ResultStatus.CriticalError, [resolvedError], exception);
+    }
 }
