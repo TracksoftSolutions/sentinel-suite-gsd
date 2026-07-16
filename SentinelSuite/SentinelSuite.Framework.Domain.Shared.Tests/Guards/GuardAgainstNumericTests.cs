@@ -84,4 +84,44 @@ public class GuardAgainstNumericTests
 
         Assert.Equal(nameof(input), ex.ParamName);
     }
+
+    [Fact]
+    public void Default_WhenGuidNonEmpty_ReturnsSameValueUnchanged()
+    {
+        var input = Guid.NewGuid();
+
+        var result = Guard.Against.Default(input);
+
+        Assert.Equal(input, result);
+    }
+
+    [Fact]
+    public void Default_WhenGuidEmpty_ThrowsArgumentExceptionWithCapturedParameterName()
+    {
+        var input = Guid.Empty;
+
+        var ex = Assert.Throws<ArgumentException>(() => Guard.Against.Default(input));
+
+        Assert.Equal(nameof(input), ex.ParamName);
+    }
+
+    [Fact]
+    public void Default_WhenDateTimeNonDefault_ReturnsSameValueUnchanged()
+    {
+        var input = DateTime.Now;
+
+        var result = Guard.Against.Default(input);
+
+        Assert.Equal(input, result);
+    }
+
+    [Fact]
+    public void Default_WhenDateTimeIsDefault_ThrowsArgumentExceptionWithCapturedParameterName()
+    {
+        var input = default(DateTime);
+
+        var ex = Assert.Throws<ArgumentException>(() => Guard.Against.Default(input));
+
+        Assert.Equal(nameof(input), ex.ParamName);
+    }
 }
