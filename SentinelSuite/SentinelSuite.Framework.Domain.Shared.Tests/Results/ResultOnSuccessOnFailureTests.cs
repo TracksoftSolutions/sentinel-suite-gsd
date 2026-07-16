@@ -146,4 +146,140 @@ public class ResultOnSuccessOnFailureTests
 
         Assert.Throws<ArgumentNullException>(() => result.OnSuccess((Action)null!));
     }
+
+    [Fact]
+    public void OnFailure_NonGeneric_Sync_WhenFailure_InvokesActionOnceAndReturnsSameInstance()
+    {
+        var invocationCount = 0;
+        var error = new Error("OnFailure.Code", "on failure failure");
+        var result = Result.Failure(error);
+
+        var returned = result.OnFailure(() => invocationCount++);
+
+        Assert.Equal(1, invocationCount);
+        Assert.Same(result, returned);
+    }
+
+    [Fact]
+    public void OnFailure_NonGeneric_Sync_WhenSuccess_NeverInvokesActionAndReturnsSameInstance()
+    {
+        var invocationCount = 0;
+        var result = Result.Success();
+
+        var returned = result.OnFailure(() => invocationCount++);
+
+        Assert.Equal(0, invocationCount);
+        Assert.Same(result, returned);
+    }
+
+    [Fact]
+    public void OnFailure_Generic_Sync_WhenFailure_InvokesActionOnceAndReturnsSameInstanceWithoutTouchingValue()
+    {
+        var invocationCount = 0;
+        var error = new Error("OnFailure.Code", "on failure failure");
+        var result = Result<int>.Failure(error);
+
+        var returned = result.OnFailure(() => invocationCount++);
+
+        Assert.Equal(1, invocationCount);
+        Assert.Same(result, returned);
+    }
+
+    [Fact]
+    public void OnFailure_Generic_Sync_WhenSuccess_NeverInvokesActionAndReturnsSameInstance()
+    {
+        var invocationCount = 0;
+        var result = Result<int>.Success(42);
+
+        var returned = result.OnFailure(() => invocationCount++);
+
+        Assert.Equal(0, invocationCount);
+        Assert.Same(result, returned);
+    }
+
+    [Fact]
+    public async Task OnFailure_NonGeneric_LeftAsync_WhenFailure_InvokesActionOnce()
+    {
+        var invocationCount = 0;
+        var error = new Error("OnFailure.Code", "on failure failure");
+        var resultTask = Task.FromResult(Result.Failure(error));
+
+        var returned = await resultTask.OnFailure(() => invocationCount++);
+
+        Assert.Equal(1, invocationCount);
+        Assert.True(returned.IsFailure);
+    }
+
+    [Fact]
+    public async Task OnFailure_NonGeneric_RightAsync_WhenFailure_InvokesAsyncActionOnceAndReturnsOriginalFailedResult()
+    {
+        var invocationCount = 0;
+        var error = new Error("OnFailure.Code", "on failure failure");
+        var result = Result.Failure(error);
+
+        var returned = await result.OnFailure(async () =>
+        {
+            invocationCount++;
+            await Task.Yield();
+        });
+
+        Assert.Equal(1, invocationCount);
+        Assert.Same(result, returned);
+    }
+
+    [Fact]
+    public async Task OnFailure_NonGeneric_BothAsync_WhenFailure_InvokesAsyncActionOnce()
+    {
+        var invocationCount = 0;
+        var error = new Error("OnFailure.Code", "on failure failure");
+        var resultTask = Task.FromResult(Result.Failure(error));
+
+        var returned = await resultTask.OnFailure(async () =>
+        {
+            invocationCount++;
+            await Task.Yield();
+        });
+
+        Assert.Equal(1, invocationCount);
+        Assert.True(returned.IsFailure);
+    }
+
+    [Fact]
+    public async Task OnFailure_Generic_LeftAsync_WhenFailure_InvokesActionOnce()
+    {
+        var invocationCount = 0;
+        var error = new Error("OnFailure.Code", "on failure failure");
+        var resultTask = Task.FromResult(Result<int>.Failure(error));
+
+        var returned = await resultTask.OnFailure(() => invocationCount++);
+
+        Assert.Equal(1, invocationCount);
+        Assert.True(returned.IsFailure);
+    }
+
+    [Fact]
+    public async Task OnFailure_Generic_RightAsync_WhenFailure_InvokesAsyncActionOnce()
+    {
+        var invocationCount = 0;
+        var error = new Error("OnFailure.Code", "on failure failure");
+        var result = Result<int>.Failure(error);
+
+        var returned = await result.OnFailure(async () =>
+        {
+            invocationCount++;
+            await Task.Yield();
+        });
+
+        Assert.Equal(1, invocationCount);
+        Assert.Same(result, returned);
+    }
+
+    [Fact]
+    public void OnFailure_NonGeneric_Sync_WhenActionIsNull_ThrowsArgumentNullException()
+    {
+        var error = new Error("OnFailure.Code", "on failure failure");
+        var result = Result.Failure(error);
+
+        Assert.Throws<ArgumentNullException>(() => result.OnFailure((Action)null!));
+    }
 }
