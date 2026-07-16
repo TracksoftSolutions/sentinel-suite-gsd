@@ -67,6 +67,11 @@ public static class GuardAgainstRangeExtensions
     /// <remarks>
     /// <see cref="InvalidEnumArgumentException"/> is a BCL type
     /// (<c>System.ComponentModel</c>) — no extra package needed on net10.0.
+    /// When <typeparamref name="T"/> is decorated with <see cref="FlagsAttribute"/>,
+    /// validity is determined by mask (any bitwise-OR combination of defined
+    /// members is valid) rather than <see cref="Enum.IsDefined(Type, object)"/>,
+    /// since the latter only recognizes exactly-named members and would
+    /// otherwise incorrectly reject legitimate flag combinations.
     /// </remarks>
     public static T EnumOutOfRange<T>(
         this IGuardClause guardClause,
@@ -74,11 +79,28 @@ public static class GuardAgainstRangeExtensions
         [CallerArgumentExpression(nameof(input))] string? parameterName = null)
         where T : struct, Enum
     {
-        if (!Enum.IsDefined(typeof(T), input))
+        var isValid = typeof(T).IsDefined(typeof(FlagsAttribute), inherit: false)
+            ? IsValidFlagsCombination(input)
+            : Enum.IsDefined(typeof(T), input);
+
+        if (!isValid)
         {
             throw new InvalidEnumArgumentException(parameterName, Convert.ToInt32(input), typeof(T));
         }
 
         return input;
+    }
+
+    private static bool IsValidFlagsCombination<T>(T input)
+        where T : struct, Enum
+    {
+        var definedMask = 0L;
+        foreach (var definedValue in Enum.GetValues<T>())
+        {
+            definedMask |= Convert.ToInt64(definedValue);
+        }
+
+        var inputValue = Convert.ToInt64(input);
+        return (inputValue & ~definedMask) == 0;
     }
 }
