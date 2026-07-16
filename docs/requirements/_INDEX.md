@@ -98,10 +98,10 @@ Status legend: `[ ]` not started · `[~]` in progress (elicitation underway) · 
 - [x] Incident Action Checklists
 - [x] Continuity of Operations Plans (COOP)
 - [x] Muster Check-in App
-- [ ] Evacuation Roster Reconciliation
-- [ ] Hazard Identification & Risk Assessment (HIRA)
-- [ ] Mitigation Task Tracker
-- [ ] Alternate Site Registries
+- [x] Evacuation Roster Reconciliation
+- [x] Hazard Identification & Risk Assessment (HIRA)
+- [x] Mitigation Task Tracker
+- [x] Alternate Site Registries
 
 ## 7. Safety Management
 - [ ] Safety Inspections & Audits
