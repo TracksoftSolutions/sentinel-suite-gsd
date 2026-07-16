@@ -10,7 +10,7 @@ Requirements for this milestone. Each maps to roadmap phases (populated during r
 ### Domain.Shared Primitives
 
 - [x] **PRIM-01**: `GuardClauses` — hand-rolled argument/invariant validation helpers (Ardalis.GuardClauses-equivalent), zero NuGet dependency
-- [ ] **PRIM-02**: `Result` / `Result<T>` — hand-rolled operation-result pattern (Ardalis.Result-equivalent) for expected failure paths
+- [x] **PRIM-02**: `Result` / `Result<T>` — hand-rolled operation-result pattern (Ardalis.Result-equivalent) for expected failure paths
 - [ ] **PRIM-03**: `SmartEnum<T>` — hand-rolled type-safe enumeration base (Ardalis.SmartEnum-equivalent)
 - [ ] **PRIM-04**: `DomainException` — a dedicated domain-level exception type, distinct from framework/infrastructure exceptions
 
@@ -88,7 +88,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | PRIM-01 | Phase 1 | Complete |
-| PRIM-02 | Phase 2 | Pending |
+| PRIM-02 | Phase 2 | Complete |
 | PRIM-03 | Phase 3 | Pending |
 | PRIM-04 | Phase 4 | Pending |
 | LAYOUT-01 | Phase 5 | Pending |
