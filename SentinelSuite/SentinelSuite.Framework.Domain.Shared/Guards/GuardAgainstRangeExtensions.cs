@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace SentinelSuite.Framework.Domain.Shared.Guards;
@@ -16,6 +17,9 @@ namespace SentinelSuite.Framework.Domain.Shared.Guards;
 /// may know a concrete database engine exists). This is a permanent
 /// exclusion, not a placeholder for a future phase.
 /// </remarks>
+// A SQL-Server-specific date-range guard is deliberately excluded from this
+// Domain.Shared kernel — see the class-level remarks above for the full
+// Clean Architecture dependency-direction rationale (permanent, not deferred).
 public static class GuardAgainstRangeExtensions
 {
     /// <summary>
@@ -50,6 +54,28 @@ public static class GuardAgainstRangeExtensions
             throw new ArgumentOutOfRangeException(
                 parameterName,
                 $"Input {parameterName} was out of range.");
+        }
+
+        return input;
+    }
+
+    /// <summary>
+    /// Guards against an enum value that is not defined on <typeparamref name="T"/>,
+    /// returning it unchanged when valid.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="InvalidEnumArgumentException"/> is a BCL type
+    /// (<c>System.ComponentModel</c>) — no extra package needed on net10.0.
+    /// </remarks>
+    public static T EnumOutOfRange<T>(
+        this IGuardClause guardClause,
+        T input,
+        [CallerArgumentExpression(nameof(input))] string? parameterName = null)
+        where T : struct, Enum
+    {
+        if (!Enum.IsDefined(typeof(T), input))
+        {
+            throw new InvalidEnumArgumentException(parameterName, Convert.ToInt32(input), typeof(T));
         }
 
         return input;
