@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 1
-current_phase_name: "Domain.Shared: GuardClauses"
+current_phase: 01
+current_phase_name: domain-shared-guardclauses
 status: executing
 stopped_at: Phase 1 context gathered
-last_updated: "2026-07-16T03:39:33.064Z"
-last_activity: 2026-07-15
-last_activity_desc: Roadmap revised to finer granularity per user feedback (20 phases, 21/21 v1 requirements mapped)
+last_updated: "2026-07-16T03:50:13.137Z"
+last_activity: 2026-07-16
+last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 20
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 6
+  completed_plans: 1
   percent: 0
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-15)
 
 **Core value:** Every one of Sentinel Suite's 222 planned features depends on getting the Entity/EntityAssociation taxonomy, multi-tenancy, and auditing conventions right once, in a dependency-minimal, FedRAMP-friendly kernel.
-**Current focus:** Phase 1 - Domain.Shared: GuardClauses
+**Current focus:** Phase 01 — domain-shared-guardclauses
 
 ## Current Position
 
-Phase: 1 of 20 (Domain.Shared: GuardClauses)
-Plan: 0 of TBD in current phase
+Phase: 01 (domain-shared-guardclauses) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-07-15 — Roadmap revised to finer granularity per user feedback (20 phases, 21/21 v1 requirements mapped)
+Last activity: 2026-07-16 — Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P1 | 15min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work:
 - Roadmap: Value Object base and explicit aggregate-root distinction (research-recommended additions) confirmed in scope as ENT-04 and ENT-02 in REQUIREMENTS.md. Aggregate root distinction stays paired with domain events (ENT-03) in Phase 10 since aggregate-root status gates where domain events collect; Value Object (ENT-04) split into its own Phase 11 during the roadmap revision below.
 - Roadmap: REQUIREMENTS.md's traceability section understated the v1 requirement count as 20; the actual enumerated list totals 21 (PRIM 4 + LAYOUT 1 + AUDIT 3 + ENT 4 + ASSOC 2 + CAP 4 + MOD 1 + QUERY 1 + TEST 1). Corrected during roadmap creation.
 - Roadmap revision (2026-07-15): User requested finer phase granularity, landing in the 15-20 phase range with each Ardalis-branded pattern equivalent (`GuardClauses`, `Result`/`Result<T>`, `SmartEnum<T>`, `Specification<T>`) as its own dedicated phase. Roadmap expanded from 9 to 20 phases — near one-requirement-per-phase, with only Aggregate Root + Domain Events (ENT-02 + ENT-03, Phase 10) kept paired as a tightly-coupled exception since the event-collection API is gated by the aggregate-root distinction. All success criteria redistributed across the new phase boundaries without loss of detail; dependency chain re-derived and tightened (e.g., capability sub-phases now chain interface scaffold → registry → drift-validation instead of sharing one flat dependency).
+- [Phase 01]: Hand-authored the test .csproj instead of dotnet new xunit / xunit.v3.templates, per RESEARCH.md Pitfall 5 (SDK template emits VSTest, not MTP)
+- [Phase 01]: Used coverlet.mtp (not coverlet.collector) for coverage, per RESEARCH.md Pitfall 4 - coverlet.collector is VSTest-only and incompatible with MTP
 
 ### Pending Todos
 
@@ -88,6 +91,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-16T03:06:04.934Z
+Last session: 2026-07-16T03:49:13.036Z
 Stopped at: Phase 1 context gathered
 Resume file: .planning/phases/01-domain-shared-guardclauses/01-CONTEXT.md

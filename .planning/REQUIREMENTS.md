@@ -9,7 +9,7 @@ Requirements for this milestone. Each maps to roadmap phases (populated during r
 
 ### Domain.Shared Primitives
 
-- [ ] **PRIM-01**: `GuardClauses` — hand-rolled argument/invariant validation helpers (Ardalis.GuardClauses-equivalent), zero NuGet dependency
+- [x] **PRIM-01**: `GuardClauses` — hand-rolled argument/invariant validation helpers (Ardalis.GuardClauses-equivalent), zero NuGet dependency
 - [ ] **PRIM-02**: `Result` / `Result<T>` — hand-rolled operation-result pattern (Ardalis.Result-equivalent) for expected failure paths
 - [ ] **PRIM-03**: `SmartEnum<T>` — hand-rolled type-safe enumeration base (Ardalis.SmartEnum-equivalent)
 - [ ] **PRIM-04**: `DomainException` — a dedicated domain-level exception type, distinct from framework/infrastructure exceptions
@@ -87,7 +87,7 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PRIM-01 | Phase 1 | Pending |
+| PRIM-01 | Phase 1 | Complete |
 | PRIM-02 | Phase 2 | Pending |
 | PRIM-03 | Phase 3 | Pending |
 | PRIM-04 | Phase 4 | Pending |
@@ -110,6 +110,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | TEST-01 | Phase 20 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 21 total (corrected from the initial 20-count during roadmap creation — the enumerated PRIM/AUDIT/ENT/CAP/etc. lists above sum to 21, and REQUIREMENTS.md's opening count was off by one)
 - Mapped to phases: 21/21 ✓
 - Unmapped: 0 ✓ (100% coverage — see .planning/ROADMAP.md for phase details and success criteria)

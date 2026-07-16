@@ -47,12 +47,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Passing xUnit tests cover null-argument guard scenarios (both pass and throw paths).
   3. Passing xUnit tests cover empty/range/enum-membership guard scenarios (both pass and throw paths).
 
-**Plans**: 6 plans
+**Plans**: 1/6 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Test infrastructure scaffold (MTP-native xUnit v3 project, global.json, .slnx wiring)
+- [x] 01-01-PLAN.md — Test infrastructure scaffold (MTP-native xUnit v3 project, global.json, .slnx wiring)
 - [ ] 01-02-PLAN.md — Guard entry point & IGuardClause extensibility anchor
 
 **Wave 2** *(blocked on Wave 1 completion)*
@@ -328,7 +328,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Domain.Shared: GuardClauses | 0/TBD | Not started | - |
+| 1. Domain.Shared: GuardClauses | 1/6 | In Progress|  |
 | 2. Domain.Shared: Result / Result<T> | 0/TBD | Not started | - |
 | 3. Domain.Shared: SmartEnum<T> | 0/TBD | Not started | - |
 | 4. Domain.Shared: DomainException | 0/TBD | Not started | - |
