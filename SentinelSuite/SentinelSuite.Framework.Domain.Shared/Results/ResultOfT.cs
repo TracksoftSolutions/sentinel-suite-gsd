@@ -110,8 +110,28 @@ public sealed class Result<T>
                 $"Cannot access {nameof(Value)} on a failed Result (Status: {Status}).")
             : _value!;
 
-    /// <summary>Creates a successful <see cref="Result{T}"/> carrying <paramref name="value"/>.</summary>
-    public static Result<T> Success(T value) => new(ResultStatus.Ok, value, NoErrors);
+    /// <summary>
+    /// Creates a successful <see cref="Result{T}"/> carrying <paramref name="value"/>.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="value"/> is <see langword="null"/>. A null
+    /// reference-type value is rejected here so a successful
+    /// <see cref="Result{T}"/> can never silently present an
+    /// uninitialized/default value as if it were legitimately produced —
+    /// the same guarantee D-06's fail-fast <see cref="Value"/> getter
+    /// provides on the read side, now enforced on the write side too
+    /// (value types never match the <see langword="null"/> pattern, so this
+    /// guard is a no-op for them).
+    /// </exception>
+    public static Result<T> Success(T value)
+    {
+        if (value is null)
+        {
+            throw new ArgumentNullException(nameof(value));
+        }
+
+        return new(ResultStatus.Ok, value, NoErrors);
+    }
 
     /// <summary>
     /// Creates a failed <see cref="Result{T}"/> with <see cref="ResultStatus.Error"/> —
