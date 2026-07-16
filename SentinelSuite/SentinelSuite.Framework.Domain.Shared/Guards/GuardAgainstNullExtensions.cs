@@ -82,4 +82,46 @@ public static class GuardAgainstNullExtensions
 
         return input;
     }
+
+    /// <summary>
+    /// Guards against a null or empty (zero-length) string. Delegates to
+    /// <see cref="Null{T}(IGuardClause, T, string?)"/> first so a null input
+    /// throws <see cref="ArgumentNullException"/> rather than
+    /// <see cref="ArgumentException"/>.
+    /// </summary>
+    public static string NullOrEmpty(
+        this IGuardClause guardClause,
+        [NotNull] string? input,
+        [CallerArgumentExpression(nameof(input))] string? parameterName = null)
+    {
+        Guard.Against.Null(input, parameterName);
+
+        if (input.Length == 0)
+        {
+            throw new ArgumentException("Required input was empty.", parameterName);
+        }
+
+        return input;
+    }
+
+    /// <summary>
+    /// Guards against a null or empty sequence. Delegates to
+    /// <see cref="Null{T}(IGuardClause, T, string?)"/> first so a null input
+    /// throws <see cref="ArgumentNullException"/> rather than
+    /// <see cref="ArgumentException"/>.
+    /// </summary>
+    public static IEnumerable<T> NullOrEmpty<T>(
+        this IGuardClause guardClause,
+        [NotNull] IEnumerable<T>? input,
+        [CallerArgumentExpression(nameof(input))] string? parameterName = null)
+    {
+        Guard.Against.Null(input, parameterName);
+
+        if (!input.Any())
+        {
+            throw new ArgumentException("Required input was empty.", parameterName);
+        }
+
+        return input;
+    }
 }
