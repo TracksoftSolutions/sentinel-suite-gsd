@@ -110,6 +110,15 @@ public static class GuardAgainstNullExtensions
     /// throws <see cref="ArgumentNullException"/> rather than
     /// <see cref="ArgumentException"/>.
     /// </summary>
+    /// <remarks>
+    /// Emptiness is checked via <see cref="ICollection{T}.Count"/> rather than
+    /// <see cref="Enumerable.Any{T}(IEnumerable{T})"/>, and a non-collection
+    /// <paramref name="input"/> is materialized to a <see cref="List{T}"/>
+    /// before returning. Checking via <c>.Any()</c> alone would enumerate
+    /// (and, for a forward-only/single-use sequence, partially consume) the
+    /// caller's sequence before handing it back, leaving a reference the
+    /// caller could no longer safely re-enumerate.
+    /// </remarks>
     public static IEnumerable<T> NullOrEmpty<T>(
         this IGuardClause guardClause,
         [NotNull] IEnumerable<T>? input,
@@ -117,11 +126,13 @@ public static class GuardAgainstNullExtensions
     {
         Guard.Against.Null(input, parameterName);
 
-        if (!input.Any())
+        var materialized = input as ICollection<T> ?? input.ToList();
+
+        if (materialized.Count == 0)
         {
             throw new ArgumentException("Required input was empty.", Guard.SafeParamName(parameterName));
         }
 
-        return input;
+        return materialized;
     }
 }
