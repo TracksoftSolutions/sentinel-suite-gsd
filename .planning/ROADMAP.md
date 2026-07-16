@@ -78,7 +78,27 @@ Plans:
   3. Passing unit tests verify error message/code propagation from a failure `Result`.
   4. A unit test confirms a failure `Result<T>` cannot expose a `Value` (throws or fails predictably on access).
 
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 02-01-PLAN.md — ResultStatus enum + Error sealed record + Result (non-generic) core with all 9 status factories including CriticalError
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 02-02-PLAN.md — Result<T> mirroring the factory set, fail-fast Value getter, one-directional implicit conversion
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 02-03-PLAN.md — Map + Bind combinators (sync/Left-async/Right-async/Both-async)
+- [ ] 02-04-PLAN.md — Ensure + Match combinators
+- [ ] 02-05-PLAN.md — OnSuccess + OnFailure combinators
+- [ ] 02-06-PLAN.md — Result.Combine aggregation
+
+**Cross-cutting constraints:**
+
+- Domain.Shared remains free of third-party package references after this plan
 
 ### Phase 3: Domain.Shared: SmartEnum<T>
 
