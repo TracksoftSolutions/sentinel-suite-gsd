@@ -79,4 +79,31 @@ public static class GuardAgainstNumericExtensions
 
         return input;
     }
+
+    /// <summary>
+    /// Guards against an uninitialized/default-value struct (e.g. an unset
+    /// <see cref="Guid"/> or <see cref="DateTime"/>), returning the input
+    /// unchanged when valid. Deliberately generic over any
+    /// <see cref="IEquatable{T}"/> struct rather than hand-written per
+    /// concrete type.
+    /// </summary>
+    /// <remarks>
+    /// The exception message interpolates only <paramref name="parameterName"/>,
+    /// never the actual input value, per the Information-Disclosure mitigation
+    /// in this phase's threat model (T-1-02).
+    /// </remarks>
+    public static T Default<T>(
+        this IGuardClause guardClause,
+        T input,
+        [CallerArgumentExpression(nameof(input))] string? parameterName = null)
+        where T : struct, IEquatable<T>
+    {
+        if (input.Equals(default(T)))
+        {
+            throw new ArgumentException(
+                $"Required input {parameterName} cannot be the default value.", parameterName);
+        }
+
+        return input;
+    }
 }
