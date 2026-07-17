@@ -16,7 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\SentinelSuite.Framework.Domain.Shared\SentinelSuite.Framework.Domain.Shared.csproj" />
+        <ProjectReference Include="..\..\src\Framework\SentinelSuite.Framework.Domain.Shared\SentinelSuite.Framework.Domain.Shared.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="SentinelSuite.Framework.Domain.Shared/SentinelSuite.Framework.Domain.Shared.csproj" />
-  <Project Path="SentinelSuite.Framework.Domain/SentinelSuite.Framework.Domain.csproj" />
-  <Project Path="SentinelSuite.Framework.Domain.Shared.Tests/SentinelSuite.Framework.Domain.Shared.Tests.csproj" />
+  <Project Path="src/Framework/SentinelSuite.Framework.Domain.Shared/SentinelSuite.Framework.Domain.Shared.csproj" />
+  <Project Path="src/Framework/SentinelSuite.Framework.Domain/SentinelSuite.Framework.Domain.csproj" />
+  <Project Path="test/Framework/SentinelSuite.Framework.Domain.Shared.Tests/SentinelSuite.Framework.Domain.Shared.Tests.csproj" />
 </Solution>
