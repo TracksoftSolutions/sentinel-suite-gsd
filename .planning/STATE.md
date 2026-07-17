@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-07-15)
 Phase: 03 — Domain.Shared: SmartEnum<T>
 Plan: Not started
 Status: Phase complete — ready for verification
-Last activity: 2026-07-16 — Phase 02 complete, transitioned to Phase 03
+Last activity: 2026-07-17 - Completed quick task 260717-hw8: Restructure SentinelSuite/ into src/Framework and test/Framework, fix cross-references, git hygiene, rewrite README.md
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -111,6 +111,12 @@ None yet.
 - Phase 12 (EntityAssociation Base) flagged by research as the highest design-risk item in the milestone — no external prior art for the current-value-plus-history shape. Budget extra discussion time, possibly a dedicated `/gsd-discuss-phase` pass before planning. (Formerly part of old Phase 6; Phase 13, TPT Abstract Roots, inherits the same risk profile to a lesser degree since it builds directly on the association taxonomy.)
 - Phase 16 (Startup Drift-Validation Pass) is a novel mechanism combining compile-time and runtime sources of truth — worth a focused design pass during planning. (Formerly part of old Phase 7's capability scaffold.)
 - Phase 18 (Module System) diamond-dependency graph resolution needs care even at small scale — confirm the topological-sort approach against a concrete test scenario during planning. (Formerly part of old Phase 8.)
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 260717-hw8 | Restructure SentinelSuite/ into src/Framework and test/Framework, fix cross-references, git hygiene (untrack obj/.idea, gitignore .idea/, pick up orphaned 03-PATTERNS.md), rewrite README.md | 2026-07-17 | c63b328 | Verified | [260717-hw8-restructure-sentinelsuite-into-src-and-t](./quick/260717-hw8-restructure-sentinelsuite-into-src-and-t/) |
 
 ### Roadmap Evolution
 
